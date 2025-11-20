@@ -34,7 +34,7 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      <section className="container section-shell" style={{ marginTop: '1.6rem' }}>
+      <section id="collaboration" className="container section-shell" style={{ marginTop: '1.6rem' }}>
         <div className="card-grid">
           <div className="glass panel">
             <div className="section-title">
