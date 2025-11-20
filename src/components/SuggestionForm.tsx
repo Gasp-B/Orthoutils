@@ -37,16 +37,16 @@ Elle est prête à être partagée avec le comité éditorial.`,
   };
 
   return (
-    <div className="glass" style={{ padding: '1.3rem', display: 'grid', gap: '0.7rem' }} id="collaboration">
+    <div className="glass panel panel-muted" id="collaboration">
       <div className="section-title">
         <span />
         <p style={{ margin: 0 }}>Proposer une modification</p>
       </div>
-      <p style={{ margin: 0, lineHeight: 1.5 }}>
+      <p className="body-text">
         Rédigez vos suggestions de mise à jour (terminologie, consignes, scores…) avant de les publier. Nous conservons
         le fil de discussion et les validations afin de documenter chaque décision clinique en toute transparence.
       </p>
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
+      <form onSubmit={handleSubmit} className="stack" style={{ gap: '0.75rem' }}>
         <label style={{ display: 'grid', gap: '0.3rem' }}>
           <span>Outil concerné</span>
           <input
@@ -106,7 +106,7 @@ Elle est prête à être partagée avec le comité éditorial.`,
         </button>
       </form>
       {message && (
-        <div className="glass" style={{ padding: '0.9rem', border: '1px solid rgba(56,189,248,0.35)' }}>
+        <div className="glass panel" style={{ padding: '0.9rem', border: '1px solid rgba(56,189,248,0.35)' }}>
           {message}
         </div>
       )}

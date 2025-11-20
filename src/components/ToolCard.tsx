@@ -14,15 +14,7 @@ const statusClass: Record<Tool['status'], string> = {
 
 const ToolCard: React.FC<Props> = ({ tool, onSuggest }) => {
   return (
-    <article
-      className="glass"
-      style={{
-        padding: '1.25rem',
-        display: 'grid',
-        gap: '0.75rem',
-        background: 'linear-gradient(180deg, #ffffff 0%, #f7fbff 100%)',
-      }}
-    >
+    <article className="glass panel panel-muted">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.6rem' }}>
         <div>
           <p style={{ margin: 0, color: '#0f172a', fontWeight: 800, fontSize: '1.1rem' }}>{tool.name}</p>
@@ -31,7 +23,7 @@ const ToolCard: React.FC<Props> = ({ tool, onSuggest }) => {
         <span className={statusClass[tool.status]}>{tool.status}</span>
       </div>
       <p style={{ margin: 0, lineHeight: 1.6, color: '#0f172a' }}>{tool.description}</p>
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div className="tag-row">
         <span className="tag">{tool.population}</span>
         {tool.tags.map((tag) => (
           <span key={tag} className="tag">
@@ -39,7 +31,7 @@ const ToolCard: React.FC<Props> = ({ tool, onSuggest }) => {
           </span>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+      <div className="tool-actions">
         <button className="primary-btn" onClick={() => onSuggest(tool)}>
           Proposer une modification
         </button>
