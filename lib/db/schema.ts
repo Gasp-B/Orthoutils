@@ -20,6 +20,16 @@ export const toolsCatalog = pgTable('tools_catalog', {
 
 export type ToolRecord = typeof toolsCatalog.$inferSelect;
 
+export const tools = pgTable('tools', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  category: text('category').notNull(),
+  type: text('type').notNull(),
+  tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+  source: text('source').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const sections = pgTable('sections', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),

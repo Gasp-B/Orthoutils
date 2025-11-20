@@ -11,6 +11,10 @@ const statusClass: Record<ToolStatus, string> = {
 };
 
 function ToolCard({ tool }: Props) {
+  const hasDescription = Boolean(tool.description);
+  const hasType = Boolean(tool.type);
+  const hasSource = Boolean(tool.source);
+
   return (
     <article className="glass panel panel-muted">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.6rem' }}>
@@ -20,9 +24,27 @@ function ToolCard({ tool }: Props) {
         </div>
         <span className={statusClass[tool.status]}>{tool.status}</span>
       </div>
-      <p style={{ margin: 0, lineHeight: 1.6, color: '#0f172a' }}>{tool.description}</p>
+      <p style={{ margin: 0, lineHeight: 1.6, color: '#0f172a' }}>
+        {hasDescription
+          ? tool.description
+          : hasType
+            ? `Type : ${tool.type}`
+            : "Cet outil n'a pas encore de description détaillée."}
+      </p>
       <div className="tag-row">
         <span className="tag">{tool.targetPopulation ?? 'Tous publics'}</span>
+        {hasType && <span className="tag">Type : {tool.type}</span>}
+        {hasSource && (
+          <a
+            href={tool.source ?? '#'}
+            className="tag"
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Consulter la source de ${tool.title}`}
+          >
+            Source
+          </a>
+        )}
         {tool.tags.map((tag) => (
           <span key={tag} className="tag">
             #{tag}

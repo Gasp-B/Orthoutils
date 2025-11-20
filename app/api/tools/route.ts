@@ -1,64 +1,110 @@
-import { NextResponse } from 'next/server';
-import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
-import { toolsCatalog } from '@/lib/db/schema';
-import { toolsResponseSchema } from '@/lib/validation/tools';
+import { NextResponse, type NextRequest } from 'next/server';
+import { getDb } from '@/lib/db/client';
+import { tools, toolsCatalog } from '@/lib/db/schema';
+import { createToolSchema, toolsResponseSchema, type ToolStatus } from '@/lib/validation/tools';
 
-type ToolRow = {
+type CatalogRow = {
   id: string;
   title: string;
   category: string;
-  color_label: string | null;
-  tags: string[] | null;
+  colorLabel: string | null;
+  tags: string[];
   description: string | null;
-  links: Array<{ label: string; url: string }> | null;
+  links: Array<{ label: string; url: string }>;
   notes: string | null;
-  target_population: string | null;
-  status: string;
-  created_at: string;
+  targetPopulation: string | null;
+  status: ToolStatus;
+  createdAt: Date | string;
+  type: string | null;
+  source: string | null;
+};
+
+type CommunityRow = {
+  id: string;
+  name: string;
+  category: string;
+  type: string;
+  tags: string[];
+  source: string;
+  createdAt: Date | string;
 };
 
 export async function GET() {
   try {
-    const supabase = createRouteHandlerSupabaseClient();
-
-    const { data, error } = await supabase
-      .from(toolsCatalog._.name)
-      .select(
-        [
-          'id',
-          'title',
-          'category',
-          'color_label',
-          'tags',
-          'description',
-          'links',
-          'notes',
-          'target_population',
-          'status',
-          'created_at',
-        ].join(','),
-      );
-
-    if (error) {
-      throw error;
-    }
-
-    const rows = ((data as unknown as ToolRow[] | null) ?? []);
+    const [catalogRows, communityRows] = await Promise.all([
+      getDb()
+        .select({
+          id: toolsCatalog.id,
+          title: toolsCatalog.title,
+          category: toolsCatalog.category,
+          colorLabel: toolsCatalog.colorLabel,
+          tags: toolsCatalog.tags,
+          description: toolsCatalog.description,
+          links: toolsCatalog.links,
+          notes: toolsCatalog.notes,
+          targetPopulation: toolsCatalog.targetPopulation,
+          status: toolsCatalog.status,
+          createdAt: toolsCatalog.createdAt,
+        })
+        .from(toolsCatalog),
+      getDb()
+        .select({
+          id: tools.id,
+          name: tools.name,
+          category: tools.category,
+          type: tools.type,
+          tags: tools.tags,
+          source: tools.source,
+          createdAt: tools.createdAt,
+        })
+        .from(tools),
+    ]);
 
     const payload = toolsResponseSchema.parse({
-      tools: rows.map((tool) => ({
-        id: tool.id,
-        title: tool.title,
-        category: tool.category,
-        colorLabel: tool.color_label ?? null,
-        tags: tool.tags ?? [],
-        description: tool.description ?? null,
-        links: tool.links ?? [],
-        notes: tool.notes ?? null,
-        targetPopulation: tool.target_population ?? null,
-        status: tool.status,
-        createdAt: tool.created_at,
-      })),
+      tools: [...catalogRows, ...communityRows]
+        .map((tool) => {
+          const isCommunity = 'name' in tool;
+
+          const createdAt =
+            tool.createdAt instanceof Date ? tool.createdAt.toISOString() : tool.createdAt;
+
+          if (isCommunity) {
+            const community = tool as CommunityRow;
+            return {
+              id: community.id,
+              title: community.name,
+              category: community.category,
+              colorLabel: null,
+              tags: community.tags ?? [],
+              description: null,
+              links: [],
+              notes: null,
+              targetPopulation: 'Tous publics',
+              status: 'Communauté' as const,
+              createdAt,
+              type: community.type,
+              source: community.source,
+            } satisfies CatalogRow & { type: string; source: string };
+          }
+
+          const catalog = tool as CatalogRow;
+          return {
+            id: catalog.id,
+            title: catalog.title,
+            category: catalog.category,
+            colorLabel: catalog.colorLabel ?? null,
+            tags: catalog.tags ?? [],
+            description: catalog.description ?? null,
+            links: catalog.links ?? [],
+            notes: catalog.notes ?? null,
+            targetPopulation: catalog.targetPopulation ?? 'Tous publics',
+            status: catalog.status,
+            createdAt,
+            type: null,
+            source: catalog.links?.[0]?.url ?? null,
+          } satisfies CatalogRow;
+        })
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     });
 
     return NextResponse.json(payload, {
@@ -71,5 +117,56 @@ export async function GET() {
     console.error('Failed to fetch tools from Supabase', error);
     const message = error instanceof Error ? error.message : 'Impossible de récupérer les outils';
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const json = await request.json();
+    const payload = createToolSchema.parse(json);
+
+    const [inserted] = await getDb()
+      .insert(tools)
+      .values({
+        name: payload.name,
+        category: payload.category,
+        type: payload.type,
+        tags: payload.tags,
+        source: payload.source,
+      })
+      .returning({
+        id: tools.id,
+        name: tools.name,
+        category: tools.category,
+        type: tools.type,
+        tags: tools.tags,
+        source: tools.source,
+        createdAt: tools.createdAt,
+      });
+
+    const responseBody = toolsResponseSchema.shape.tools.element.parse({
+      id: inserted.id,
+      title: inserted.name,
+      category: inserted.category,
+      colorLabel: null,
+      tags: inserted.tags ?? [],
+      description: null,
+      links: [],
+      notes: null,
+      targetPopulation: 'Tous publics',
+      status: 'Communauté' as const,
+      createdAt:
+        inserted.createdAt instanceof Date
+          ? inserted.createdAt.toISOString()
+          : inserted.createdAt ?? new Date().toISOString(),
+      type: inserted.type,
+      source: inserted.source,
+    });
+
+    return NextResponse.json({ tool: responseBody }, { status: 201 });
+  } catch (error) {
+    console.error('Failed to create tool', error);
+    const message = error instanceof Error ? error.message : 'Impossible de créer l\'outil';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

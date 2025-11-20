@@ -59,3 +59,16 @@ CREATE TABLE tools_catalog (
 );
 
 ALTER TABLE tools_catalog ENABLE ROW LEVEL SECURITY;
+
+-- Community-submitted tools.
+CREATE TABLE tools (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  category text NOT NULL,
+  type text NOT NULL,
+  tags text[] NOT NULL DEFAULT '{}',
+  source text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+
+ALTER TABLE tools ENABLE ROW LEVEL SECURITY;

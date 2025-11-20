@@ -16,6 +16,9 @@ function Header() {
           <a href="#collaboration" className="top-banner__link">
             Collaboration
           </a>
+          <a href="/tools/new" className="top-banner__link">
+            Ajouter un outil
+          </a>
         </nav>
       </div>
     </header>
