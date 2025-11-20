@@ -9,7 +9,7 @@ const Header: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0.9rem 1.2rem',
+          padding: '1.1rem 1.4rem',
           borderRadius: '14px',
         }}
       >
@@ -19,7 +19,7 @@ const Header: React.FC = () => {
               width: 42,
               height: 42,
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)',
+              background: 'linear-gradient(135deg, #7dd3fc, #0ea5e9)',
               display: 'grid',
               placeItems: 'center',
               color: '#0b1223',
@@ -30,13 +30,13 @@ const Header: React.FC = () => {
             OT
           </div>
           <div>
-            <p style={{ margin: 0, color: '#e2e8f0', fontWeight: 800 }}>Othoutils</p>
-            <small style={{ color: 'rgba(255,255,255,0.65)' }}>
-              Référentiel collaboratif d'outils d'orthophonie
+            <p style={{ margin: 0, color: '#0f172a', fontWeight: 800 }}>Othoutils</p>
+            <small style={{ color: '#334155' }}>
+              Référentiel clinique, co-construit par les équipes de soins
             </small>
           </div>
         </div>
-        <nav style={{ display: 'flex', gap: '0.9rem', alignItems: 'center', color: '#e2e8f0' }}>
+        <nav style={{ display: 'flex', gap: '0.9rem', alignItems: 'center', color: '#0f172a' }}>
           <a href="#catalogue" className="secondary-btn" style={{ padding: '0.55rem 0.9rem' }}>
             Catalogue
           </a>
