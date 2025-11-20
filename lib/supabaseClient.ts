@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY;
 
-type GenericSupabaseClient = SupabaseClient<any>;
+type GenericSupabaseClient = SupabaseClient<Record<string, unknown>>;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
@@ -51,7 +51,7 @@ export function createRouteHandlerSupabaseClient(): GenericSupabaseClient {
     return undefined;
   };
 
-  const client = createServerClient<any, 'public'>(
+  const client = createServerClient<Record<string, unknown>, 'public'>(
     assertValue(supabaseUrl, 'NEXT_PUBLIC_SUPABASE_URL est requis'),
     assertValue(supabaseAnonKey, 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY est requis'),
     {
