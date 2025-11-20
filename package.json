@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "migrate:apply": "sh -c 'if [ -z \"$SUPABASE_DB_URL\" ]; then echo "SUPABASE_DB_URL manquant" >&2; exit 1; fi; supabase migration up --db-url \"$SUPABASE_DB_URL\" --include-all'",
+    "migrate:rollback": "sh -c 'if [ -z \"$SUPABASE_DB_URL\" ]; then echo "SUPABASE_DB_URL manquant" >&2; exit 1; fi; supabase migration down 1 --db-url \"$SUPABASE_DB_URL\" --include-all'"
   },
   "dependencies": {
     "@supabase/ssr": "0.7.0",
@@ -22,6 +24,7 @@
     "@types/node": "24.10.1",
     "@types/react": "19.2.6",
     "@types/react-dom": "19.2.3",
+    "supabase": "^2.58.5",
     "@typescript-eslint/eslint-plugin": "^8.47.0",
     "@typescript-eslint/parser": "^8.47.0",
     "eslint": "9.39.1",

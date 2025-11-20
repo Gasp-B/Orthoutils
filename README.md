@@ -10,6 +10,8 @@ npm install
 npm run dev
 ```
 
+Pour que les migrations Supabase soient appliquées automatiquement lors des builds Vercel, ajoutez `SUPABASE_DB_URL` dans les variables d'environnement du projet. La commande de build exécute `npm run migrate:apply` avant `next build`. En cas de besoin, `npm run migrate:rollback` permet d'annuler la dernière migration appliquée.
+
 Variables d'environnement à ajouter dans `.env.local` pour activer Supabase (clé publishable côté client et clé secrète côté serveur) :
 
 ```
