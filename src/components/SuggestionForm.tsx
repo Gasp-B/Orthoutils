@@ -43,8 +43,8 @@ Elle est prête à être partagée avec le comité éditorial.`,
         <p style={{ margin: 0 }}>Proposer une modification</p>
       </div>
       <p style={{ margin: 0, lineHeight: 1.5 }}>
-        Rédigez vos suggestions de mise à jour (terminologie, consignes, scores…) avant de les publier. Le flux garde
-        la trace des discussions, votes et validations pour chaque outil.
+        Rédigez vos suggestions de mise à jour (terminologie, consignes, scores…) avant de les publier. Nous conservons
+        le fil de discussion et les validations afin de documenter chaque décision clinique en toute transparence.
       </p>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
         <label style={{ display: 'grid', gap: '0.3rem' }}>
