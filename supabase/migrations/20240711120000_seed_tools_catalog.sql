@@ -13,6 +13,33 @@ CREATE TABLE IF NOT EXISTS tools_catalog (
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
+ALTER TABLE tools_catalog ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'tools_catalog_public_read'
+  ) THEN
+    CREATE POLICY tools_catalog_public_read
+    ON tools_catalog FOR SELECT
+    USING (true);
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE policyname = 'tools_catalog_service_manage'
+  ) THEN
+    CREATE POLICY tools_catalog_service_manage
+    ON tools_catalog FOR ALL
+    USING (auth.role() = 'service_role')
+    WITH CHECK (auth.role() = 'service_role');
+  END IF;
+END $$;
+
 WITH payload AS (
   SELECT $tools_catalog_payload$[
   {"title":"Inventaire Alimentaire OAV","category":"OMF","color":"Rouge","tags":["oralité alimentaire","inventaire","adulte"],"description":"Inventaire alimentaire proposé par E. Levavasseur pour l’évaluation de l’oralité alimentaire.","links":[{"label":"Inventaire Alimentaire (E. Levavasseur)","url":"https://oralite-alimentaire.fr/wp-content/uploads/2017/05/Inventaire-Alimentaire-OAV.pdf"}],"notes":""},
