@@ -1,30 +1,65 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerSupabaseClient, createDrizzleClient } from '@/lib/supabaseClient';
+import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import { toolsCatalog } from '@/lib/db/schema';
 import { toolsResponseSchema } from '@/lib/validation/tools';
+
+type ToolRow = {
+  id: string;
+  title: string;
+  category: string;
+  color_label: string | null;
+  tags: string[] | null;
+  description: string | null;
+  links: Array<{ label: string; url: string }> | null;
+  notes: string | null;
+  target_population: string | null;
+  status: string;
+  created_at: string;
+};
 
 export async function GET() {
   try {
     const supabase = createRouteHandlerSupabaseClient();
-    const db = createDrizzleClient(supabase);
 
-    const tools = await db
-      .select({
-        id: toolsCatalog.id,
-        title: toolsCatalog.title,
-        category: toolsCatalog.category,
-        colorLabel: toolsCatalog.colorLabel,
-        tags: toolsCatalog.tags,
-        description: toolsCatalog.description,
-        links: toolsCatalog.links,
-        notes: toolsCatalog.notes,
-        targetPopulation: toolsCatalog.targetPopulation,
-        status: toolsCatalog.status,
-        createdAt: toolsCatalog.createdAt,
-      })
-      .from(toolsCatalog);
+    const { data, error } = await supabase
+      .from(toolsCatalog._.name)
+      .select(
+        [
+          'id',
+          'title',
+          'category',
+          'color_label',
+          'tags',
+          'description',
+          'links',
+          'notes',
+          'target_population',
+          'status',
+          'created_at',
+        ].join(','),
+      );
 
-    const payload = toolsResponseSchema.parse({ tools });
+    if (error) {
+      throw error;
+    }
+
+    const rows = ((data as unknown as ToolRow[] | null) ?? []);
+
+    const payload = toolsResponseSchema.parse({
+      tools: rows.map((tool) => ({
+        id: tool.id,
+        title: tool.title,
+        category: tool.category,
+        colorLabel: tool.color_label ?? null,
+        tags: tool.tags ?? [],
+        description: tool.description ?? null,
+        links: tool.links ?? [],
+        notes: tool.notes ?? null,
+        targetPopulation: tool.target_population ?? null,
+        status: tool.status,
+        createdAt: tool.created_at,
+      })),
+    });
 
     return NextResponse.json(payload, {
       status: 200,

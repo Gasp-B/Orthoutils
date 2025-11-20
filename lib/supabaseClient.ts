@@ -1,13 +1,12 @@
 import { createBrowserClient, createServerClient, type CookieOptions } from '@supabase/ssr';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { drizzle } from 'drizzle-orm/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY;
 
-type GenericSupabaseClient = SupabaseClient<unknown, 'public', unknown>;
+type GenericSupabaseClient = SupabaseClient<any>;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
@@ -42,7 +41,8 @@ export function createRouteHandlerSupabaseClient(): GenericSupabaseClient {
   const cookieStore = cookies();
 
   const getCookieValue = (name: string): string | undefined => {
-    const cookie = cookieStore.get(name);
+    const store = cookieStore as unknown as Awaited<ReturnType<typeof cookies>>;
+    const cookie = store.get(name);
 
     if (cookie && typeof cookie === 'object' && typeof cookie.value === 'string') {
       return cookie.value;
@@ -51,7 +51,7 @@ export function createRouteHandlerSupabaseClient(): GenericSupabaseClient {
     return undefined;
   };
 
-  const client = createServerClient<unknown, 'public', unknown>(
+  const client = createServerClient<any, 'public'>(
     assertValue(supabaseUrl, 'NEXT_PUBLIC_SUPABASE_URL est requis'),
     assertValue(supabaseAnonKey, 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY est requis'),
     {
@@ -66,10 +66,3 @@ export function createRouteHandlerSupabaseClient(): GenericSupabaseClient {
   return client as GenericSupabaseClient;
 }
 
-export function createDrizzleClient(client: GenericSupabaseClient) {
-  return drizzle(client);
-}
-
-export function getAdminDrizzle() {
-  return createDrizzleClient(assertValue(supabaseAdmin, 'SUPABASE_SECRET_KEY est requis pour les opérations serveur.'));
-}
