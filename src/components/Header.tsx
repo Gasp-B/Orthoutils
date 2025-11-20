@@ -43,8 +43,8 @@ const Header: React.FC = () => {
           <a href="#collaboration" className="secondary-btn" style={{ padding: '0.55rem 0.9rem' }}>
             Collaboration
           </a>
-          <a href="#supabase" className="primary-btn" style={{ padding: '0.75rem 1rem' }}>
-            Activer la BDD
+          <a href="#collaboration" className="primary-btn" style={{ padding: '0.75rem 1rem' }}>
+            Soumettre une idée
           </a>
         </nav>
       </div>

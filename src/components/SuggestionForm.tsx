@@ -30,8 +30,8 @@ const SuggestionForm: React.FC<Props> = ({ selectedTool }) => {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     setMessage(
-      `Suggestion enregistrée pour ${selectedTool?.name ?? 'un outil'} : ${form.title}. 
-Vous pourrez connecter Supabase pour la stocker en base puis notifier les reviewers.`,
+      `Suggestion enregistrée pour ${selectedTool?.name ?? 'un outil'} : ${form.title}.
+Elle est prête à être partagée avec le comité éditorial.`,
     );
     setForm({ toolId: selectedTool?.id ?? '', title: '', description: '', impact: 'Contenu', author: '' });
   };
@@ -43,8 +43,8 @@ Vous pourrez connecter Supabase pour la stocker en base puis notifier les review
         <p style={{ margin: 0 }}>Proposer une modification</p>
       </div>
       <p style={{ margin: 0, lineHeight: 1.5 }}>
-        Rédigez vos suggestions de mise à jour (terminologie, consignes, scores…) avant de les publier. Le flux peut
-        être branché sur Supabase pour tracer les discussions, votes et validations.
+        Rédigez vos suggestions de mise à jour (terminologie, consignes, scores…) avant de les publier. Le flux garde
+        la trace des discussions, votes et validations pour chaque outil.
       </p>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
         <label style={{ display: 'grid', gap: '0.3rem' }}>

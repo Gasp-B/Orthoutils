@@ -30,8 +30,8 @@ const Hero: React.FC = () => {
           </h1>
           <p style={{ margin: 0, maxWidth: 640, lineHeight: 1.6 }}>
             Othoutils centralise les questionnaires, batteries et suivis patients avec un mode collaboratif.
-            Chaque membre peut proposer des évolutions, annoter les fiches et synchroniser les données vers
-            Supabase pour générer des tableaux de bord en temps réel.
+            Chaque membre peut proposer des évolutions, annoter les fiches et alimenter vos tableaux de bord en
+            temps réel.
           </p>
           <div className="hero-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <a href="#catalogue" className="primary-btn">
@@ -49,7 +49,7 @@ const Hero: React.FC = () => {
             gap: '1rem',
           }}
         >
-          {[{ title: 'Synchronisation', desc: 'Glissez vos fiches vers Supabase en un clic et conservez un historique.' },
+          {[{ title: 'Synchronisation', desc: 'Glissez vos fiches vers vos outils préférés en un clic et conservez un historique.' },
           { title: 'Gouvernance', desc: 'Workflow de revue : brouillon, validation par pairs et diffusion publique.' },
           { title: 'Accessibilité', desc: 'Interface responsive, contrastée et prête pour les cabinets comme le terrain.' }].map(
             (item) => (
