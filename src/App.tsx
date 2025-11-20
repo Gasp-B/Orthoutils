@@ -1,17 +1,93 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import ToolCard from './components/ToolCard';
-import { tools } from './data/tools';
+import type { Tool } from './data/tools';
+import { tools as fallbackTools } from './data/tools';
+import { supabase } from './lib/supabaseClient';
+
+type ToolRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  population: string | null;
+  tags: string[] | null;
+  status: string | null;
+};
+
+const parseStatus = (status: string | null): Tool['status'] => {
+  if (status === 'Validé' || status === 'En cours de revue') {
+    return status;
+  }
+
+  return 'Communauté';
+};
+
+const parseCategory = (category: string | null): Tool['category'] => {
+  if (category === 'Questionnaire' || category === 'Test standardisé') {
+    return category;
+  }
+
+  return 'Suivi patient';
+};
+
+const normalizeTool = (tool: ToolRow): Tool => ({
+  id: tool.id,
+  name: tool.name,
+  description: tool.description ?? '',
+  category: parseCategory(tool.category),
+  population: tool.population ?? 'Tous publics',
+  tags: tool.tags ?? [],
+  status: parseStatus(tool.status),
+});
 
 const App: React.FC = () => {
+  const [catalogue, setCatalogue] = useState<Tool[]>(fallbackTools);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!supabase) {
+      return undefined;
+    }
+
+    const supabaseClient = supabase;
+    let isActive = true;
+
+    const fetchTools = async () => {
+      setIsRefreshing(true);
+      const { data, error } = await supabaseClient
+        .from('tools')
+        .select('id, name, description, category, population, tags, status')
+        .order('name');
+
+      if (!isActive) return;
+
+      if (error) {
+        setSyncError("Impossible de synchroniser les outils avec Supabase : " + error.message);
+      } else if (data) {
+        setCatalogue(data.map(normalizeTool));
+        setSyncError(null);
+      }
+
+      setIsRefreshing(false);
+    };
+
+    void fetchTools();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const stats = useMemo(
     () => [
-      { label: 'Outils référencés', value: tools.length, detail: 'Questionnaires, batteries, suivis patients' },
+      { label: 'Outils référencés', value: catalogue.length, detail: 'Questionnaires, batteries, suivis patients' },
       { label: 'Contributeurs', value: 38, detail: 'Orthophonistes référents, chercheurs, UX designers' },
       { label: 'Propositions en cours', value: 12, detail: 'Relectures éditoriales en cours de validation' },
     ],
-    [],
+    [catalogue.length],
   );
 
   return (
@@ -24,8 +100,10 @@ const App: React.FC = () => {
           <span />
           <p style={{ margin: 0 }}>Référentiels prêts à consulter</p>
         </div>
+        {isRefreshing && <p className="text-subtle">Mise à jour en cours depuis Supabase...</p>}
+        {syncError && <p className="text-subtle" role="status">{syncError}</p>}
         <div className="card-grid">
-          {tools.map((tool) => (
+          {catalogue.map((tool) => (
             <ToolCard key={tool.id} tool={tool} />
           ))}
         </div>
