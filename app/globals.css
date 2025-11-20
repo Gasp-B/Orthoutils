@@ -121,6 +121,11 @@ button {
   padding-bottom: 2rem;
 }
 
+a,
+button {
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+
 .glass {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.82));
   backdrop-filter: blur(12px);
@@ -312,7 +317,6 @@ button {
   background: linear-gradient(120deg, var(--accent), var(--accent-strong));
   color: #ffffff;
   cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
   box-shadow: 0 12px 30px rgba(14, 165, 233, 0.3);
 }
 

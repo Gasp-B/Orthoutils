@@ -1,6 +1,4 @@
-import React from 'react';
-
-const Header: React.FC = () => {
+function Header() {
   return (
     <header className="container header-shell">
       <div className="glass header-bar">
@@ -22,6 +20,6 @@ const Header: React.FC = () => {
       </div>
     </header>
   );
-};
+}
 
 export default Header;

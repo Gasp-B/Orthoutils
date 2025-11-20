@@ -1,4 +1,3 @@
-import React from 'react';
 import type { Tool } from '../data/tools';
 
 type Props = {
@@ -11,7 +10,7 @@ const statusClass: Record<Tool['status'], string> = {
   Communauté: 'badge community',
 };
 
-const ToolCard: React.FC<Props> = ({ tool }) => {
+function ToolCard({ tool }: Props) {
   return (
     <article className="glass panel panel-muted">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.6rem' }}>
@@ -35,6 +34,6 @@ const ToolCard: React.FC<Props> = ({ tool }) => {
       </div>
     </article>
   );
-};
+}
 
 export default ToolCard;
