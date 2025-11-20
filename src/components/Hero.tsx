@@ -16,15 +16,18 @@ const Hero: React.FC = () => {
         <div className="stack">
           <div className="section-title">
             <span />
-            <p style={{ margin: 0, opacity: 0.8 }}>Référentiels conçus et validés par des orthophonistes</p>
+            <p style={{ margin: 0, opacity: 0.8 }}>
+              Référentiels conçus et validés par des orthophonistes, prêts pour Supabase
+            </p>
           </div>
           <h1 className="title-lg">
-            Une bibliothèque clinique pour consulter des outils éprouvés et suivre leur validation
+            Une bibliothèque clinique pour consulter des outils éprouvés et préparer la plateforme Next.js 14
           </h1>
           <p className="hero-lead section-note">
             Pensé pour les cabinets, centres hospitaliers et services de rééducation : Othoutils met en avant les
             questionnaires, batteries et fiches de suivi déjà relus par des professionnels de santé. Les équipes peuvent
-            ensuite proposer, en toute discrétion, des ajustements documentés et relus avant diffusion.
+            ensuite préparer la connexion Supabase (Postgres, Auth, Storage) et les route handlers typés pour suivre les
+            validations.
           </p>
           <div className="hero-actions">
             <a href="#catalogue" className="primary-btn">

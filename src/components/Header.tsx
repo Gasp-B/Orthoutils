@@ -18,6 +18,15 @@ const Header: React.FC = () => {
           <a href="#collaboration" className="top-banner__link">
             Collaboration
           </a>
+          <a href="#architecture" className="top-banner__link">
+            Architecture
+          </a>
+          <a href="#securite" className="top-banner__link">
+            Sécurité
+          </a>
+          <a href="#roadmap" className="top-banner__link">
+            Roadmap
+          </a>
         </nav>
       </div>
     </header>
