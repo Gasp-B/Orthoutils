@@ -1,18 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import ToolCard from './components/ToolCard';
-import SuggestionForm from './components/SuggestionForm';
-import { tools, type Tool } from './data/tools';
+import { tools } from './data/tools';
 
 const App: React.FC = () => {
-  const [selectedTool, setSelectedTool] = useState<Tool | undefined>(tools[0]);
-
   const stats = useMemo(
     () => [
       { label: 'Outils référencés', value: tools.length, detail: 'Questionnaires, batteries, suivis patients' },
-      { label: 'Contributeurs', value: 38, detail: 'Orthophonistes, chercheurs, UX designers' },
-      { label: 'Propositions en cours', value: 12, detail: 'En relecture et validation par pairs' },
+      { label: 'Contributeurs', value: 38, detail: 'Orthophonistes référents, chercheurs, UX designers' },
+      { label: 'Propositions en cours', value: 12, detail: 'Relectures éditoriales en cours de validation' },
     ],
     [],
   );
@@ -25,11 +22,11 @@ const App: React.FC = () => {
       <section id="catalogue" className="container section-shell">
         <div className="section-title">
           <span />
-          <p style={{ margin: 0 }}>Catalogue prêt à éditer</p>
+          <p style={{ margin: 0 }}>Référentiels prêts à consulter</p>
         </div>
         <div className="card-grid">
           {tools.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} onSuggest={setSelectedTool} />
+            <ToolCard key={tool.id} tool={tool} />
           ))}
         </div>
       </section>
@@ -56,7 +53,6 @@ const App: React.FC = () => {
               ))}
             </div>
           </div>
-          <SuggestionForm selectedTool={selectedTool} />
         </div>
       </section>
 

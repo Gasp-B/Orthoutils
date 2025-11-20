@@ -207,6 +207,52 @@ button {
   background: rgba(255, 255, 255, 0.88);
 }
 
+.preview-card {
+  gap: 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 15px 35px rgba(15, 23, 42, 0.12);
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.preview-title {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.preview-label {
+  margin: 0;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+}
+
+.preview-value {
+  margin: 0.15rem 0 0;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.preview-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  padding: 0.3rem 0 0.15rem;
+}
+
+.preview-foot {
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  padding-top: 0.35rem;
+}
+
 .list {
   margin: 0;
   padding-left: 1.2rem;

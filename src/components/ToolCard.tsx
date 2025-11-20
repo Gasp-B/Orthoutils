@@ -3,7 +3,6 @@ import type { Tool } from '../data/tools';
 
 type Props = {
   tool: Tool;
-  onSuggest: (tool: Tool) => void;
 };
 
 const statusClass: Record<Tool['status'], string> = {
@@ -12,7 +11,7 @@ const statusClass: Record<Tool['status'], string> = {
   Communauté: 'badge community',
 };
 
-const ToolCard: React.FC<Props> = ({ tool, onSuggest }) => {
+const ToolCard: React.FC<Props> = ({ tool }) => {
   return (
     <article className="glass panel panel-muted">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.6rem' }}>
@@ -32,10 +31,7 @@ const ToolCard: React.FC<Props> = ({ tool, onSuggest }) => {
         ))}
       </div>
       <div className="tool-actions">
-        <button className="primary-btn" onClick={() => onSuggest(tool)}>
-          Proposer une modification
-        </button>
-        <button className="secondary-btn">Voir la fiche détaillée</button>
+        <button className="primary-btn">Voir la fiche détaillée</button>
       </div>
     </article>
   );

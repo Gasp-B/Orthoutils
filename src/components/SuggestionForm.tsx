@@ -40,11 +40,11 @@ Elle est prête à être partagée avec le comité éditorial.`,
     <div className="glass panel panel-muted" id="collaboration">
       <div className="section-title">
         <span />
-        <p style={{ margin: 0 }}>Proposer une modification</p>
+        <p style={{ margin: 0 }}>Suggérer une amélioration</p>
       </div>
       <p className="body-text">
-        Rédigez vos suggestions de mise à jour (terminologie, consignes, scores…) avant de les publier. Nous conservons
-        le fil de discussion et les validations afin de documenter chaque décision clinique en toute transparence.
+        Les référentiels sont publiés après validation par des orthophonistes. Vous pouvez néanmoins partager discrètement
+        vos propositions (terminologie, consignes, scores…). Chaque proposition est relue et documentée avant diffusion.
       </p>
       <form onSubmit={handleSubmit} className="stack" style={{ gap: '0.75rem' }}>
         <label style={{ display: 'grid', gap: '0.3rem' }}>
@@ -101,8 +101,8 @@ Elle est prête à être partagée avec le comité éditorial.`,
             />
           </label>
         </div>
-        <button className="primary-btn" type="submit" style={{ justifySelf: 'flex-start' }}>
-          Soumettre la proposition
+        <button className="secondary-btn" type="submit" style={{ justifySelf: 'flex-start' }}>
+          Partager ma suggestion
         </button>
       </form>
       {message && (
