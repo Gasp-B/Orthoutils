@@ -1,5 +1,6 @@
 import Header from '../components/Header';
 import Hero from '../components/Hero';
+import ReferentialsSection from '../components/ReferentialsSection';
 import ToolsSection from '../components/ToolsSection';
 
 function HomePage() {
@@ -7,6 +8,7 @@ function HomePage() {
     <>
       <Header />
       <Hero />
+      <ReferentialsSection />
       <ToolsSection />
 
       <footer className="container footer">
