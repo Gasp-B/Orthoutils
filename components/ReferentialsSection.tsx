@@ -7,7 +7,8 @@ async function fetchReferentials() {
   const response = await fetch('/api/referentials', { cache: 'no-store' });
 
   if (!response.ok) {
-    throw new Error("Erreur lors du chargement des référentiels");
+    const { error } = (await response.json().catch(() => ({ error: null }))) as { error?: string | null };
+    throw new Error(error ?? "Erreur lors du chargement des référentiels");
   }
 
   const data = (await response.json()) as unknown;
@@ -19,6 +20,7 @@ function ReferentialsSection() {
     queryKey: ['referentials'],
     queryFn: fetchReferentials,
     staleTime: 1000 * 60,
+    retry: false,
   });
 
   return (
@@ -84,6 +86,12 @@ function ReferentialsSection() {
           </article>
         ))}
       </div>
+
+      {!isLoading && !isError && referentials.length === 0 && (
+        <p className="text-subtle" style={{ marginTop: '0.5rem' }}>
+          Aucun référentiel n'est disponible pour le moment. Vérifiez que les données sont bien présentes dans Supabase.
+        </p>
+      )}
     </section>
   );
 }

@@ -9,7 +9,8 @@ async function fetchTools() {
   const response = await fetch('/api/tools', { cache: 'no-store' });
 
   if (!response.ok) {
-    throw new Error('Erreur lors du chargement des outils');
+    const { error } = (await response.json().catch(() => ({ error: null }))) as { error?: string | null };
+    throw new Error(error ?? 'Erreur lors du chargement des outils');
   }
 
   const data = (await response.json()) as unknown;
@@ -21,6 +22,7 @@ function ToolsSection() {
     queryKey: ['tools'],
     queryFn: fetchTools,
     staleTime: 1000 * 60,
+    retry: false,
   });
 
   const computedStats = useMemo(
@@ -60,6 +62,12 @@ function ToolsSection() {
             <ToolCard key={tool.id} tool={tool} />
           ))}
         </div>
+
+        {!isLoading && !isError && tools.length === 0 && (
+          <p className="text-subtle" style={{ marginTop: '0.5rem' }}>
+            Aucun outil n'est disponible pour l'instant. Ajoutez des entrées dans Supabase pour alimenter le catalogue.
+          </p>
+        )}
       </section>
 
       <section id="collaboration" className="container section-shell" style={{ marginTop: '1.6rem' }}>
