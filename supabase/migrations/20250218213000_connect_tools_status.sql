@@ -30,7 +30,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE polname = 'tools_catalog_public_read'
+    WHERE policyname = 'tools_catalog_public_read'
   ) THEN
     CREATE POLICY tools_catalog_public_read
     ON tools_catalog FOR SELECT
@@ -42,7 +42,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE polname = 'tools_catalog_service_manage'
+    WHERE policyname = 'tools_catalog_service_manage'
   ) THEN
     CREATE POLICY tools_catalog_service_manage
     ON tools_catalog FOR ALL
