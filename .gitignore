@@ -1,8 +1,8 @@
 node_modules
 .DS_Store
 .env.local
+.next
+out
 dist
 npm-debug.log*
 *.tsbuildinfo
-vite.config.js
-vite.config.d.ts

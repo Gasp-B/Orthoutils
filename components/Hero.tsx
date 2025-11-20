@@ -1,6 +1,4 @@
-import React from 'react';
-
-const Hero: React.FC = () => {
+function Hero() {
   return (
     <section className="container hero-shell">
       <div className="glass hero-grid">
@@ -52,6 +50,6 @@ const Hero: React.FC = () => {
       </div>
     </section>
   );
-};
+}
 
 export default Hero;

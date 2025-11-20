@@ -1,21 +1,17 @@
-import React, { useMemo } from 'react';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import ToolCard from './components/ToolCard';
-import { tools } from './data/tools';
+import Header from '../components/Header';
+import Hero from '../components/Hero';
+import ToolCard from '../components/ToolCard';
+import { tools } from '../data/tools';
 
-const App: React.FC = () => {
-  const stats = useMemo(
-    () => [
-      { label: 'Outils référencés', value: tools.length, detail: 'Questionnaires, batteries, suivis patients' },
-      { label: 'Contributeurs', value: 38, detail: 'Orthophonistes référents, chercheurs, UX designers' },
-      { label: 'Propositions en cours', value: 12, detail: 'Relectures éditoriales en cours de validation' },
-    ],
-    [],
-  );
+const stats = [
+  { label: 'Outils référencés', value: tools.length, detail: 'Questionnaires, batteries, suivis patients' },
+  { label: 'Contributeurs', value: 38, detail: 'Orthophonistes référents, chercheurs, UX designers' },
+  { label: 'Propositions en cours', value: 12, detail: 'Relectures éditoriales en cours de validation' },
+];
 
+function HomePage() {
   return (
-    <div className="page">
+    <>
       <Header />
       <Hero />
 
@@ -59,8 +55,8 @@ const App: React.FC = () => {
       <footer className="container footer">
         Made with soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour vos collaborations.
       </footer>
-    </div>
+    </>
   );
-};
+}
 
-export default App;
+export default HomePage;
