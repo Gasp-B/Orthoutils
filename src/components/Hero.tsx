@@ -1,15 +1,6 @@
 import React from 'react';
 
 const Hero: React.FC = () => {
-  const preview = {
-    name: 'EVALO 2-6',
-    status: 'Validé',
-    version: 'v3.1',
-    lastReview: '05/2025',
-    population: 'Enfants 2 à 6 ans',
-    focus: 'Langage oral · compréhension · production',
-  } as const;
-
   return (
     <section className="container hero-shell">
       <div className="glass hero-grid">
@@ -36,37 +27,6 @@ const Hero: React.FC = () => {
           </div>
         </div>
         <div className="hero-support">
-          <div className="glass panel preview-card">
-            <div className="preview-header">
-              <div>
-                <p className="preview-label">Référentiel</p>
-                <p className="preview-title">{preview.name}</p>
-              </div>
-              <span className="badge validated">{preview.status}</span>
-            </div>
-            <div className="preview-meta">
-              <div>
-                <p className="preview-label">Version</p>
-                <p className="preview-value">{preview.version}</p>
-              </div>
-              <div>
-                <p className="preview-label">Relecture orthophoniste</p>
-                <p className="preview-value">{preview.lastReview}</p>
-              </div>
-              <div>
-                <p className="preview-label">Population</p>
-                <p className="preview-value">{preview.population}</p>
-              </div>
-            </div>
-            <div className="preview-foot">
-              <p className="preview-label">Focus clinique</p>
-              <p className="body-text" style={{ marginTop: '0.1rem' }}>{preview.focus}</p>
-              <p className="section-note" style={{ marginTop: '0.4rem' }}>
-                Fiche validée par des orthophonistes. Les propositions d’ajustements restent discrètes et arrivent après la
-                lecture des consignes et cotations.
-              </p>
-            </div>
-          </div>
           {[
             {
               title: 'Référentiels vérifiés',
