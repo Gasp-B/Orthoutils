@@ -15,10 +15,10 @@ const Header: React.FC = () => {
           <a href="#catalogue" className="secondary-btn" style={{ padding: '0.55rem 0.9rem' }}>
             Catalogue
           </a>
-          <a href="#collaboration" className="secondary-btn" style={{ padding: '0.55rem 0.9rem' }}>
+          <a href="#collaboration" className="top-banner__link">
             Collaboration
           </a>
-          <a href="#collaboration" className="primary-btn" style={{ padding: '0.75rem 1rem' }}>
+          <a href="#collaboration" className="primary-btn top-banner__cta">
             Soumettre une idée
           </a>
         </nav>
