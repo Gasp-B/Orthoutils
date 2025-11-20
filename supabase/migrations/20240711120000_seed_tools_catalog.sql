@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS tools_catalog (
 );
 
 WITH payload AS (
-  SELECT jsonb '[
+  SELECT $tools_catalog_payload$[
   {"title":"Inventaire Alimentaire OAV","category":"OMF","color":"Rouge","tags":["oralité alimentaire","inventaire","adulte"],"description":"Inventaire alimentaire proposé par E. Levavasseur pour l’évaluation de l’oralité alimentaire.","links":[{"label":"Inventaire Alimentaire (E. Levavasseur)","url":"https://oralite-alimentaire.fr/wp-content/uploads/2017/05/Inventaire-Alimentaire-OAV.pdf"}],"notes":""},
   {"title":"Mini-Zarit","category":"Accompagnement","color":"Bleu","tags":["aidants","fardeau","questionnaire"],"description":"Grille courte d’évaluation du fardeau de l’aidant.","links":[{"label":"Grille Mini-Zarit (PDF)","url":"https://haltemis.fr/wp-content/uploads/2018/10/Outil-2-Grille-mini-Zarit-.pdf"}],"notes":""},
   {"title":"HAD - Hospital Anxiety and Depression scale","category":"Accompagnement","color":"Bleu","tags":["anxiété","dépression","aidants","auto-questionnaire"],"description":"Questionnaire en 14 items permettant d’évaluer séparément l’anxiété et la dépression, avec deux scores A et D.","links":[{"label":"Questionnaire HAD","url":"https://iedm.asso.fr/le-questionnaire-had/#:~:text=Le%20questionnaire%20HAD%20permet%20de,de%20chaque%20score%20%3A%2021"}],"notes":""},
@@ -81,7 +81,7 @@ WITH payload AS (
   {"title":"Questionnaire post-frénectomie (Charlotte Yonge)","category":"Succion et allaitement","color":null,"tags":["freins buccaux","suivi","allaitement"],"description":"Questionnaire d’évaluation de l’évolution post-frénectomie.","links":[{"label":"Questionnaire post-frénectomie","url":"https://www.allaitementpourtous.com/uploads/8/1/5/5/81559904/questionnaire-poste_frenectomie_09-2021%C2%A9c.yonge.pdf"}],"notes":""},
   {"title":"MOOC Allaitement : l’affaire de tous","category":"Succion et allaitement","color":null,"tags":["formation","allaitement"],"description":"MOOC PNS sur l’allaitement, accessible en ligne.","links":[{"label":"MOOC Allaitement","url":"https://www.pns-mooc.com/fr/mooc/3/presentation"}],"notes":""},
   {"title":"Sites ressources allaitement","category":"Succion et allaitement","color":null,"tags":["ressources","allaitement"],"description":"Sites d’information sur l’allaitement (pour les parents et les professionnels).","links":[{"label":"Au sein en douceur","url":"https://www.auseinendouceur.com/"},{"label":"LLL France","url":"https://www.lllfrance.org/"},{"label":"Allaitement pour tous","url":"https://www.allaitementpourtous.com/"}],"notes":""}
-]' AS data
+  ]$tools_catalog_payload$::jsonb AS data
 )
 INSERT INTO tools_catalog (title, category, color_label, tags, description, links, notes)
 SELECT
