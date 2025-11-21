@@ -12,7 +12,7 @@ export function slugify(value: string): string {
 }
 
 type GenerateUniqueSlugParams<TTable extends AnyPgTable> = {
-  db: PostgresJsDatabase;
+  db: PostgresJsDatabase<Record<string, unknown>>;
   name: string;
   table: TTable;
   slugColumn: AnyPgColumn;
