@@ -64,8 +64,7 @@ export const sectionSubsections = pgTable(
 
 export const tags = pgTable('tags', {
   id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull(),
-  colorLabel: text('color_label'),
+  label: text('label').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -109,6 +108,7 @@ export type TestRecord = typeof tests.$inferSelect;
 export const domains = pgTable('domains', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
 });
 
 export const testDomains = pgTable(
@@ -123,5 +123,20 @@ export const testDomains = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.testId, table.domainId] }),
+  }),
+);
+
+export const testTags = pgTable(
+  'test_tags',
+  {
+    testId: uuid('test_id')
+      .notNull()
+      .references(() => tests.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.testId, table.tagId] }),
   }),
 );

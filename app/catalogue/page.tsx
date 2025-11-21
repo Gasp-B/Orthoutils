@@ -56,7 +56,7 @@ export default async function CataloguePage() {
                 planifier vos séances.
               </p>
             </div>
-            <Link className="ph-header__pill" href="/tools/new">
+            <Link className="ph-header__pill" href="/tests/manage">
               Ajouter un test
             </Link>
           </div>
@@ -117,6 +117,16 @@ export default async function CataloguePage() {
                   {test.domains.map((domain) => (
                     <span key={domain} className="pill-muted">
                       {domain}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {test.tags.length > 0 && (
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  {test.tags.map((tag) => (
+                    <span key={tag} className="badge">
+                      {tag}
                     </span>
                   ))}
                 </div>

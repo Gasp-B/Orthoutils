@@ -1,0 +1,572 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { z } from 'zod';
+import { testsResponseSchema, testSchema, taxonomyResponseSchema, type TestDto } from '@/lib/validation/tests';
+
+const formSchema = testSchema
+  .omit({ id: true, slug: true, createdAt: true, updatedAt: true })
+  .extend({
+    id: z.string().uuid().optional(),
+    shortDescription: z.string().nullable().optional(),
+    objective: z.string().nullable().optional(),
+    population: z.string().nullable().optional(),
+    materials: z.string().nullable().optional(),
+    publisher: z.string().nullable().optional(),
+    priceRange: z.string().nullable().optional(),
+    buyLink: z.string().url().nullable().optional(),
+    notes: z.string().nullable().optional(),
+    ageMinMonths: z.number().int().nullable().optional(),
+    ageMaxMonths: z.number().int().nullable().optional(),
+    durationMinutes: z.number().int().nullable().optional(),
+  });
+
+type FormValues = z.infer<typeof formSchema>;
+
+type ApiResponse = {
+  test?: TestDto;
+  tests?: TestDto[];
+  error?: string;
+};
+
+const defaultValues: FormValues = {
+  id: undefined,
+  name: '',
+  shortDescription: null,
+  objective: null,
+  ageMinMonths: null,
+  ageMaxMonths: null,
+  population: null,
+  durationMinutes: null,
+  materials: null,
+  isStandardized: false,
+  publisher: null,
+  priceRange: null,
+  buyLink: null,
+  notes: null,
+  domains: [],
+  tags: [],
+};
+
+async function fetchTests() {
+  const response = await fetch('/api/tests');
+
+  if (!response.ok) {
+    throw new Error('Impossible de récupérer les tests');
+  }
+
+  const json = (await response.json()) as ApiResponse;
+  const parsed = testsResponseSchema.parse({ tests: json.tests ?? [] });
+  return parsed.tests;
+}
+
+async function fetchTaxonomy() {
+  const response = await fetch('/api/tests/taxonomy');
+
+  if (!response.ok) {
+    throw new Error('Impossible de charger les domaines et tags');
+  }
+
+  const json = await response.json();
+  return taxonomyResponseSchema.parse(json);
+}
+
+async function createTest(payload: FormValues) {
+  const response = await fetch('/api/tests', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const json = (await response.json().catch(() => ({}))) as ApiResponse;
+    throw new Error(json.error ?? "Impossible de créer le test");
+  }
+
+  return (await response.json()) as ApiResponse;
+}
+
+async function updateTest(payload: FormValues) {
+  const response = await fetch('/api/tests', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const json = (await response.json().catch(() => ({}))) as ApiResponse;
+    throw new Error(json.error ?? "Impossible de mettre à jour le test");
+  }
+
+  return (await response.json()) as ApiResponse;
+}
+
+function TestForm() {
+  const queryClient = useQueryClient();
+  const { data: taxonomy } = useQuery({ queryKey: ['test-taxonomy'], queryFn: fetchTaxonomy });
+  const { data: tests } = useQuery({ queryKey: ['tests'], queryFn: fetchTests });
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const domainInputRef = useRef<HTMLInputElement | null>(null);
+  const tagInputRef = useRef<HTMLInputElement | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+  });
+
+  const currentTags = watch('tags');
+  const currentDomains = watch('domains');
+
+  useEffect(() => {
+    if (!tests || !selectedTestId) {
+      reset(defaultValues);
+      return;
+    }
+
+    const test = tests.find((item) => item.id === selectedTestId);
+
+    if (test) {
+      reset({
+        id: test.id,
+        name: test.name,
+        shortDescription: test.shortDescription,
+        objective: test.objective,
+        ageMinMonths: test.ageMinMonths,
+        ageMaxMonths: test.ageMaxMonths,
+        population: test.population,
+        durationMinutes: test.durationMinutes,
+        materials: test.materials,
+        isStandardized: test.isStandardized,
+        publisher: test.publisher,
+        priceRange: test.priceRange,
+        buyLink: test.buyLink,
+        notes: test.notes,
+        domains: test.domains,
+        tags: test.tags,
+      });
+    }
+  }, [reset, selectedTestId, tests]);
+
+  const createMutation = useMutation({
+    mutationFn: createTest,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tests'] });
+      void queryClient.invalidateQueries({ queryKey: ['test-taxonomy'] });
+      reset(defaultValues);
+      setSelectedTestId(null);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateTest,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tests'] });
+      void queryClient.invalidateQueries({ queryKey: ['test-taxonomy'] });
+    },
+  });
+
+  const [submitLabel, submitDisabled] = useMemo(() => {
+    const pending = createMutation.isPending || updateMutation.isPending;
+    const label = pending ? 'Enregistrement…' : selectedTestId ? 'Mettre à jour' : 'Créer le test';
+    return [label, pending];
+  }, [createMutation.isPending, updateMutation.isPending, selectedTestId]);
+
+  const onSubmit = handleSubmit((values) => {
+    const payload: FormValues = {
+      ...values,
+      name: values.name.trim(),
+      shortDescription: values.shortDescription?.trim() || null,
+      objective: values.objective?.trim() || null,
+      population: values.population?.trim() || null,
+      materials: values.materials?.trim() || null,
+      publisher: values.publisher?.trim() || null,
+      priceRange: values.priceRange?.trim() || null,
+      buyLink: values.buyLink?.trim() || null,
+      notes: values.notes?.trim() || null,
+      ageMinMonths: values.ageMinMonths ?? null,
+      ageMaxMonths: values.ageMaxMonths ?? null,
+      durationMinutes: values.durationMinutes ?? null,
+      domains: Array.from(new Set((values.domains ?? []).map((domain) => domain.trim()).filter(Boolean))),
+      tags: Array.from(new Set((values.tags ?? []).map((tag) => tag.trim()).filter(Boolean))),
+    };
+
+    if (payload.id) {
+      updateMutation.mutate(payload);
+    } else {
+      createMutation.mutate(payload);
+    }
+  });
+
+  function addDomain(value: string) {
+    const next = Array.from(new Set([...(currentDomains ?? []), value.trim()].filter(Boolean)));
+    setValue('domains', next, { shouldDirty: true });
+  }
+
+  function addTag(value: string) {
+    const next = Array.from(new Set([...(currentTags ?? []), value.trim()].filter(Boolean)));
+    setValue('tags', next, { shouldDirty: true });
+  }
+
+  function removeDomain(value: string) {
+    setValue(
+      'domains',
+      (currentDomains ?? []).filter((domain) => domain !== value),
+      { shouldDirty: true },
+    );
+  }
+
+  function removeTag(value: string) {
+    setValue(
+      'tags',
+      (currentTags ?? []).filter((tag) => tag !== value),
+      { shouldDirty: true },
+    );
+  }
+
+  return (
+    <form className="glass panel" style={{ padding: '1.5rem', display: 'grid', gap: '1rem' }} onSubmit={(event) => void onSubmit(event)}>
+      <div className="stack" style={{ margin: 0 }}>
+        <label className="text-subtle" htmlFor="test-selector">
+          Sélectionner un test existant (optionnel)
+        </label>
+        <select
+          id="test-selector"
+          className="input"
+          value={selectedTestId ?? ''}
+          onChange={(event) => setSelectedTestId(event.target.value || null)}
+        >
+          <option value="">Nouveau test</option>
+          {(tests ?? []).map((test) => (
+            <option key={test.id} value={test.id}>
+              {test.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="name">
+            Nom du test
+          </label>
+          <input id="name" className="input" placeholder="Ex: Évaluation du langage" {...register('name')} />
+          {errors.name && <p className="error-text">{errors.name.message}</p>}
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="ageMinMonths">
+            Âge minimum (mois)
+          </label>
+          <input
+            id="ageMinMonths"
+            type="number"
+            className="input"
+            placeholder="36"
+            {...register('ageMinMonths', {
+              setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
+            })}
+          />
+          {errors.ageMinMonths && <p className="error-text">{errors.ageMinMonths.message}</p>}
+        </div>
+
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="ageMaxMonths">
+            Âge maximum (mois)
+          </label>
+          <input
+            id="ageMaxMonths"
+            type="number"
+            className="input"
+            placeholder="120"
+            {...register('ageMaxMonths', {
+              setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
+            })}
+          />
+          {errors.ageMaxMonths && <p className="error-text">{errors.ageMaxMonths.message}</p>}
+        </div>
+
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="durationMinutes">
+            Durée (minutes)
+          </label>
+          <input
+            id="durationMinutes"
+            type="number"
+            className="input"
+            placeholder="45"
+            {...register('durationMinutes', {
+              setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
+            })}
+          />
+          {errors.durationMinutes && <p className="error-text">{errors.durationMinutes.message}</p>}
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="population">
+            Population ciblée
+          </label>
+          <input
+            id="population"
+            className="input"
+            placeholder="Enfants, adultes…"
+            {...register('population', { setValueAs: (value) => (value === '' ? null : value) })}
+          />
+        </div>
+
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="publisher">
+            Éditeur
+          </label>
+          <input
+            id="publisher"
+            className="input"
+            placeholder="Maison d'édition"
+            {...register('publisher', { setValueAs: (value) => (value === '' ? null : value) })}
+          />
+        </div>
+
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="priceRange">
+            Fourchette de prix
+          </label>
+          <input
+            id="priceRange"
+            className="input"
+            placeholder="€€"
+            {...register('priceRange', { setValueAs: (value) => (value === '' ? null : value) })}
+          />
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="shortDescription">
+            Description courte
+          </label>
+          <textarea
+            id="shortDescription"
+            className="input"
+            rows={2}
+            {...register('shortDescription', { setValueAs: (value) => (value === '' ? null : value) })}
+          />
+        </div>
+
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="objective">
+            Objectif
+          </label>
+          <textarea
+            id="objective"
+            className="input"
+            rows={2}
+            {...register('objective', { setValueAs: (value) => (value === '' ? null : value) })}
+          />
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="materials">
+            Matériel
+          </label>
+          <input
+            id="materials"
+            className="input"
+            placeholder="Matériel nécessaire"
+            {...register('materials', { setValueAs: (value) => (value === '' ? null : value) })}
+          />
+        </div>
+
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="buyLink">
+            Lien d'achat
+          </label>
+          <input
+            id="buyLink"
+            className="input"
+            placeholder="https://"
+            {...register('buyLink', { setValueAs: (value) => (value === '' ? null : value) })}
+          />
+          {errors.buyLink && <p className="error-text">{errors.buyLink.message}</p>}
+        </div>
+
+        <label className="stack" style={{ margin: 0, alignItems: 'flex-start', gap: '0.4rem' }}>
+          <span className="text-subtle">Test standardisé</span>
+          <input type="checkbox" {...register('isStandardized')} />
+        </label>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div className="stack" style={{ margin: 0 }}>
+          <label className="text-subtle" htmlFor="notes">
+            Notes internes
+          </label>
+          <textarea
+            id="notes"
+            className="input"
+            rows={2}
+            {...register('notes', { setValueAs: (value) => (value === '' ? null : value) })}
+          />
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div className="stack" style={{ margin: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label className="text-subtle" htmlFor="domainInput">
+              Domaines
+            </label>
+            <small className="text-subtle">Cliquez pour ajouter ou retirer</small>
+          </div>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {(taxonomy?.domains ?? []).map((domain) => {
+              const isSelected = (currentDomains ?? []).includes(domain.name);
+              return (
+                <button
+                  key={domain.id}
+                  type="button"
+                  className={isSelected ? 'pill' : 'pill-muted'}
+                  onClick={() => (isSelected ? removeDomain(domain.name) : addDomain(domain.name))}
+                >
+                  {domain.name}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <input
+            id="domainInput"
+            className="input"
+            placeholder="Nouveau domaine"
+            ref={domainInputRef}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                addDomain((event.currentTarget as HTMLInputElement).value);
+                (event.currentTarget as HTMLInputElement).value = '';
+              }
+            }}
+          />
+          <button
+            className="primary-btn"
+            type="button"
+            onClick={() => {
+              const input = domainInputRef.current;
+              if (input && input.value) {
+                addDomain(input.value);
+                input.value = '';
+              }
+            }}
+          >
+            Ajouter
+          </button>
+          </div>
+          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+            {(currentDomains ?? []).map((domain) => (
+              <span key={domain} className="pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                {domain}
+                <button type="button" aria-label={`Retirer ${domain}`} onClick={() => removeDomain(domain)}>
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="stack" style={{ margin: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label className="text-subtle" htmlFor="tagInput">
+              Tags
+            </label>
+            <small className="text-subtle">Cliquez pour ajouter ou retirer</small>
+          </div>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {(taxonomy?.tags ?? []).map((tag) => {
+              const isSelected = (currentTags ?? []).includes(tag.label);
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  className={isSelected ? 'pill' : 'pill-muted'}
+                  onClick={() => (isSelected ? removeTag(tag.label) : addTag(tag.label))}
+                >
+                  {tag.label}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <input
+            id="tagInput"
+            className="input"
+            placeholder="Nouveau tag"
+            ref={tagInputRef}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                addTag((event.currentTarget as HTMLInputElement).value);
+                (event.currentTarget as HTMLInputElement).value = '';
+              }
+            }}
+          />
+          <button
+            className="primary-btn"
+            type="button"
+            onClick={() => {
+              const input = tagInputRef.current;
+              if (input && input.value) {
+                addTag(input.value);
+                input.value = '';
+              }
+            }}
+          >
+            Ajouter
+          </button>
+          </div>
+          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+            {(currentTags ?? []).map((tag) => (
+              <span key={tag} className="pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                {tag}
+                <button type="button" aria-label={`Retirer ${tag}`} onClick={() => removeTag(tag)}>
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {(createMutation.isError || updateMutation.isError) && (
+        <p className="error-text" style={{ margin: 0 }}>
+          {createMutation.error?.message || updateMutation.error?.message || 'Une erreur est survenue.'}
+        </p>
+      )}
+
+      {(createMutation.isSuccess || updateMutation.isSuccess) && !createMutation.isError && !updateMutation.isError && (
+        <p style={{ margin: 0, color: '#16a34a', fontWeight: 600 }}>
+          Le test et ses relations ont été enregistrés.
+        </p>
+      )}
+
+      <button className="primary-btn" type="submit" disabled={submitDisabled} aria-busy={submitDisabled}>
+        {submitLabel}
+      </button>
+    </form>
+  );
+}
+
+export default TestForm;

@@ -86,6 +86,16 @@ async function ToolsSection() {
                 ))}
               </div>
 
+              {test.tags.length > 0 && (
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  {test.tags.map((tag) => (
+                    <span key={tag} className="badge">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="action-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
                 <span className="text-subtle">{test.durationMinutes ? `${test.durationMinutes} min` : 'Durée variable'}</span>
                 <Link className="ph-header__link" href={`/catalogue/${test.slug}`} aria-label={`Consulter ${test.name}`}>

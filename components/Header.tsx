@@ -42,8 +42,8 @@ function Header() {
               <a className="ph-header__submenu-link" href="/administration">
                 Tableau de bord
               </a>
-              <a className="ph-header__submenu-link" href="/tools/new">
-                Ajouter un outil
+              <a className="ph-header__submenu-link" href="/tests/manage">
+                Ajouter un test
               </a>
             </div>
           </div>
