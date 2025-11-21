@@ -1,12 +1,11 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import type { Header, Redirect, Rewrite } from 'next/dist/lib/load-custom-routes';
 import type { NextConfig } from 'next';
+import { NextResponse, type NextRequest } from 'next/server';
 
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 100;
 
 const rateLimitStore = new Map<string, { count: number; expires: number }>();
-
-const proxyMatcher = ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'];
 
 function getClientKey(request: NextRequest) {
   const xForwardedFor = request.headers.get('x-forwarded-for');
@@ -75,7 +74,7 @@ function applySecurityHeaders(response: NextResponse) {
   }
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const key = getClientKey(request);
   const entry = getUpdatedEntry(key);
 
@@ -106,25 +105,21 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: proxyMatcher,
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'],
 };
 
-export function headers(): NextConfig['headers'] {
+export const headers = async (): Promise<Header[]> => {
   return [
     {
       source: '/(.*)',
       headers: getSecurityHeaders(),
     },
   ];
-}
+};
 
-export function rewrites(): NextConfig['rewrites'] {
-  return [];
-}
+export const rewrites = async (): Promise<Rewrite[]> => [];
 
-export function redirects(): NextConfig['redirects'] {
-  return [];
-}
+export const redirects = async (): Promise<Redirect[]> => [];
 
 export const proxyConfig: NextConfig = {
   headers,
