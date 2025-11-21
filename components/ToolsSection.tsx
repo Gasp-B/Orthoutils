@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getTestsWithMetadata } from '@/lib/tests/queries';
+import type { TestDto } from '@/lib/validation/tests';
 
 function formatAgeRange(min: number | null, max: number | null) {
   if (min && max) {
@@ -18,7 +19,16 @@ function formatAgeRange(min: number | null, max: number | null) {
 }
 
 async function ToolsSection() {
-  const tests = await getTestsWithMetadata();
+  let tests: TestDto[] = [];
+  let loadError: string | null = null;
+
+  try {
+    tests = await getTestsWithMetadata();
+  } catch (error) {
+    console.error('Erreur lors du chargement du catalogue des tests', error);
+    loadError =
+      "Impossible de récupérer les tests pour le moment. Vérifiez la connexion à la base Supabase ou réessayez plus tard.";
+  }
   const featured = tests.slice(0, 3);
   const domains = Array.from(new Set(tests.flatMap((test) => test.domains)));
 
@@ -87,9 +97,12 @@ async function ToolsSection() {
         </div>
 
         {tests.length === 0 && (
-          <p className="text-subtle" style={{ marginTop: '0.5rem' }}>
-            Aucun test n'est disponible pour l'instant. Ajoutez des entrées dans Supabase pour alimenter le catalogue.
-          </p>
+          <div className="glass panel" style={{ marginTop: '0.5rem' }}>
+            <p className="text-subtle" style={{ margin: 0 }}>
+              {loadError ??
+                "Aucun test n'est disponible pour l'instant. Ajoutez des entrées dans Supabase pour alimenter le catalogue."}
+            </p>
+          </div>
         )}
       </section>
 

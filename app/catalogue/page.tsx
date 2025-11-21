@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getTestsWithMetadata } from '@/lib/tests/queries';
+import type { TestDto } from '@/lib/validation/tests';
 
 function formatAgeRange(min: number | null, max: number | null) {
   if (min && max) {
@@ -28,7 +29,16 @@ function formatDuration(minutes: number | null) {
 export const dynamic = 'force-dynamic';
 
 export default async function CataloguePage() {
-  const tests = await getTestsWithMetadata();
+  let tests: TestDto[] = [];
+  let loadError: string | null = null;
+
+  try {
+    tests = await getTestsWithMetadata();
+  } catch (error) {
+    console.error('Impossible de charger le catalogue complet', error);
+    loadError =
+      'Le catalogue ne peut pas être affiché pour le moment. Vérifiez la connexion à Supabase ou réessayez dans un instant.';
+  }
 
   return (
     <main className="container section-shell" style={{ padding: '1.5rem 0 2rem' }}>
@@ -129,9 +139,12 @@ export default async function CataloguePage() {
         </div>
 
         {tests.length === 0 && (
-          <p className="text-subtle" style={{ marginTop: '0.5rem' }}>
-            Aucun test n&apos;est référencé pour l&apos;instant. Ajoutez vos premiers tests pour alimenter le catalogue.
-          </p>
+          <div className="glass panel" style={{ marginTop: '0.5rem' }}>
+            <p className="text-subtle" style={{ margin: 0 }}>
+              {loadError ??
+                "Aucun test n'est référencé pour l'instant. Ajoutez vos premiers tests pour alimenter le catalogue."}
+            </p>
+          </div>
         )}
       </section>
     </main>
