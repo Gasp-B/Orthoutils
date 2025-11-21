@@ -103,8 +103,8 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
     });
 
     const [domainRecords, tagRecords] = await Promise.all([
-      upsertDomains(tx as DbClient, payload.domains ?? []),
-      upsertTags(tx as DbClient, payload.tags ?? []),
+      upsertDomains(tx as unknown as DbClient, payload.domains ?? []),
+      upsertTags(tx as unknown as DbClient, payload.tags ?? []),
     ]);
 
     const [created] = await tx
@@ -127,8 +127,8 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
       })
       .returning({ id: tests.id });
 
-    await syncDomains(tx as DbClient, created.id, domainRecords.map((domain) => domain.id));
-    await syncTags(tx as DbClient, created.id, tagRecords.map((tag) => tag.id));
+    await syncDomains(tx as unknown as DbClient, created.id, domainRecords.map((domain) => domain.id));
+    await syncTags(tx as unknown as DbClient, created.id, tagRecords.map((tag) => tag.id));
 
     return created.id;
   });
@@ -155,8 +155,8 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
     });
 
     const [domainRecords, tagRecords] = await Promise.all([
-      upsertDomains(tx as DbClient, payload.domains ?? []),
-      upsertTags(tx as DbClient, payload.tags ?? []),
+      upsertDomains(tx as unknown as DbClient, payload.domains ?? []),
+      upsertTags(tx as unknown as DbClient, payload.tags ?? []),
     ]);
 
     await tx
@@ -179,8 +179,8 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
       })
       .where(eq(tests.id, payload.id));
 
-    await syncDomains(tx as DbClient, payload.id, domainRecords.map((domain) => domain.id));
-    await syncTags(tx as DbClient, payload.id, tagRecords.map((tag) => tag.id));
+    await syncDomains(tx as unknown as DbClient, payload.id, domainRecords.map((domain) => domain.id));
+    await syncTags(tx as unknown as DbClient, payload.id, tagRecords.map((tag) => tag.id));
   });
 
   const test = await getTestWithMetadata(payload.id);
