@@ -37,7 +37,7 @@ export async function getTestsWithMetadata(): Promise<TestDto[]> {
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domains.name}) FILTER (WHERE ${domains.name} IS NOT NULL), '{}')`,
-      tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tags.label}) FILTER (WHERE ${tags.label} IS NOT NULL), '{}')`,
+      tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tags.name}) FILTER (WHERE ${tags.name} IS NOT NULL), '{}')`,
     })
     .from(tests)
     .leftJoin(testDomains, eq(tests.id, testDomains.testId))
@@ -83,7 +83,7 @@ export async function getTestWithMetadata(id: string): Promise<TestDto | null> {
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domains.name}) FILTER (WHERE ${domains.name} IS NOT NULL), '{}')`,
-      tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tags.label}) FILTER (WHERE ${tags.label} IS NOT NULL), '{}')`,
+      tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tags.name}) FILTER (WHERE ${tags.name} IS NOT NULL), '{}')`,
     })
     .from(tests)
     .leftJoin(testDomains, eq(tests.id, testDomains.testId))
