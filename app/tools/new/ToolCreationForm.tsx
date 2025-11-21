@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { createToolSchema } from '@/lib/validation/tools';
+import styles from './tool-creation-form.module.css';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
@@ -93,12 +94,8 @@ function ToolCreationForm() {
   });
 
   return (
-    <form
-      className="glass panel"
-      style={{ padding: '1.5rem', display: 'grid', gap: '1rem' }}
-      onSubmit={(event) => void onSubmit(event)}
-    >
-      <div style={{ display: 'grid', gap: '0.6rem' }}>
+    <form className={`glass panel ${styles.form}`} onSubmit={(event) => void onSubmit(event)}>
+      <div className={styles.fieldGroup}>
         <label className="text-subtle" htmlFor="name">
           Nom de l'outil
         </label>
@@ -111,7 +108,7 @@ function ToolCreationForm() {
         {errors.name && <p className="error-text">{errors.name.message}</p>}
       </div>
 
-      <div style={{ display: 'grid', gap: '0.6rem' }}>
+      <div className={styles.fieldGroup}>
         <label className="text-subtle" htmlFor="category">
           Catégorie
         </label>
@@ -124,7 +121,7 @@ function ToolCreationForm() {
         {errors.category && <p className="error-text">{errors.category.message}</p>}
       </div>
 
-      <div style={{ display: 'grid', gap: '0.6rem' }}>
+      <div className={styles.fieldGroup}>
         <label className="text-subtle" htmlFor="type">
           Type
         </label>
@@ -132,7 +129,7 @@ function ToolCreationForm() {
         {errors.type && <p className="error-text">{errors.type.message}</p>}
       </div>
 
-      <div style={{ display: 'grid', gap: '0.6rem' }}>
+      <div className={styles.fieldGroup}>
         <label className="text-subtle" htmlFor="tags">
           Tags
         </label>
@@ -142,13 +139,13 @@ function ToolCreationForm() {
           placeholder="dysarthrie, accompagnement, cognition"
           {...register('tags')}
         />
-        <p className="text-subtle" style={{ margin: 0 }}>
+        <p className={`text-subtle ${styles.helperTight}`}>
           Séparez les tags par des virgules. Ils seront utilisés pour filtrer le catalogue.
         </p>
         {errors.tags && <p className="error-text">{errors.tags.message}</p>}
       </div>
 
-      <div style={{ display: 'grid', gap: '0.6rem' }}>
+      <div className={styles.fieldGroup}>
         <label className="text-subtle" htmlFor="source">
           Source
         </label>
@@ -157,13 +154,13 @@ function ToolCreationForm() {
       </div>
 
       {mutation.isError && (
-        <p className="error-text" style={{ margin: 0 }}>
+        <p className={`error-text ${styles.errorInline}`}>
           {mutation.error instanceof Error ? mutation.error.message : "Une erreur est survenue."}
         </p>
       )}
 
       {mutation.isSuccess && !mutation.isError && (
-        <p style={{ margin: 0, color: '#16a34a', fontWeight: 600 }}>
+        <p className={styles.successMessage}>
           La fiche a été créée. Elle apparaîtra dans le catalogue sous l'étiquette « Communauté ».
         </p>
       )}

@@ -1,4 +1,5 @@
 import TaxonomyManager from './TaxonomyManager';
+import styles from './taxonomy-page.module.css';
 
 export const metadata = {
   title: 'Gérer les catégories et tags | Othoutils',
@@ -7,15 +8,15 @@ export const metadata = {
 
 function TaxonomyPage() {
   return (
-    <main className="container section-shell" style={{ padding: '1.5rem 0 2rem', gap: '1rem' }}>
+    <main className={`container section-shell ${styles.page}`}>
       <div className="section-title">
         <span />
-        <p style={{ margin: 0 }}>Administration</p>
+        <p className={styles.sectionLabel}>Administration</p>
       </div>
 
-      <div className="glass panel" style={{ padding: '1.5rem', display: 'grid', gap: '0.6rem' }}>
-        <h1 style={{ margin: 0, color: '#0f172a' }}>Catégories & tags</h1>
-        <p className="text-subtle" style={{ margin: 0 }}>
+      <div className={`glass panel ${styles.introPanel}`}>
+        <h1 className={styles.pageTitle}>Catégories & tags</h1>
+        <p className={`text-subtle ${styles.pageLead}`}>
           Centralisez la liste des domaines et tags utilisables dans la fiche test. Les éléments créés ici seront
           immédiatement disponibles dans le formulaire « Ajouter / Éditer un test ».
         </p>

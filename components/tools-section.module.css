@@ -1,0 +1,81 @@
+.sectionLabel {
+  margin: 0;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.headingStack {
+  margin: 0;
+}
+
+.headingTitle {
+  margin: 0;
+  color: #0f172a;
+}
+
+.headingText {
+  margin: 0;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.cardTitle {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.cardSubtitle {
+  margin: 0.1rem 0 0;
+}
+
+.objectiveText {
+  margin: 0.4rem 0 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.tagRow {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.actionRow {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.emptyState {
+  margin-top: 0.5rem;
+}
+
+.emptyText {
+  margin: 0;
+}
+
+.collaborationSection {
+  margin-top: 1.6rem;
+}
+
+.statCardValue {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 1.3rem;
+}
+
+.statCardLabel {
+  margin: 0.1rem 0 0;
+  color: #0f172a;
+}
