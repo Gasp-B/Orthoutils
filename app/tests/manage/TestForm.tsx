@@ -435,8 +435,8 @@ function TestForm() {
                 }}
               >
                 {(taxonomy?.domains ?? []).map((domain) => (
-                  <option key={domain.id} value={domain.name}>
-                    {domain.name}
+                  <option key={domain.id} value={domain.label}>
+                    {domain.label}
                   </option>
                 ))}
               </Select>
@@ -458,8 +458,8 @@ function TestForm() {
                 }}
               >
                 {(taxonomy?.tags ?? []).map((tag) => (
-                  <option key={tag.id} value={tag.name}>
-                    {tag.name}
+                  <option key={tag.id} value={tag.label}>
+                    {tag.label}
                   </option>
                 ))}
               </Select>

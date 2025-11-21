@@ -13,13 +13,13 @@ export async function GET() {
   try {
     const [domainRows, tagRows] = await Promise.all([
       getDb()
-        .select({ id: domains.id, name: domains.name })
+        .select({ id: domains.id, label: domains.label, slug: domains.slug })
         .from(domains)
-        .orderBy(asc(domains.name)),
+        .orderBy(asc(domains.label)),
       getDb()
-        .select({ id: tags.id, name: tags.name })
+        .select({ id: tags.id, label: tags.label })
         .from(tags)
-        .orderBy(asc(tags.name)),
+        .orderBy(asc(tags.label)),
     ]);
 
     const payload = taxonomyResponseSchema.parse({

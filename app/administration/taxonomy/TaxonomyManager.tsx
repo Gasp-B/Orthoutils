@@ -142,18 +142,18 @@ function TaxonomyManager() {
   });
 
   const sortedDomains = useMemo(
-    () => [...(data?.domains ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
+    () => [...(data?.domains ?? [])].sort((a, b) => a.label.localeCompare(b.label)),
     [data?.domains],
   );
-  const sortedTags = useMemo(() => [...(data?.tags ?? [])].sort((a, b) => a.name.localeCompare(b.name)), [data?.tags]);
+  const sortedTags = useMemo(() => [...(data?.tags ?? [])].sort((a, b) => a.label.localeCompare(b.label)), [data?.tags]);
 
   const domainExists = useMemo(
-    () => sortedDomains.some((domain) => domain.name.trim().toLowerCase() === normalizedDomainInput.toLowerCase()),
+    () => sortedDomains.some((domain) => domain.label.trim().toLowerCase() === normalizedDomainInput.toLowerCase()),
     [normalizedDomainInput, sortedDomains],
   );
 
   const tagExists = useMemo(
-    () => sortedTags.some((tag) => tag.name.trim().toLowerCase() === normalizedTagInput.toLowerCase()),
+    () => sortedTags.some((tag) => tag.label.trim().toLowerCase() === normalizedTagInput.toLowerCase()),
     [normalizedTagInput, sortedTags],
   );
 
@@ -198,12 +198,12 @@ function TaxonomyManager() {
                 )}
                 {sortedDomains.map((domain) => (
                   <div key={domain.id} className={`notion-toolbar__group ${styles.toolbarGroupJustify}`}>
-                    <span>{domain.name}</span>
+                    <span>{domain.label}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      aria-label={`Supprimer ${domain.name}`}
+                      aria-label={`Supprimer ${domain.label}`}
                       onClick={() => deleteMutation.mutate({ type: 'domain', id: domain.id })}
                       disabled={deleteMutation.isPending && deletingId === domain.id}
                     >
@@ -270,12 +270,12 @@ function TaxonomyManager() {
                 {sortedTags.length === 0 && <p className="helper-text">Aucun tag enregistré pour le moment.</p>}
                 {sortedTags.map((tag) => (
                   <div key={tag.id} className={`notion-toolbar__group ${styles.toolbarGroupJustify}`}>
-                    <span>{tag.name}</span>
+                    <span>{tag.label}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      aria-label={`Supprimer ${tag.name}`}
+                      aria-label={`Supprimer ${tag.label}`}
                       onClick={() => deleteMutation.mutate({ type: 'tag', id: tag.id })}
                       disabled={deleteMutation.isPending && deletingId === tag.id}
                     >
