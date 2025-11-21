@@ -45,6 +45,9 @@ function Header() {
               <a className="ph-header__submenu-link" href="/tests/manage">
                 Ajouter un test
               </a>
+              <Link className="ph-header__submenu-link" href="/administration/taxonomy">
+                Catégories & tags
+              </Link>
             </div>
           </div>
         </nav>
