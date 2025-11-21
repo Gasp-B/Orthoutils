@@ -51,7 +51,7 @@ function getSecurityHeaders() {
     "font-src 'self' data:",
     "img-src 'self' data:",
     "object-src 'none'",
-    "script-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     `connect-src ${getConnectSources()}`,
     "frame-ancestors 'none'",
