@@ -47,22 +47,22 @@ async function upsertDomains(db: DbClient, domainNames: string[]) {
     .where(inArray(domains.name, normalized));
 }
 
-async function upsertTags(db: DbClient, tagLabels: string[]) {
-  const normalized = normalizeList(tagLabels);
+async function upsertTags(db: DbClient, tagNames: string[]) {
+  const normalized = normalizeList(tagNames);
 
   if (normalized.length === 0) {
-    return [] as { id: string; label: string }[];
+    return [] as { id: string; name: string }[];
   }
 
   await db
     .insert(tags)
-    .values(normalized.map((label) => ({ label })))
+    .values(normalized.map((name) => ({ name })))
     .onConflictDoNothing();
 
   return db
-    .select({ id: tags.id, label: tags.label })
+    .select({ id: tags.id, name: tags.name })
     .from(tags)
-    .where(inArray(tags.label, normalized));
+    .where(inArray(tags.name, normalized));
 }
 
 async function syncDomains(db: DbClient, testId: string, domainIds: string[]) {

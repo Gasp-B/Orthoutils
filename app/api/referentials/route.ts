@@ -16,7 +16,7 @@ type ReferentialRow = {
       subsection_tags: Array<{
         tag: {
           id: string;
-          label: string;
+          name: string;
         } | null;
       }> | null;
     } | null;
@@ -51,7 +51,7 @@ export async function GET() {
               subsection_tags:subsection_tags (
                 tag:tags (
                   id,
-                  label
+                  name
                 )
               )
             )
@@ -89,7 +89,7 @@ export async function GET() {
                     .filter((tag): tag is ReferentialTagRow => Boolean(tag))
                     .map((tag) => ({
                       id: tag.id,
-                      name: tag.label,
+                      name: tag.name,
                       colorLabel: null,
                     })) ?? [],
               })) ?? [],

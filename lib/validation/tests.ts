@@ -70,7 +70,7 @@ export const taxonomyResponseSchema = z.object({
   tags: z.array(
     z.object({
       id: z.string().uuid(),
-      label: z.string(),
+      name: z.string(),
     }),
   ),
 });

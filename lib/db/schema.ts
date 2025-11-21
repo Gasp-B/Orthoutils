@@ -64,7 +64,8 @@ export const sectionSubsections = pgTable(
 
 export const tags = pgTable('tags', {
   id: uuid('id').defaultRandom().primaryKey(),
-  label: text('label').notNull().unique(),
+  name: text('name').notNull().unique(),
+  colorLabel: text('color_label'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

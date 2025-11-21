@@ -63,9 +63,9 @@ export async function createTag(label: string) {
   const db = getDb();
 
   const [existingTag] = await db
-    .select({ id: tags.id, label: tags.label })
+    .select({ id: tags.id, name: tags.name })
     .from(tags)
-    .where(eq(tags.label, normalized))
+    .where(eq(tags.name, normalized))
     .limit(1);
 
   if (existingTag) {
@@ -74,18 +74,18 @@ export async function createTag(label: string) {
 
   const [created] = await db
     .insert(tags)
-    .values({ label: normalized })
+    .values({ name: normalized })
     .onConflictDoNothing()
-    .returning({ id: tags.id, label: tags.label });
+    .returning({ id: tags.id, name: tags.name });
 
   if (created) {
     return created;
   }
 
   const [existing] = await db
-    .select({ id: tags.id, label: tags.label })
+    .select({ id: tags.id, name: tags.name })
     .from(tags)
-    .where(eq(tags.label, normalized))
+    .where(eq(tags.name, normalized))
     .limit(1);
 
   if (!existing) {
@@ -121,7 +121,7 @@ export async function deleteTag(id: string) {
     const [removed] = await tx
       .delete(tags)
       .where(eq(tags.id, id))
-      .returning({ id: tags.id, label: tags.label });
+      .returning({ id: tags.id, name: tags.name });
 
     return removed ?? null;
   });

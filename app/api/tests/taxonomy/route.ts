@@ -17,9 +17,9 @@ export async function GET() {
         .from(domains)
         .orderBy(asc(domains.name)),
       getDb()
-        .select({ id: tags.id, label: tags.label })
+        .select({ id: tags.id, name: tags.name })
         .from(tags)
-        .orderBy(asc(tags.label)),
+        .orderBy(asc(tags.name)),
     ]);
 
     const payload = taxonomyResponseSchema.parse({
