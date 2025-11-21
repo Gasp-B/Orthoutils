@@ -2,6 +2,8 @@ import Hero from '../components/Hero';
 import ReferentialsSection from '../components/ReferentialsSection';
 import ToolsSection from '../components/ToolsSection';
 
+export const dynamic = 'force-dynamic';
+
 function HomePage() {
   return (
     <>

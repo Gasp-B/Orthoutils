@@ -108,18 +108,16 @@ export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'],
 };
 
-export const headers = async (): Promise<Header[]> => {
-  return [
-    {
-      source: '/(.*)',
-      headers: getSecurityHeaders(),
-    },
-  ];
-};
+export const headers = (): Header[] => [
+  {
+    source: '/(.*)',
+    headers: getSecurityHeaders(),
+  },
+];
 
-export const rewrites = async (): Promise<Rewrite[]> => [];
+export const rewrites = (): Rewrite[] => [];
 
-export const redirects = async (): Promise<Redirect[]> => [];
+export const redirects = (): Redirect[] => [];
 
 export const proxyConfig: NextConfig = {
   headers,

@@ -1,4 +1,4 @@
-import { jsonb, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const toolsCatalog = pgTable('tools_catalog', {
@@ -81,5 +81,47 @@ export const subsectionTags = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.subsectionId, table.tagId] }),
+  }),
+);
+
+export const tests = pgTable('tests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  shortDescription: text('short_description'),
+  objective: text('objective'),
+  ageMinMonths: integer('age_min_months'),
+  ageMaxMonths: integer('age_max_months'),
+  population: text('population'),
+  durationMinutes: integer('duration_minutes'),
+  materials: text('materials'),
+  isStandardized: boolean('is_standardized').default(false),
+  publisher: text('publisher'),
+  priceRange: text('price_range'),
+  buyLink: text('buy_link'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type TestRecord = typeof tests.$inferSelect;
+
+export const domains = pgTable('domains', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull().unique(),
+});
+
+export const testDomains = pgTable(
+  'test_domains',
+  {
+    testId: uuid('test_id')
+      .notNull()
+      .references(() => tests.id, { onDelete: 'cascade' }),
+    domainId: uuid('domain_id')
+      .notNull()
+      .references(() => domains.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.testId, table.domainId] }),
   }),
 );

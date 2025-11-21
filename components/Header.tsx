@@ -1,8 +1,10 @@
+import Link from 'next/link';
+
 function Header() {
   return (
     <header className="ph-header" role="banner">
       <div className="ph-header__bar container">
-        <a className="ph-header__brand" href="/" aria-label="Othoutils, retour à l'accueil">
+        <Link className="ph-header__brand" href="/" aria-label="Othoutils, retour à l'accueil">
           <div className="ph-header__logo" aria-hidden>
             OT
           </div>
@@ -10,7 +12,7 @@ function Header() {
             <p className="ph-header__name">Othoutils</p>
             <p className="ph-header__tagline">Ressources cliniques vérifiées par des orthophonistes</p>
           </div>
-        </a>
+        </Link>
 
         <div className="ph-header__search" role="search">
           <input
@@ -22,9 +24,9 @@ function Header() {
         </div>
 
         <nav className="ph-header__nav" aria-label="Navigation principale">
-          <a className="ph-header__link" href="#catalogue">
+          <Link className="ph-header__link" href="/catalogue">
             Catalogue
-          </a>
+          </Link>
           <a className="ph-header__link" href="#collaboration">
             Communauté
           </a>
