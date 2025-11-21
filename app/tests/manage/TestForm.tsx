@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { testsResponseSchema, testSchema, taxonomyResponseSchema, type TestDto } from '@/lib/validation/tests';
 
 const formSchema = testSchema
-  .omit({ id: true, createdAt: true, updatedAt: true })
+  .omit({ id: true, slug: true, createdAt: true, updatedAt: true })
   .extend({
     id: z.string().uuid().optional(),
     shortDescription: z.string().nullable().optional(),
@@ -35,7 +35,6 @@ type ApiResponse = {
 const defaultValues: FormValues = {
   id: undefined,
   name: '',
-  slug: '',
   shortDescription: null,
   objective: null,
   ageMinMonths: null,
@@ -51,16 +50,6 @@ const defaultValues: FormValues = {
   domains: [],
   tags: [],
 };
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[^\w\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/--+/g, '-');
-}
 
 async function fetchTests() {
   const response = await fetch('/api/tests');
@@ -135,17 +124,8 @@ function TestForm() {
     defaultValues,
   });
 
-  const watchedName = watch('name');
   const currentTags = watch('tags');
   const currentDomains = watch('domains');
-
-  useEffect(() => {
-    if (!watchedName || selectedTestId) {
-      return;
-    }
-
-    setValue('slug', slugify(watchedName), { shouldDirty: true });
-  }, [watchedName, selectedTestId, setValue]);
 
   useEffect(() => {
     if (!tests || !selectedTestId) {
@@ -159,7 +139,6 @@ function TestForm() {
       reset({
         id: test.id,
         name: test.name,
-        slug: test.slug,
         shortDescription: test.shortDescription,
         objective: test.objective,
         ageMinMonths: test.ageMinMonths,
@@ -206,7 +185,6 @@ function TestForm() {
     const payload: FormValues = {
       ...values,
       name: values.name.trim(),
-      slug: values.slug.trim(),
       shortDescription: values.shortDescription?.trim() || null,
       objective: values.objective?.trim() || null,
       population: values.population?.trim() || null,
@@ -283,14 +261,6 @@ function TestForm() {
           </label>
           <input id="name" className="input" placeholder="Ex: Évaluation du langage" {...register('name')} />
           {errors.name && <p className="error-text">{errors.name.message}</p>}
-        </div>
-
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="slug">
-            Slug
-          </label>
-          <input id="slug" className="input" placeholder="evaluation-langage" {...register('slug')} />
-          {errors.slug && <p className="error-text">{errors.slug.message}</p>}
         </div>
       </div>
 

@@ -29,7 +29,6 @@ export const testsResponseSchema = z.object({
 export type TestDto = z.infer<typeof testSchema>;
 export const testInputSchema = z.object({
   name: z.string().min(1),
-  slug: z.string().min(1),
   shortDescription: z.string().nullable().optional(),
   objective: z.string().nullable().optional(),
   ageMinMonths: z.number().int().nullable().optional(),

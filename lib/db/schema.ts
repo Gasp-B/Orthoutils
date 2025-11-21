@@ -108,6 +108,7 @@ export type TestRecord = typeof tests.$inferSelect;
 export const domains = pgTable('domains', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
 });
 
 export const testDomains = pgTable(

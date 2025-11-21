@@ -2,6 +2,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { getDb } from '@/lib/db/client';
 import { domains, tags, testDomains, testTags, tests } from '@/lib/db/schema';
 import { testInputSchema, testSchema, updateTestInputSchema, type TestDto } from '@/lib/validation/tests';
+import { generateUniqueSlug } from '@/lib/utils/slug';
 import { getTestWithMetadata } from './queries';
 
 type DbClient = ReturnType<typeof getDb>;
@@ -17,9 +18,25 @@ async function upsertDomains(db: DbClient, domainNames: string[]) {
     return [] as { id: string; name: string }[];
   }
 
+  const reservedSlugs = new Set<string>();
+  const values = [] as { name: string; slug: string }[];
+
+  for (const name of normalized) {
+    const slug = await generateUniqueSlug({
+      db,
+      name,
+      table: domains,
+      slugColumn: domains.slug,
+      idColumn: domains.id,
+      reserved: reservedSlugs,
+    });
+
+    values.push({ name, slug });
+  }
+
   await db
     .insert(domains)
-    .values(normalized.map((name) => ({ name })))
+    .values(values)
     .onConflictDoNothing();
 
   return db
@@ -75,6 +92,14 @@ async function syncTags(db: DbClient, testId: string, tagIds: string[]) {
 export async function createTestWithRelations(input: unknown): Promise<TestDto> {
   const payload = testInputSchema.parse(input);
   const createdId = await getDb().transaction(async (tx) => {
+    const slug = await generateUniqueSlug({
+      db: tx,
+      name: payload.name,
+      table: tests,
+      slugColumn: tests.slug,
+      idColumn: tests.id,
+    });
+
     const [domainRecords, tagRecords] = await Promise.all([
       upsertDomains(tx, payload.domains ?? []),
       upsertTags(tx, payload.tags ?? []),
@@ -84,7 +109,7 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
       .insert(tests)
       .values({
         name: payload.name,
-        slug: payload.slug,
+        slug,
         shortDescription: payload.shortDescription ?? null,
         objective: payload.objective ?? null,
         ageMinMonths: payload.ageMinMonths ?? null,
@@ -118,6 +143,15 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
 export async function updateTestWithRelations(input: unknown): Promise<TestDto> {
   const payload = updateTestInputSchema.parse(input);
   await getDb().transaction(async (tx) => {
+    const slug = await generateUniqueSlug({
+      db: tx,
+      name: payload.name,
+      table: tests,
+      slugColumn: tests.slug,
+      idColumn: tests.id,
+      excludeId: payload.id,
+    });
+
     const [domainRecords, tagRecords] = await Promise.all([
       upsertDomains(tx, payload.domains ?? []),
       upsertTags(tx, payload.tags ?? []),
@@ -127,7 +161,7 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
       .update(tests)
       .set({
         name: payload.name,
-        slug: payload.slug,
+        slug,
         shortDescription: payload.shortDescription ?? null,
         objective: payload.objective ?? null,
         ageMinMonths: payload.ageMinMonths ?? null,

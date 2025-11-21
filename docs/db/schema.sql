@@ -77,7 +77,8 @@ CREATE TABLE tests (
 
 CREATE TABLE domains (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL UNIQUE
+  name text NOT NULL UNIQUE,
+  slug text UNIQUE NOT NULL
 );
 
 CREATE TABLE test_domains (
