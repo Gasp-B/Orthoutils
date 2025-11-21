@@ -1,4 +1,5 @@
 import type { ToolDto, ToolStatus } from '@/lib/validation/tools';
+import styles from './tool-card.module.css';
 
 type Props = {
   tool: ToolDto;
@@ -17,14 +18,14 @@ function ToolCard({ tool }: Props) {
 
   return (
     <article className="glass panel panel-muted">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.6rem' }}>
+      <div className={styles.cardHeader}>
         <div>
-          <p style={{ margin: 0, color: '#0f172a', fontWeight: 800, fontSize: '1.1rem' }}>{tool.title}</p>
-          <p style={{ margin: '0.1rem 0 0', color: '#475569', fontWeight: 600 }}>{tool.category}</p>
+          <p className={styles.title}>{tool.title}</p>
+          <p className={styles.category}>{tool.category}</p>
         </div>
         <span className={statusClass[tool.status]}>{tool.status}</span>
       </div>
-      <p style={{ margin: 0, lineHeight: 1.6, color: '#0f172a' }}>
+      <p className={styles.description}>
         {hasDescription
           ? tool.description
           : hasType

@@ -1,0 +1,90 @@
+.page {
+  padding: 1.5rem 0 2rem;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.headingStack {
+  margin: 0;
+}
+
+.headingTitle {
+  margin: 0;
+  color: #0f172a;
+}
+
+.headingText {
+  margin: 0;
+}
+
+.sectionLabel {
+  margin: 0;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.cardTitle {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.cardSubtitle {
+  margin: 0.1rem 0 0;
+}
+
+.durationBadge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.12);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.badgeRow {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.metaList {
+  display: flex;
+  gap: 0.35rem;
+  flex-direction: column;
+}
+
+.metaItem {
+  margin: 0;
+}
+
+.tagRow {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.emptyState {
+  margin-top: 0.5rem;
+}
+
+.emptyText {
+  margin: 0;
+}

@@ -1,4 +1,5 @@
-import type { Header, Redirect, Rewrite } from 'next/dist/lib/load-custom-routes';
+import crypto from 'crypto';
+import type { Redirect, Rewrite } from 'next/dist/lib/load-custom-routes';
 import type { NextConfig } from 'next';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -40,28 +41,22 @@ function getUpdatedEntry(key: string) {
 }
 
 function getConnectSources() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://*.supabase.co';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
   return ["'self'", supabaseUrl].filter(Boolean).join(' ');
 }
 
-function getScriptSrc() {
-  const sources = ["'self'", "'unsafe-inline'"];
-
-  if (process.env.NODE_ENV !== 'production') {
-    sources.push("'unsafe-eval'");
-  }
-
-  return sources.join(' ');
+function buildNonce() {
+  return crypto.randomBytes(16).toString('base64');
 }
 
-function getSecurityHeaders() {
+function getSecurityHeaders(nonce: string) {
   const contentSecurityPolicy = [
     "default-src 'self'",
     "base-uri 'self'",
     "font-src 'self' data:",
     "img-src 'self' data:",
     "object-src 'none'",
-    `script-src ${getScriptSrc()}`,
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
     `connect-src ${getConnectSources()}`,
     "frame-ancestors 'none'",
@@ -78,8 +73,8 @@ function getSecurityHeaders() {
   ];
 }
 
-function applySecurityHeaders(response: NextResponse) {
-  for (const { key, value } of getSecurityHeaders()) {
+function applySecurityHeaders(response: NextResponse, nonce: string) {
+  for (const { key, value } of getSecurityHeaders(nonce)) {
     response.headers.set(key, value);
   }
 }
@@ -87,6 +82,10 @@ function applySecurityHeaders(response: NextResponse) {
 export function proxy(request: NextRequest) {
   const key = getClientKey(request);
   const entry = getUpdatedEntry(key);
+  const nonce = buildNonce();
+  const requestHeaders = new Headers(request.headers);
+
+  requestHeaders.set('x-nonce', nonce);
 
   entry.count += 1;
 
@@ -100,16 +99,20 @@ export function proxy(request: NextRequest) {
       },
     });
 
-    applySecurityHeaders(limitedResponse);
+    applySecurityHeaders(limitedResponse, nonce);
     return limitedResponse;
   }
 
-  const response = NextResponse.next();
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
   response.headers.set('X-RateLimit-Limit', `${MAX_REQUESTS}`);
   response.headers.set('X-RateLimit-Remaining', `${Math.max(0, MAX_REQUESTS - entry.count)}`);
   response.headers.set('X-RateLimit-Reset', `${entry.expires}`);
 
-  applySecurityHeaders(response);
+  applySecurityHeaders(response, nonce);
 
   return response;
 }
@@ -118,19 +121,11 @@ export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'],
 };
 
-export const headers = (): Header[] => [
-  {
-    source: '/(.*)',
-    headers: getSecurityHeaders(),
-  },
-];
-
 export const rewrites = (): Rewrite[] => [];
 
 export const redirects = (): Redirect[] => [];
 
 export const proxyConfig: NextConfig = {
-  headers,
   rewrites,
   redirects,
 };

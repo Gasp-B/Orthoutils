@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { referentialsResponseSchema, type ReferentialDto } from '@/lib/validation/referentials';
+import styles from './referentials-section.module.css';
 
 async function fetchReferentials() {
   const response = await fetch('/api/referentials', { cache: 'no-store' });
@@ -27,16 +28,16 @@ function ReferentialsSection() {
     <section id="referentiels" className="container section-shell">
       <div className="section-title">
         <span />
-        <p style={{ margin: 0 }}>Référentiels structurés</p>
+        <p className={styles.sectionLabel}>Référentiels structurés</p>
       </div>
 
       {isLoading && <p className="text-subtle">Chargement des référentiels depuis Supabase…</p>}
 
       {isError && (
-        <div className="glass panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className={`glass panel ${styles.errorPanel}`}>
           <div>
-            <p style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>Impossible de récupérer les référentiels</p>
-            <p className="text-subtle" style={{ margin: '0.1rem 0 0' }}>
+            <p className={styles.errorTitle}>Impossible de récupérer les référentiels</p>
+            <p className={`text-subtle ${styles.errorSubtitle}`}>
               Vérifiez la connexion ou rechargez la page. La requête passe par Supabase avec RLS activé.
             </p>
           </div>
@@ -48,12 +49,12 @@ function ReferentialsSection() {
 
       <div className="card-grid">
         {referentials.map((referential) => (
-          <article key={referential.id} className="glass panel panel-muted" style={{ display: 'grid', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+          <article key={referential.id} className={`glass panel panel-muted ${styles.referentialCard}`}>
+            <div className={styles.referentialHeader}>
               <div>
-                <p style={{ margin: 0, color: '#0f172a', fontWeight: 800 }}>{referential.name}</p>
+                <p className={styles.cardTitle}>{referential.name}</p>
                 {referential.description && (
-                  <p className="text-subtle" style={{ margin: '0.1rem 0 0' }}>
+                  <p className={`text-subtle ${styles.cardSubtitle}`}>
                     {referential.description}
                   </p>
                 )}
@@ -61,9 +62,9 @@ function ReferentialsSection() {
               <span className="badge validated">Référentiel</span>
             </div>
 
-            <div className="tag-row" style={{ flexWrap: 'wrap' }}>
+            <div className={`tag-row ${styles.subsectionRow}`}>
               {referential.subsections.map((subsection) => (
-                <span key={subsection.id} className="tag" style={{ backgroundColor: '#0ea5e91a', color: '#0f172a' }}>
+                <span key={subsection.id} className={`tag ${styles.subsectionTag}`}>
                   {subsection.name}
                 </span>
               ))}
@@ -73,10 +74,10 @@ function ReferentialsSection() {
             </div>
 
             {referential.subsections.some((subsection) => subsection.tags.length > 0) && (
-              <div className="tag-row" style={{ flexWrap: 'wrap', gap: '0.45rem' }}>
+              <div className={`tag-row ${styles.tagRowTight}`}>
                 {referential.subsections.flatMap((subsection) =>
                   subsection.tags.map((tag) => (
-                    <span key={`${subsection.id}-${tag.id}`} className="tag" style={{ backgroundColor: '#e2f3ff' }}>
+                    <span key={`${subsection.id}-${tag.id}`} className={`tag ${styles.lightTag}`}>
                       #{tag.name}
                     </span>
                   )),
@@ -88,7 +89,7 @@ function ReferentialsSection() {
       </div>
 
       {!isLoading && !isError && referentials.length === 0 && (
-        <p className="text-subtle" style={{ marginTop: '0.5rem' }}>
+        <p className={`text-subtle ${styles.emptyState}`}>
           Aucun référentiel n'est disponible pour le moment. Vérifiez que les données sont bien présentes dans Supabase.
         </p>
       )}
