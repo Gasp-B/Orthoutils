@@ -144,7 +144,7 @@ function TaxonomyManager() {
     () => [...(data?.domains ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
     [data?.domains],
   );
-  const sortedTags = useMemo(() => [...(data?.tags ?? [])].sort((a, b) => a.label.localeCompare(b.label)), [data?.tags]);
+  const sortedTags = useMemo(() => [...(data?.tags ?? [])].sort((a, b) => a.name.localeCompare(b.name)), [data?.tags]);
 
   const domainExists = useMemo(
     () => sortedDomains.some((domain) => domain.name.trim().toLowerCase() === normalizedDomainInput.toLowerCase()),
@@ -152,7 +152,7 @@ function TaxonomyManager() {
   );
 
   const tagExists = useMemo(
-    () => sortedTags.some((tag) => tag.label.trim().toLowerCase() === normalizedTagInput.toLowerCase()),
+    () => sortedTags.some((tag) => tag.name.trim().toLowerCase() === normalizedTagInput.toLowerCase()),
     [normalizedTagInput, sortedTags],
   );
 
@@ -284,12 +284,12 @@ function TaxonomyManager() {
                 {sortedTags.length === 0 && <p className="helper-text">Aucun tag enregistré pour le moment.</p>}
                 {sortedTags.map((tag) => (
                   <div key={tag.id} className="notion-toolbar__group" style={{ justifyContent: 'space-between' }}>
-                    <span>{tag.label}</span>
+                    <span>{tag.name}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      aria-label={`Supprimer ${tag.label}`}
+                      aria-label={`Supprimer ${tag.name}`}
                       onClick={() => deleteMutation.mutate({ type: 'tag', id: tag.id })}
                       disabled={deleteMutation.isPending && deletingId === tag.id}
                     >

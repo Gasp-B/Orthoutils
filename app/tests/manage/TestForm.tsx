@@ -457,8 +457,8 @@ function TestForm() {
                 }}
               >
                 {(taxonomy?.tags ?? []).map((tag) => (
-                  <option key={tag.id} value={tag.label}>
-                    {tag.label}
+                  <option key={tag.id} value={tag.name}>
+                    {tag.name}
                   </option>
                 ))}
               </Select>
