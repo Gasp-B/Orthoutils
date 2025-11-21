@@ -5,6 +5,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils/cn';
 import { testsResponseSchema, testSchema, taxonomyResponseSchema, type TestDto } from '@/lib/validation/tests';
 
 const formSchema = testSchema
@@ -122,18 +131,21 @@ function TestForm() {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
+    mode: 'onBlur',
   });
 
-  const currentTags = watch('tags');
   const currentDomains = watch('domains');
+  const currentTags = watch('tags');
+  const populationValue = watch('population');
+  const materialsValue = watch('materials');
 
   useEffect(() => {
-    if (!tests || !selectedTestId) {
+    if (!selectedTestId) {
       reset(defaultValues);
       return;
     }
 
-    const test = tests.find((item) => item.id === selectedTestId);
+    const test = (tests ?? []).find((item) => item.id === selectedTestId);
 
     if (test) {
       reset({
@@ -234,320 +246,321 @@ function TestForm() {
   }
 
   return (
-    <form className="glass panel" style={{ padding: '1.5rem', display: 'grid', gap: '1rem' }} onSubmit={(event) => void onSubmit(event)}>
-      <div className="stack" style={{ margin: 0 }}>
-        <label className="text-subtle" htmlFor="test-selector">
-          Sélectionner un test existant (optionnel)
-        </label>
-        <select
-          id="test-selector"
-          className="input"
-          value={selectedTestId ?? ''}
-          onChange={(event) => setSelectedTestId(event.target.value || null)}
-        >
-          <option value="">Nouveau test</option>
-          {(tests ?? []).map((test) => (
-            <option key={test.id} value={test.id}>
-              {test.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="name">
-            Nom du test
-          </label>
-          <input id="name" className="input" placeholder="Ex: Évaluation du langage" {...register('name')} />
-          {errors.name && <p className="error-text">{errors.name.message}</p>}
-        </div>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="ageMinMonths">
-            Âge minimum (mois)
-          </label>
-          <input
-            id="ageMinMonths"
-            type="number"
-            className="input"
-            placeholder="36"
-            {...register('ageMinMonths', {
-              setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-            })}
-          />
-          {errors.ageMinMonths && <p className="error-text">{errors.ageMinMonths.message}</p>}
+    <form className="notion-form" onSubmit={(event) => void onSubmit(event)}>
+      <div className="notion-toolbar">
+        <div className="notion-toolbar__group">
+          <Label htmlFor="test-selector">Fiche</Label>
+          <Select
+            id="test-selector"
+            value={selectedTestId ?? ''}
+            onChange={(event) => setSelectedTestId(event.target.value || null)}
+          >
+            <option value="">Nouveau test</option>
+            {(tests ?? []).map((test) => (
+              <option key={test.id} value={test.id}>
+                {test.name}
+              </option>
+            ))}
+          </Select>
+          {selectedTestId ? <Badge variant="outline">Mode édition</Badge> : <Badge>Nouvelle fiche</Badge>}
         </div>
 
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="ageMaxMonths">
-            Âge maximum (mois)
-          </label>
-          <input
-            id="ageMaxMonths"
-            type="number"
-            className="input"
-            placeholder="120"
-            {...register('ageMaxMonths', {
-              setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-            })}
-          />
-          {errors.ageMaxMonths && <p className="error-text">{errors.ageMaxMonths.message}</p>}
-        </div>
-
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="durationMinutes">
-            Durée (minutes)
-          </label>
-          <input
-            id="durationMinutes"
-            type="number"
-            className="input"
-            placeholder="45"
-            {...register('durationMinutes', {
-              setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-            })}
-          />
-          {errors.durationMinutes && <p className="error-text">{errors.durationMinutes.message}</p>}
-        </div>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="population">
-            Population ciblée
-          </label>
-          <input
-            id="population"
-            className="input"
-            placeholder="Enfants, adultes…"
-            {...register('population', { setValueAs: (value) => (value === '' ? null : value) })}
-          />
-        </div>
-
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="publisher">
-            Éditeur
-          </label>
-          <input
-            id="publisher"
-            className="input"
-            placeholder="Maison d'édition"
-            {...register('publisher', { setValueAs: (value) => (value === '' ? null : value) })}
-          />
-        </div>
-
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="priceRange">
-            Fourchette de prix
-          </label>
-          <input
-            id="priceRange"
-            className="input"
-            placeholder="€€"
-            {...register('priceRange', { setValueAs: (value) => (value === '' ? null : value) })}
-          />
-        </div>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="shortDescription">
-            Description courte
-          </label>
-          <textarea
-            id="shortDescription"
-            className="input"
-            rows={2}
-            {...register('shortDescription', { setValueAs: (value) => (value === '' ? null : value) })}
-          />
-        </div>
-
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="objective">
-            Objectif
-          </label>
-          <textarea
-            id="objective"
-            className="input"
-            rows={2}
-            {...register('objective', { setValueAs: (value) => (value === '' ? null : value) })}
-          />
-        </div>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="materials">
-            Matériel
-          </label>
-          <input
-            id="materials"
-            className="input"
-            placeholder="Matériel nécessaire"
-            {...register('materials', { setValueAs: (value) => (value === '' ? null : value) })}
-          />
-        </div>
-
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="buyLink">
-            Lien d'achat
-          </label>
-          <input
-            id="buyLink"
-            className="input"
-            placeholder="https://"
-            {...register('buyLink', { setValueAs: (value) => (value === '' ? null : value) })}
-          />
-          {errors.buyLink && <p className="error-text">{errors.buyLink.message}</p>}
-        </div>
-
-        <label className="stack" style={{ margin: 0, alignItems: 'flex-start', gap: '0.4rem' }}>
-          <span className="text-subtle">Test standardisé</span>
-          <input type="checkbox" {...register('isStandardized')} />
-        </label>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-        <div className="stack" style={{ margin: 0 }}>
-          <label className="text-subtle" htmlFor="notes">
-            Notes internes
-          </label>
-          <textarea
-            id="notes"
-            className="input"
-            rows={2}
-            {...register('notes', { setValueAs: (value) => (value === '' ? null : value) })}
-          />
-        </div>
-      </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-        <div className="stack" style={{ margin: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="text-subtle" htmlFor="domainInput">
-              Domaines
-            </label>
-            <small className="text-subtle">Cliquez pour ajouter ou retirer</small>
-          </div>
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            {(taxonomy?.domains ?? []).map((domain) => {
-              const isSelected = (currentDomains ?? []).includes(domain.name);
-              return (
-                <button
-                  key={domain.id}
-                  type="button"
-                  className={isSelected ? 'pill' : 'pill-muted'}
-                  onClick={() => (isSelected ? removeDomain(domain.name) : addDomain(domain.name))}
-                >
-                  {domain.name}
-                </button>
-              );
-            })}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            id="domainInput"
-            className="input"
-            placeholder="Nouveau domaine"
-            ref={domainInputRef}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                addDomain((event.currentTarget as HTMLInputElement).value);
-                (event.currentTarget as HTMLInputElement).value = '';
-              }
-            }}
-          />
-          <button
-            className="primary-btn"
+        <div className="notion-toolbar__group">
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
-              const input = domainInputRef.current;
-              if (input && input.value) {
-                addDomain(input.value);
-                input.value = '';
-              }
+              reset(defaultValues);
+              setSelectedTestId(null);
             }}
           >
-            Ajouter
-          </button>
-          </div>
-          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-            {(currentDomains ?? []).map((domain) => (
-              <span key={domain} className="pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                {domain}
-                <button type="button" aria-label={`Retirer ${domain}`} onClick={() => removeDomain(domain)}>
-                  ✕
-                </button>
-              </span>
-            ))}
-          </div>
+            Réinitialiser
+          </Button>
+          <Button type="submit" disabled={submitDisabled} aria-busy={submitDisabled}>
+            {submitLabel}
+          </Button>
         </div>
+      </div>
 
-        <div className="stack" style={{ margin: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="text-subtle" htmlFor="tagInput">
-              Tags
-            </label>
-            <small className="text-subtle">Cliquez pour ajouter ou retirer</small>
+      <Input
+        id="name"
+        className="notion-title-input"
+        placeholder="Nom du test (ex : Évaluation du langage)"
+        {...register('name')}
+      />
+      {errors.name && <p className="error-text">{errors.name.message}</p>}
+
+      <Card className="property-panel">
+        <CardHeader>
+          <CardTitle>Propriétés</CardTitle>
+          <p className="helper-text">Pensez aux propriétés clés comme dans une fiche Notion.</p>
+        </CardHeader>
+        <CardContent className="property-grid">
+          <div className="property-row">
+            <div className="property-label">Âge (mois)</div>
+            <div className="property-value">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
+                <Input
+                  id="ageMinMonths"
+                  type="number"
+                  placeholder="36"
+                  {...register('ageMinMonths', {
+                    setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
+                  })}
+                />
+                <Input
+                  id="ageMaxMonths"
+                  type="number"
+                  placeholder="120"
+                  {...register('ageMaxMonths', {
+                    setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
+                  })}
+                />
+              </div>
+              {(errors.ageMinMonths || errors.ageMaxMonths) && (
+                <p className="error-text">{errors.ageMinMonths?.message || errors.ageMaxMonths?.message}</p>
+              )}
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            {(taxonomy?.tags ?? []).map((tag) => {
-              const isSelected = (currentTags ?? []).includes(tag.label);
-              return (
-                <button
-                  key={tag.id}
+
+          <div className="property-row">
+            <div className="property-label">Durée</div>
+            <div className="property-value">
+              <Input
+                id="durationMinutes"
+                type="number"
+                placeholder="45"
+                {...register('durationMinutes', {
+                  setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
+                })}
+              />
+              {errors.durationMinutes && <p className="error-text">{errors.durationMinutes.message}</p>}
+              <p className="helper-text">Temps moyen estimé en minutes.</p>
+            </div>
+          </div>
+
+          <div className="property-row">
+            <div className="property-label">Population</div>
+            <div className="property-value">
+              <Input
+                id="population"
+                placeholder="Enfants, adolescents, adultes…"
+                {...register('population', { setValueAs: (value) => (value === '' ? null : value) })}
+              />
+            </div>
+          </div>
+
+          <div className="property-row">
+            <div className="property-label">Éditeur</div>
+            <div className="property-value">
+              <Input
+                id="publisher"
+                placeholder="Maison d'édition"
+                {...register('publisher', { setValueAs: (value) => (value === '' ? null : value) })}
+              />
+              <Input
+                id="priceRange"
+                placeholder="Fourchette de prix"
+                {...register('priceRange', { setValueAs: (value) => (value === '' ? null : value) })}
+              />
+            </div>
+          </div>
+
+          <div className="property-row">
+            <div className="property-label">Achat</div>
+            <div className="property-value">
+              <Input
+                id="buyLink"
+                placeholder="Lien d'achat (URL)"
+                {...register('buyLink', { setValueAs: (value) => (value === '' ? null : value) })}
+              />
+              {errors.buyLink && <p className="error-text">{errors.buyLink.message}</p>}
+              <Input
+                id="materials"
+                placeholder="Matériel requis"
+                {...register('materials', { setValueAs: (value) => (value === '' ? null : value) })}
+              />
+            </div>
+          </div>
+
+          <div className="property-row">
+            <div className="property-label">Standardisation</div>
+            <div className="property-value">
+              <label className={cn('pill-toggle', watch('isStandardized') && 'is-active')}>
+                <input type="checkbox" {...register('isStandardized')} style={{ display: 'none' }} />
+                {watch('isStandardized') ? 'Standardisé' : 'Non standardisé'}
+              </label>
+              <p className="helper-text">Basculer selon la nature du protocole.</p>
+            </div>
+          </div>
+
+          <div className="property-row">
+            <div className="property-label">Domaines</div>
+            <div className="property-value">
+              <div className="pill-collection">
+                {(taxonomy?.domains ?? []).map((domain) => {
+                  const isSelected = (currentDomains ?? []).includes(domain.name);
+                  return (
+                    <button
+                      key={domain.id}
+                      type="button"
+                      className={cn('pill-toggle', isSelected && 'is-active')}
+                      onClick={() => (isSelected ? removeDomain(domain.name) : addDomain(domain.name))}
+                    >
+                      {domain.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="notion-toolbar__group">
+                <Input
+                  id="domainInput"
+                  placeholder="Ajouter un domaine"
+                  ref={domainInputRef}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      addDomain((event.currentTarget as HTMLInputElement).value);
+                      (event.currentTarget as HTMLInputElement).value = '';
+                    }
+                  }}
+                />
+                <Button
                   type="button"
-                  className={isSelected ? 'pill' : 'pill-muted'}
-                  onClick={() => (isSelected ? removeTag(tag.label) : addTag(tag.label))}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const input = domainInputRef.current;
+                    if (input && input.value) {
+                      addDomain(input.value);
+                      input.value = '';
+                    }
+                  }}
                 >
-                  {tag.label}
-                </button>
-              );
-            })}
+                  Ajouter
+                </Button>
+              </div>
+              <p className="helper-text">Domaines actifs : {(currentDomains ?? []).join(', ') || 'aucun'}</p>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            id="tagInput"
-            className="input"
-            placeholder="Nouveau tag"
-            ref={tagInputRef}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                addTag((event.currentTarget as HTMLInputElement).value);
-                (event.currentTarget as HTMLInputElement).value = '';
-              }
-            }}
-          />
-          <button
-            className="primary-btn"
-            type="button"
-            onClick={() => {
-              const input = tagInputRef.current;
-              if (input && input.value) {
-                addTag(input.value);
-                input.value = '';
-              }
-            }}
-          >
-            Ajouter
-          </button>
+
+          <div className="property-row">
+            <div className="property-label">Tags</div>
+            <div className="property-value">
+              <div className="pill-collection">
+                {(taxonomy?.tags ?? []).map((tag) => {
+                  const isSelected = (currentTags ?? []).includes(tag.label);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={cn('pill-toggle', isSelected && 'is-active')}
+                      onClick={() => (isSelected ? removeTag(tag.label) : addTag(tag.label))}
+                    >
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="notion-toolbar__group">
+                <Input
+                  id="tagInput"
+                  placeholder="Ajouter un tag"
+                  ref={tagInputRef}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      addTag((event.currentTarget as HTMLInputElement).value);
+                      (event.currentTarget as HTMLInputElement).value = '';
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const input = tagInputRef.current;
+                    if (input && input.value) {
+                      addTag(input.value);
+                      input.value = '';
+                    }
+                  }}
+                >
+                  Ajouter
+                </Button>
+              </div>
+              <p className="helper-text">Tags actifs : {(currentTags ?? []).join(', ') || 'aucun'}</p>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-            {(currentTags ?? []).map((tag) => (
-              <span key={tag} className="pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                {tag}
-                <button type="button" aria-label={`Retirer ${tag}`} onClick={() => removeTag(tag)}>
-                  ✕
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
+        </CardContent>
+      </Card>
+
+      <div className="content-grid">
+        <Card>
+          <CardHeader>
+            <CardTitle>Résumé détaillé</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="property-value">
+              <Label htmlFor="shortDescription">Description longue</Label>
+              <Textarea
+                id="shortDescription"
+                placeholder="Présentez l'outil et ce qui le rend unique."
+                {...register('shortDescription', { setValueAs: (value) => (value === '' ? null : value) })}
+              />
+            </div>
+            <Separator />
+            <div className="property-value">
+              <Label htmlFor="objective">Objectif</Label>
+              <Textarea
+                id="objective"
+                placeholder="Que mesure ce test ? Dans quel contexte l'utiliser ?"
+                {...register('objective', { setValueAs: (value) => (value === '' ? null : value) })}
+              />
+            </div>
+            <Separator />
+            <div className="property-value">
+              <Label htmlFor="notes">Notes internes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Observations internes ou liens vers des ressources connexes."
+                {...register('notes', { setValueAs: (value) => (value === '' ? null : value) })}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Informations complémentaires</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="property-value">
+              <Label htmlFor="population-secondary">Public cible</Label>
+              <Input
+                id="population-secondary"
+                placeholder="Compléter le public si besoin"
+                value={populationValue ?? ''}
+                onChange={(event) =>
+                  setValue('population', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
+                }
+              />
+            </div>
+            <Separator />
+            <div className="property-value">
+              <Label htmlFor="materials-secondary">Matériel détaillé</Label>
+              <Textarea
+                id="materials-secondary"
+                placeholder="Listez le matériel précis, les grilles ou supports nécessaires."
+                value={materialsValue ?? ''}
+                onChange={(event) =>
+                  setValue('materials', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {(createMutation.isError || updateMutation.isError) && (
@@ -561,10 +574,6 @@ function TestForm() {
           Le test et ses relations ont été enregistrés.
         </p>
       )}
-
-      <button className="primary-btn" type="submit" disabled={submitDisabled} aria-busy={submitDisabled}>
-        {submitLabel}
-      </button>
     </form>
   );
 }
