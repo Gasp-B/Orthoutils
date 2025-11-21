@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import type { TaxonomyDeletionInput, TaxonomyMutationInput, TaxonomyResponse } from '@/lib/validation/tests';
 
+const TEST_TAXONOMY_QUERY_KEY = ['test-taxonomy'] as const;
+
 async function fetchTaxonomy() {
   const response = await fetch('/api/tests/taxonomy', { cache: 'no-store' });
 
@@ -51,7 +53,10 @@ async function deleteTaxonomyItem(payload: TaxonomyDeletionInput) {
 
 function TaxonomyManager() {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery({ queryKey: ['test-taxonomy'], queryFn: fetchTaxonomy });
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: TEST_TAXONOMY_QUERY_KEY,
+    queryFn: fetchTaxonomy,
+  });
   const [domainInput, setDomainInput] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -64,8 +69,8 @@ function TaxonomyManager() {
   const createMutation = useMutation({
     mutationFn: createTaxonomyItem,
     onSuccess: (result, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ['test-taxonomy'] });
-      queryClient.setQueryData(['test-taxonomy'], (current?: TaxonomyResponse) => {
+      void queryClient.invalidateQueries({ queryKey: TEST_TAXONOMY_QUERY_KEY });
+      queryClient.setQueryData(TEST_TAXONOMY_QUERY_KEY, (current?: TaxonomyResponse) => {
         if (!current) return current;
 
         if (variables.type === 'domain' && result.domain) {
@@ -110,7 +115,7 @@ function TaxonomyManager() {
       setDeletingId(variables.id);
     },
     onSuccess: (result, variables) => {
-      queryClient.setQueryData(['test-taxonomy'], (current?: TaxonomyResponse) => {
+      queryClient.setQueryData(TEST_TAXONOMY_QUERY_KEY, (current?: TaxonomyResponse) => {
         if (!current) return current;
 
         if (variables.type === 'domain') {
@@ -131,7 +136,7 @@ function TaxonomyManager() {
 
         return current;
       });
-      void queryClient.invalidateQueries({ queryKey: ['test-taxonomy'] });
+      void queryClient.invalidateQueries({ queryKey: TEST_TAXONOMY_QUERY_KEY });
       setToastMessage('Élément supprimé. Les listes seront actualisées.');
       setErrorMessage(null);
       setDeletingId(null);
