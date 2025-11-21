@@ -25,6 +25,8 @@ function formatDuration(minutes: number | null) {
   return `${minutes} min`;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function CataloguePage() {
   const tests = await getTestsWithMetadata();
 
