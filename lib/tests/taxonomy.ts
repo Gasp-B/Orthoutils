@@ -13,14 +13,14 @@ function normalizeValue(value: string) {
   return normalized;
 }
 
-export async function createDomain(name: string) {
-  const normalized = normalizeValue(name);
+export async function createDomain(label: string) {
+  const normalized = normalizeValue(label);
   const db = getDb();
 
   const [existingDomain] = await db
-    .select({ id: domains.id, name: domains.name })
+    .select({ id: domains.id, label: domains.label })
     .from(domains)
-    .where(eq(domains.name, normalized))
+    .where(eq(domains.label, normalized))
     .limit(1);
 
   if (existingDomain) {
@@ -37,18 +37,18 @@ export async function createDomain(name: string) {
 
   const [created] = await db
     .insert(domains)
-    .values({ name: normalized, slug })
+    .values({ label: normalized, slug })
     .onConflictDoNothing()
-    .returning({ id: domains.id, name: domains.name });
+    .returning({ id: domains.id, label: domains.label });
 
   if (created) {
     return created;
   }
 
   const [existing] = await db
-    .select({ id: domains.id, name: domains.name })
+    .select({ id: domains.id, label: domains.label })
     .from(domains)
-    .where(eq(domains.name, normalized))
+    .where(eq(domains.label, normalized))
     .limit(1);
 
   if (!existing) {
@@ -58,14 +58,14 @@ export async function createDomain(name: string) {
   return existing;
 }
 
-export async function createTag(name: string) {
-  const normalized = normalizeValue(name);
+export async function createTag(label: string) {
+  const normalized = normalizeValue(label);
   const db = getDb();
 
   const [existingTag] = await db
-    .select({ id: tags.id, name: tags.name })
+    .select({ id: tags.id, label: tags.label })
     .from(tags)
-    .where(eq(tags.name, normalized))
+    .where(eq(tags.label, normalized))
     .limit(1);
 
   if (existingTag) {
@@ -74,18 +74,18 @@ export async function createTag(name: string) {
 
   const [created] = await db
     .insert(tags)
-    .values({ name: normalized })
+    .values({ label: normalized })
     .onConflictDoNothing()
-    .returning({ id: tags.id, name: tags.name });
+    .returning({ id: tags.id, label: tags.label });
 
   if (created) {
     return created;
   }
 
   const [existing] = await db
-    .select({ id: tags.id, name: tags.name })
+    .select({ id: tags.id, label: tags.label })
     .from(tags)
-    .where(eq(tags.name, normalized))
+    .where(eq(tags.label, normalized))
     .limit(1);
 
   if (!existing) {
@@ -104,7 +104,7 @@ export async function deleteDomain(id: string) {
     const [removed] = await tx
       .delete(domains)
       .where(eq(domains.id, id))
-      .returning({ id: domains.id, name: domains.name });
+      .returning({ id: domains.id, label: domains.label });
 
     return removed ?? null;
   });
@@ -121,7 +121,7 @@ export async function deleteTag(id: string) {
     const [removed] = await tx
       .delete(tags)
       .where(eq(tags.id, id))
-      .returning({ id: tags.id, name: tags.name });
+      .returning({ id: tags.id, label: tags.label });
 
     return removed ?? null;
   });

@@ -64,7 +64,7 @@ export const sectionSubsections = pgTable(
 
 export const tags = pgTable('tags', {
   id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull().unique(),
+  label: text('label').notNull().unique(),
   colorLabel: text('color_label'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
@@ -112,7 +112,7 @@ export type TestRecord = typeof tests.$inferSelect;
 
 export const domains = pgTable('domains', {
   id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull().unique(),
+  label: text('label').notNull().unique(),
   slug: text('slug').notNull().unique(),
 });
 

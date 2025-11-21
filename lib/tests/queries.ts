@@ -36,8 +36,8 @@ export async function getTestsWithMetadata(): Promise<TestDto[]> {
       bibliography: tests.bibliography,
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
-      domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domains.name}) FILTER (WHERE ${domains.name} IS NOT NULL), '{}')`,
-      tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tags.name}) FILTER (WHERE ${tags.name} IS NOT NULL), '{}')`,
+      domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domains.label}) FILTER (WHERE ${domains.label} IS NOT NULL), '{}')`,
+      tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tags.label}) FILTER (WHERE ${tags.label} IS NOT NULL), '{}')`,
     })
     .from(tests)
     .leftJoin(testDomains, eq(tests.id, testDomains.testId))
@@ -82,8 +82,8 @@ export async function getTestWithMetadata(id: string): Promise<TestDto | null> {
       bibliography: tests.bibliography,
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
-      domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domains.name}) FILTER (WHERE ${domains.name} IS NOT NULL), '{}')`,
-      tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tags.name}) FILTER (WHERE ${tags.name} IS NOT NULL), '{}')`,
+      domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domains.label}) FILTER (WHERE ${domains.label} IS NOT NULL), '{}')`,
+      tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tags.label}) FILTER (WHERE ${tags.label} IS NOT NULL), '{}')`,
     })
     .from(tests)
     .leftJoin(testDomains, eq(tests.id, testDomains.testId))

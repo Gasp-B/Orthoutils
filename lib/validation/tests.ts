@@ -64,13 +64,14 @@ export const taxonomyResponseSchema = z.object({
   domains: z.array(
     z.object({
       id: z.string().uuid(),
-      name: z.string(),
+      label: z.string(),
+      slug: z.string(),
     }),
   ),
   tags: z.array(
     z.object({
       id: z.string().uuid(),
-      name: z.string(),
+      label: z.string(),
     }),
   ),
 });

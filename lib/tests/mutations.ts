@@ -13,27 +13,27 @@ function normalizeList(values: string[]) {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
 }
 
-async function upsertDomains(db: DbClient, domainNames: string[]) {
-  const normalized = normalizeList(domainNames);
+async function upsertDomains(db: DbClient, domainLabels: string[]) {
+  const normalized = normalizeList(domainLabels);
 
   if (normalized.length === 0) {
-    return [] as { id: string; name: string }[];
+    return [] as { id: string; label: string }[];
   }
 
   const reservedSlugs = new Set<string>();
-  const values = [] as { name: string; slug: string }[];
+  const values = [] as { label: string; slug: string }[];
 
-  for (const name of normalized) {
+  for (const label of normalized) {
     const slug = await generateUniqueSlug({
       db,
-      name,
+      name: label,
       table: domains,
       slugColumn: domains.slug,
       idColumn: domains.id,
       reserved: reservedSlugs,
     });
 
-    values.push({ name, slug });
+    values.push({ label, slug });
   }
 
   await db
@@ -42,27 +42,27 @@ async function upsertDomains(db: DbClient, domainNames: string[]) {
     .onConflictDoNothing();
 
   return db
-    .select({ id: domains.id, name: domains.name })
+    .select({ id: domains.id, label: domains.label })
     .from(domains)
-    .where(inArray(domains.name, normalized));
+    .where(inArray(domains.label, normalized));
 }
 
-async function upsertTags(db: DbClient, tagNames: string[]) {
-  const normalized = normalizeList(tagNames);
+async function upsertTags(db: DbClient, tagLabels: string[]) {
+  const normalized = normalizeList(tagLabels);
 
   if (normalized.length === 0) {
-    return [] as { id: string; name: string }[];
+    return [] as { id: string; label: string }[];
   }
 
   await db
     .insert(tags)
-    .values(normalized.map((name) => ({ name })))
+    .values(normalized.map((label) => ({ label })))
     .onConflictDoNothing();
 
   return db
-    .select({ id: tags.id, name: tags.name })
+    .select({ id: tags.id, label: tags.label })
     .from(tags)
-    .where(inArray(tags.name, normalized));
+    .where(inArray(tags.label, normalized));
 }
 
 async function syncDomains(db: DbClient, testId: string, domainIds: string[]) {
