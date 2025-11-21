@@ -44,6 +44,16 @@ function getConnectSources() {
   return ["'self'", supabaseUrl].filter(Boolean).join(' ');
 }
 
+function getScriptSrc() {
+  const sources = ["'self'", "'unsafe-inline'"];
+
+  if (process.env.NODE_ENV !== 'production') {
+    sources.push("'unsafe-eval'");
+  }
+
+  return sources.join(' ');
+}
+
 function getSecurityHeaders() {
   const contentSecurityPolicy = [
     "default-src 'self'",
@@ -51,7 +61,7 @@ function getSecurityHeaders() {
     "font-src 'self' data:",
     "img-src 'self' data:",
     "object-src 'none'",
-    "script-src 'self' 'unsafe-inline'",
+    `script-src ${getScriptSrc()}`,
     "style-src 'self' 'unsafe-inline'",
     `connect-src ${getConnectSources()}`,
     "frame-ancestors 'none'",
