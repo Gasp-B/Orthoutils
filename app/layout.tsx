@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Providers from './providers';
+import Header from '../components/Header';
 
 export const metadata: Metadata = {
   title: 'Othoutils | Référentiels cliniques orthophoniques',
@@ -18,7 +19,8 @@ function RootLayout({ children }: RootLayoutProps) {
     <html lang="fr">
       <body>
         <Providers>
-          <div className="page">{children}</div>
+          <Header />
+          <main className="page">{children}</main>
         </Providers>
       </body>
     </html>

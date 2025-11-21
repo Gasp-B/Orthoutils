@@ -1,4 +1,3 @@
-import Header from '../components/Header';
 import Hero from '../components/Hero';
 import ReferentialsSection from '../components/ReferentialsSection';
 import ToolsSection from '../components/ToolsSection';
@@ -6,7 +5,6 @@ import ToolsSection from '../components/ToolsSection';
 function HomePage() {
   return (
     <>
-      <Header />
       <Hero />
       <ReferentialsSection />
       <ToolsSection />
