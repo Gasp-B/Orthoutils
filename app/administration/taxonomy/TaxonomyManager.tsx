@@ -140,8 +140,11 @@ function TaxonomyManager() {
     },
   });
 
-  const sortedDomains = useMemo(() => (data?.domains ?? []).sort((a, b) => a.name.localeCompare(b.name)), [data?.domains]);
-  const sortedTags = useMemo(() => (data?.tags ?? []).sort((a, b) => a.label.localeCompare(b.label)), [data?.tags]);
+  const sortedDomains = useMemo(
+    () => [...(data?.domains ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
+    [data?.domains],
+  );
+  const sortedTags = useMemo(() => [...(data?.tags ?? [])].sort((a, b) => a.label.localeCompare(b.label)), [data?.tags]);
 
   const domainExists = useMemo(
     () => sortedDomains.some((domain) => domain.name.trim().toLowerCase() === normalizedDomainInput.toLowerCase()),
