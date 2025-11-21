@@ -35,10 +35,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 50;
-  padding: 0.25rem 0;
-  background: rgba(11, 18, 35, 0.94);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  padding: 0.35rem 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(232, 243, 250, 0.98));
+  border-bottom: 1px solid rgba(14, 165, 233, 0.14);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
 }
 
 .top-banner__content {
@@ -46,7 +46,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.65rem 0;
+  padding: 0.8rem 0;
 }
 
 .top-banner__identity {
@@ -59,42 +59,86 @@ body {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
   display: grid;
   place-items: center;
-  color: #0b1223;
+  color: #0ea5e9;
   font-weight: 900;
   letter-spacing: 0.04em;
 }
 
 .top-banner__title {
   margin: 0;
-  color: #e2e8f0;
+  color: var(--card-foreground);
   font-weight: 800;
 }
 
 .top-banner__subtitle {
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
 }
 
 .top-banner__nav {
   display: flex;
   gap: 1rem;
   align-items: center;
-  color: #e2e8f0;
+  color: var(--card-foreground);
 }
 
 .top-banner__link {
   padding: 0.35rem 0;
-  font-weight: 600;
-  color: #e2e8f0;
+  font-weight: 700;
+  color: var(--card-foreground);
   border-bottom: 2px solid transparent;
   transition: color 150ms ease, border-color 150ms ease;
 }
 
 .top-banner__link:hover {
-  color: #fff;
-  border-color: rgba(56, 189, 248, 0.8);
+  color: var(--accent-strong);
+  border-color: rgba(14, 165, 233, 0.6);
+}
+
+.top-banner__menu {
+  position: relative;
+}
+
+.top-banner__menu-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.top-banner__submenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  display: none;
+  min-width: 210px;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #eef6fb 100%);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.16);
+  border: 1px solid rgba(14, 165, 233, 0.12);
+}
+
+.top-banner__menu:hover .top-banner__submenu,
+.top-banner__menu:focus-within .top-banner__submenu {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.top-banner__submenu-link {
+  padding: 0.35rem 0.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  color: var(--card-foreground);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.top-banner__submenu-link:hover,
+.top-banner__submenu-link:focus-visible {
+  background: rgba(14, 165, 233, 0.12);
+  color: var(--accent-strong);
+  outline: none;
 }
 
 .top-banner__cta {

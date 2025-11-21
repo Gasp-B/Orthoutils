@@ -19,12 +19,19 @@ function Header() {
           <a href="#collaboration" className="top-banner__link">
             Collaboration
           </a>
-          <a href="/tools/new" className="top-banner__link">
-            Ajouter un outil
-          </a>
-          <a href="/administration" className="top-banner__link">
-            Administration
-          </a>
+          <div className="top-banner__menu">
+            <a href="/administration" className="top-banner__link top-banner__menu-label" aria-haspopup="true">
+              Administration
+            </a>
+            <div className="top-banner__submenu" aria-label="Menu administration">
+              <a href="/administration" className="top-banner__submenu-link">
+                Tableau de bord
+              </a>
+              <a href="/tools/new" className="top-banner__submenu-link">
+                Ajouter un outil
+              </a>
+            </div>
+          </div>
         </nav>
       </div>
     </header>
