@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -30,8 +30,17 @@ const formSchema = testSchema
     notes: z.string().nullable().optional(),
     ageMinMonths: z.number().int().nullable().optional(),
     ageMaxMonths: z.number().int().nullable().optional(),
-    durationMinutes: z.number().int().nullable().optional(),
-  });
+  durationMinutes: z.number().int().nullable().optional(),
+  bibliography: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        url: z.string().url(),
+      }),
+    )
+    .default([])
+    .optional(),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -58,6 +67,7 @@ const defaultValues: FormValues = {
   notes: null,
   domains: [],
   tags: [],
+  bibliography: [],
 };
 
 async function fetchTests() {
@@ -118,8 +128,7 @@ function TestForm() {
   const { data: taxonomy } = useQuery({ queryKey: ['test-taxonomy'], queryFn: fetchTaxonomy });
   const { data: tests } = useQuery({ queryKey: ['tests'], queryFn: fetchTests });
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
-  const domainInputRef = useRef<HTMLInputElement | null>(null);
-  const tagInputRef = useRef<HTMLInputElement | null>(null);
+  const [newBibliography, setNewBibliography] = useState({ label: '', url: '' });
 
   const {
     register,
@@ -136,12 +145,14 @@ function TestForm() {
 
   const currentDomains = watch('domains');
   const currentTags = watch('tags');
+  const currentBibliography = watch('bibliography');
   const populationValue = watch('population');
   const materialsValue = watch('materials');
 
   useEffect(() => {
     if (!selectedTestId) {
       reset(defaultValues);
+      setNewBibliography({ label: '', url: '' });
       return;
     }
 
@@ -165,7 +176,9 @@ function TestForm() {
         notes: test.notes,
         domains: test.domains,
         tags: test.tags,
+        bibliography: test.bibliography ?? [],
       });
+      setNewBibliography({ label: '', url: '' });
     }
   }, [reset, selectedTestId, tests]);
 
@@ -176,6 +189,7 @@ function TestForm() {
       void queryClient.invalidateQueries({ queryKey: ['test-taxonomy'] });
       reset(defaultValues);
       setSelectedTestId(null);
+      setNewBibliography({ label: '', url: '' });
     },
   });
 
@@ -210,6 +224,12 @@ function TestForm() {
       durationMinutes: values.durationMinutes ?? null,
       domains: Array.from(new Set((values.domains ?? []).map((domain) => domain.trim()).filter(Boolean))),
       tags: Array.from(new Set((values.tags ?? []).map((tag) => tag.trim()).filter(Boolean))),
+      bibliography: (values.bibliography ?? [])
+        .map((entry) => ({
+          label: entry.label.trim(),
+          url: entry.url.trim(),
+        }))
+        .filter((entry) => entry.label && entry.url),
     };
 
     if (payload.id) {
@@ -219,30 +239,35 @@ function TestForm() {
     }
   });
 
-  function addDomain(value: string) {
-    const next = Array.from(new Set([...(currentDomains ?? []), value.trim()].filter(Boolean)));
-    setValue('domains', next, { shouldDirty: true });
-  }
-
-  function addTag(value: string) {
-    const next = Array.from(new Set([...(currentTags ?? []), value.trim()].filter(Boolean)));
-    setValue('tags', next, { shouldDirty: true });
-  }
-
-  function removeDomain(value: string) {
-    setValue(
-      'domains',
-      (currentDomains ?? []).filter((domain) => domain !== value),
-      { shouldDirty: true },
+  function updateBibliographyItem(
+    index: number,
+    field: 'label' | 'url',
+    value: string,
+  ) {
+    const entries = [...(currentBibliography ?? [])];
+    const next = entries.map((entry, entryIndex) =>
+      entryIndex === index ? { ...entry, [field]: value } : entry,
     );
+    setValue('bibliography', next, { shouldDirty: true });
   }
 
-  function removeTag(value: string) {
-    setValue(
-      'tags',
-      (currentTags ?? []).filter((tag) => tag !== value),
-      { shouldDirty: true },
-    );
+  function removeBibliographyItem(index: number) {
+    const entries = [...(currentBibliography ?? [])];
+    entries.splice(index, 1);
+    setValue('bibliography', entries, { shouldDirty: true });
+  }
+
+  function addBibliographyItem() {
+    const label = newBibliography.label.trim();
+    const url = newBibliography.url.trim();
+
+    if (!label || !url) {
+      return;
+    }
+
+    const entries = [...(currentBibliography ?? []), { label, url }];
+    setValue('bibliography', entries, { shouldDirty: true });
+    setNewBibliography({ label: '', url: '' });
   }
 
   return (
@@ -272,6 +297,7 @@ function TestForm() {
             onClick={() => {
               reset(defaultValues);
               setSelectedTestId(null);
+              setNewBibliography({ label: '', url: '' });
             }}
           >
             Réinitialiser
@@ -397,49 +423,22 @@ function TestForm() {
           <div className="property-row">
             <div className="property-label">Domaines</div>
             <div className="property-value">
-              <div className="pill-collection">
-                {(taxonomy?.domains ?? []).map((domain) => {
-                  const isSelected = (currentDomains ?? []).includes(domain.name);
-                  return (
-                    <button
-                      key={domain.id}
-                      type="button"
-                      className={cn('pill-toggle', isSelected && 'is-active')}
-                      onClick={() => (isSelected ? removeDomain(domain.name) : addDomain(domain.name))}
-                    >
-                      {domain.name}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="notion-toolbar__group">
-                <Input
-                  id="domainInput"
-                  placeholder="Ajouter un domaine"
-                  ref={domainInputRef}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      addDomain((event.currentTarget as HTMLInputElement).value);
-                      (event.currentTarget as HTMLInputElement).value = '';
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const input = domainInputRef.current;
-                    if (input && input.value) {
-                      addDomain(input.value);
-                      input.value = '';
-                    }
-                  }}
-                >
-                  Ajouter
-                </Button>
-              </div>
+              <Label htmlFor="domains">Sélectionnez un ou plusieurs domaines</Label>
+              <Select
+                id="domains"
+                multiple
+                value={currentDomains ?? []}
+                onChange={(event) => {
+                  const selectedValues = Array.from(event.target.selectedOptions).map((option) => option.value);
+                  setValue('domains', selectedValues, { shouldDirty: true });
+                }}
+              >
+                {(taxonomy?.domains ?? []).map((domain) => (
+                  <option key={domain.id} value={domain.name}>
+                    {domain.name}
+                  </option>
+                ))}
+              </Select>
               <p className="helper-text">Domaines actifs : {(currentDomains ?? []).join(', ') || 'aucun'}</p>
             </div>
           </div>
@@ -447,49 +446,22 @@ function TestForm() {
           <div className="property-row">
             <div className="property-label">Tags</div>
             <div className="property-value">
-              <div className="pill-collection">
-                {(taxonomy?.tags ?? []).map((tag) => {
-                  const isSelected = (currentTags ?? []).includes(tag.label);
-                  return (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      className={cn('pill-toggle', isSelected && 'is-active')}
-                      onClick={() => (isSelected ? removeTag(tag.label) : addTag(tag.label))}
-                    >
-                      {tag.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="notion-toolbar__group">
-                <Input
-                  id="tagInput"
-                  placeholder="Ajouter un tag"
-                  ref={tagInputRef}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      addTag((event.currentTarget as HTMLInputElement).value);
-                      (event.currentTarget as HTMLInputElement).value = '';
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const input = tagInputRef.current;
-                    if (input && input.value) {
-                      addTag(input.value);
-                      input.value = '';
-                    }
-                  }}
-                >
-                  Ajouter
-                </Button>
-              </div>
+              <Label htmlFor="tags">Sélectionnez un ou plusieurs tags</Label>
+              <Select
+                id="tags"
+                multiple
+                value={currentTags ?? []}
+                onChange={(event) => {
+                  const selectedValues = Array.from(event.target.selectedOptions).map((option) => option.value);
+                  setValue('tags', selectedValues, { shouldDirty: true });
+                }}
+              >
+                {(taxonomy?.tags ?? []).map((tag) => (
+                  <option key={tag.id} value={tag.label}>
+                    {tag.label}
+                  </option>
+                ))}
+              </Select>
               <p className="helper-text">Tags actifs : {(currentTags ?? []).join(', ') || 'aucun'}</p>
             </div>
           </div>
@@ -558,6 +530,85 @@ function TestForm() {
                   setValue('materials', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
                 }
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Bibliographie</CardTitle>
+            <p className="helper-text">Ajoutez des liens vers des articles, vidéos ou références utiles.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              {(currentBibliography ?? []).length === 0 && (
+                <p className="helper-text" style={{ margin: 0 }}>
+                  Aucun lien pour le moment. Ajoutez votre première référence ci-dessous.
+                </p>
+              )}
+
+              {(currentBibliography ?? []).map((entry, index) => (
+                <div key={`${entry.label}-${index}`} className="property-value" style={{ gap: '0.35rem' }}>
+                  <Label htmlFor={`bibliography-label-${index}`}>Titre ou source</Label>
+                  <Input
+                    id={`bibliography-label-${index}`}
+                    value={entry.label}
+                    onChange={(event) => updateBibliographyItem(index, 'label', event.target.value)}
+                    placeholder="Article, vidéo, ouvrage…"
+                  />
+                  {errors.bibliography?.[index]?.label && (
+                    <p className="error-text">{errors.bibliography?.[index]?.label?.message}</p>
+                  )}
+
+                  <Label htmlFor={`bibliography-url-${index}`}>Lien</Label>
+                  <div className="notion-toolbar__group">
+                    <Input
+                      id={`bibliography-url-${index}`}
+                      type="url"
+                      value={entry.url}
+                      onChange={(event) => updateBibliographyItem(index, 'url', event.target.value)}
+                      placeholder="https://example.com/ressource"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeBibliographyItem(index)}
+                    >
+                      Supprimer
+                    </Button>
+                  </div>
+                  {errors.bibliography?.[index]?.url && (
+                    <p className="error-text">{errors.bibliography?.[index]?.url?.message}</p>
+                  )}
+                  <Separator />
+                </div>
+              ))}
+            </div>
+
+            <div className="property-value" style={{ gap: '0.75rem' }}>
+              <Label htmlFor="bibliography-new-label">Ajouter une référence</Label>
+              <Input
+                id="bibliography-new-label"
+                placeholder="Titre de la ressource"
+                value={newBibliography.label}
+                onChange={(event) => setNewBibliography((prev) => ({ ...prev, label: event.target.value }))}
+              />
+              <div className="notion-toolbar__group">
+                <Input
+                  id="bibliography-new-url"
+                  type="url"
+                  placeholder="https://exemple.com/ressource"
+                  value={newBibliography.url}
+                  onChange={(event) => setNewBibliography((prev) => ({ ...prev, url: event.target.value }))}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={addBibliographyItem}>
+                  Ajouter
+                </Button>
+              </div>
+              <p className="helper-text" style={{ margin: 0 }}>
+                Indiquez un titre court et une URL valide. Les liens seront enregistrés avec le test.
+              </p>
             </div>
           </CardContent>
         </Card>

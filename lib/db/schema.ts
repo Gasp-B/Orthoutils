@@ -99,6 +99,10 @@ export const tests = pgTable('tests', {
   priceRange: text('price_range'),
   buyLink: text('buy_link'),
   notes: text('notes'),
+  bibliography: jsonb('bibliography')
+    .notNull()
+    .$type<Array<{ label: string; url: string }>>()
+    .default(sql`'[]'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

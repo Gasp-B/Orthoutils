@@ -33,6 +33,7 @@ export async function getTestsWithMetadata(): Promise<TestDto[]> {
       priceRange: tests.priceRange,
       buyLink: tests.buyLink,
       notes: tests.notes,
+      bibliography: tests.bibliography,
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domains.name}) FILTER (WHERE ${domains.name} IS NOT NULL), '{}')`,
@@ -53,6 +54,7 @@ export async function getTestsWithMetadata(): Promise<TestDto[]> {
       updatedAt: toIsoString(row.updatedAt ?? null),
       domains: row.domains ?? [],
       tags: row.tags ?? [],
+      bibliography: row.bibliography ?? [],
     })),
   });
 
@@ -77,6 +79,7 @@ export async function getTestWithMetadata(id: string): Promise<TestDto | null> {
       priceRange: tests.priceRange,
       buyLink: tests.buyLink,
       notes: tests.notes,
+      bibliography: tests.bibliography,
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domains.name}) FILTER (WHERE ${domains.name} IS NOT NULL), '{}')`,
@@ -98,6 +101,7 @@ export async function getTestWithMetadata(id: string): Promise<TestDto | null> {
       updatedAt: toIsoString(row.updatedAt ?? null),
       domains: row.domains ?? [],
       tags: row.tags ?? [],
+      bibliography: row.bibliography ?? [],
     })),
   });
 

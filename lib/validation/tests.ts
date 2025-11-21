@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+const bibliographySchema = z
+  .array(
+    z.object({
+      label: z.string().min(1),
+      url: z.string().url(),
+    }),
+  )
+  .default([]);
+
 export const testSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -20,6 +29,7 @@ export const testSchema = z.object({
   updatedAt: z.string(),
   domains: z.array(z.string()),
   tags: z.array(z.string()),
+  bibliography: bibliographySchema,
 });
 
 export const testsResponseSchema = z.object({
@@ -43,6 +53,7 @@ export const testInputSchema = z.object({
   notes: z.string().nullable().optional(),
   domains: z.array(z.string().min(1)).default([]),
   tags: z.array(z.string().min(1)).default([]),
+  bibliography: bibliographySchema,
 });
 
 export const updateTestInputSchema = testInputSchema.extend({

@@ -10,12 +10,13 @@ npm install
 npm run dev
 ```
 
-Variables d'environnement à ajouter dans `.env.local` pour activer Supabase (clé publishable côté client et clé secrète côté serveur) :
+Variables d'environnement à ajouter dans `.env.local` pour activer Supabase (clé publishable côté client et clé service côté serveur) :
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xyz.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<clé_anon>
-SUPABASE_SECRET_KEY=<clé_service>
+SUPABASE_SERVICE_ROLE_KEY=<clé_service>
+SUPABASE_DB_URL=postgresql://postgres:password@db.host:6543/postgres
 ```
 
 ## Fonctionnalités incluses

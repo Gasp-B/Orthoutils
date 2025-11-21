@@ -124,6 +124,7 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
         priceRange: payload.priceRange ?? null,
         buyLink: payload.buyLink ?? null,
         notes: payload.notes ?? null,
+        bibliography: payload.bibliography ?? [],
       })
       .returning({ id: tests.id });
 
@@ -176,6 +177,7 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
         priceRange: payload.priceRange ?? null,
         buyLink: payload.buyLink ?? null,
         notes: payload.notes ?? null,
+        bibliography: payload.bibliography ?? [],
       })
       .where(eq(tests.id, payload.id));
 
