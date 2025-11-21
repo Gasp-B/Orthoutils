@@ -17,6 +17,16 @@ export async function createDomain(name: string) {
   const normalized = normalizeValue(name);
   const db = getDb();
 
+  const [existingDomain] = await db
+    .select({ id: domains.id, name: domains.name })
+    .from(domains)
+    .where(eq(domains.name, normalized))
+    .limit(1);
+
+  if (existingDomain) {
+    throw new Error('Ce domaine existe déjà.');
+  }
+
   const slug = await generateUniqueSlug({
     db,
     name: normalized,
@@ -51,6 +61,16 @@ export async function createDomain(name: string) {
 export async function createTag(label: string) {
   const normalized = normalizeValue(label);
   const db = getDb();
+
+  const [existingTag] = await db
+    .select({ id: tags.id, label: tags.label })
+    .from(tags)
+    .where(eq(tags.label, normalized))
+    .limit(1);
+
+  if (existingTag) {
+    throw new Error('Ce tag existe déjà.');
+  }
 
   const [created] = await db
     .insert(tags)

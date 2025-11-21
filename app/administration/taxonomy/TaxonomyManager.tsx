@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import type { TaxonomyDeletionInput, TaxonomyMutationInput, TaxonomyResponse } from '@/lib/validation/tests';
 
 async function fetchTaxonomy() {
-  const response = await fetch('/api/tests/taxonomy');
+  const response = await fetch('/api/tests/taxonomy', { cache: 'no-store' });
 
   if (!response.ok) {
     throw new Error('Impossible de récupérer les domaines et tags');
@@ -58,6 +58,9 @@ function TaxonomyManager() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const normalizedDomainInput = domainInput.trim();
+  const normalizedTagInput = tagInput.trim();
+
   const createMutation = useMutation({
     mutationFn: createTaxonomyItem,
     onSuccess: (_, variables) => {
@@ -104,6 +107,16 @@ function TaxonomyManager() {
   const sortedDomains = useMemo(() => (data?.domains ?? []).sort((a, b) => a.name.localeCompare(b.name)), [data?.domains]);
   const sortedTags = useMemo(() => (data?.tags ?? []).sort((a, b) => a.label.localeCompare(b.label)), [data?.tags]);
 
+  const domainExists = useMemo(
+    () => sortedDomains.some((domain) => domain.name.trim().toLowerCase() === normalizedDomainInput.toLowerCase()),
+    [normalizedDomainInput, sortedDomains],
+  );
+
+  const tagExists = useMemo(
+    () => sortedTags.some((tag) => tag.label.trim().toLowerCase() === normalizedTagInput.toLowerCase()),
+    [normalizedTagInput, sortedTags],
+  );
+
   return (
     <div className="content-grid">
       <Card>
@@ -122,11 +135,16 @@ function TaxonomyManager() {
             onChange={(event) => setDomainInput(event.target.value)}
             disabled={createMutation.isPending}
           />
+          {domainExists && (
+            <p className="error-text" style={{ margin: 0 }}>
+              Ce domaine existe déjà.
+            </p>
+          )}
           <div className="notion-toolbar__group">
             <Button
               type="button"
-              onClick={() => createMutation.mutate({ type: 'domain', value: domainInput })}
-              disabled={!domainInput.trim() || createMutation.isPending}
+              onClick={() => createMutation.mutate({ type: 'domain', value: normalizedDomainInput })}
+              disabled={!normalizedDomainInput || createMutation.isPending || domainExists}
             >
               {createMutation.isPending ? 'Enregistrement…' : 'Ajouter le domaine'}
             </Button>
@@ -153,11 +171,16 @@ function TaxonomyManager() {
             onChange={(event) => setTagInput(event.target.value)}
             disabled={createMutation.isPending}
           />
+          {tagExists && (
+            <p className="error-text" style={{ margin: 0 }}>
+              Ce tag existe déjà.
+            </p>
+          )}
           <div className="notion-toolbar__group">
             <Button
               type="button"
-              onClick={() => createMutation.mutate({ type: 'tag', value: tagInput })}
-              disabled={!tagInput.trim() || createMutation.isPending}
+              onClick={() => createMutation.mutate({ type: 'tag', value: normalizedTagInput })}
+              disabled={!normalizedTagInput || createMutation.isPending || tagExists}
             >
               {createMutation.isPending ? 'Enregistrement…' : 'Ajouter le tag'}
             </Button>

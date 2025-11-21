@@ -81,7 +81,7 @@ export type TaxonomyResponse = z.infer<typeof taxonomyResponseSchema>;
 
 export const taxonomyMutationSchema = z.object({
   type: z.enum(['domain', 'tag']),
-  value: z.string().min(1),
+  value: z.string().trim().min(1, { message: 'La valeur fournie est vide.' }),
 });
 
 export const taxonomyDeletionSchema = z.object({
