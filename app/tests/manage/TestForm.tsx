@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils/cn';
 import { testsResponseSchema, testSchema, taxonomyResponseSchema, type TestDto } from '@/lib/validation/tests';
+import styles from './test-form.module.css';
 
 const formSchema = testSchema
   .omit({ id: true, slug: true, createdAt: true, updatedAt: true })
@@ -325,7 +326,7 @@ function TestForm() {
           <div className="property-row">
             <div className="property-label">Âge (mois)</div>
             <div className="property-value">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
+              <div className={styles.ageGrid}>
                 <Input
                   id="ageMinMonths"
                   type="number"
@@ -413,7 +414,7 @@ function TestForm() {
             <div className="property-label">Standardisation</div>
             <div className="property-value">
               <label className={cn('pill-toggle', watch('isStandardized') && 'is-active')}>
-                <input type="checkbox" {...register('isStandardized')} style={{ display: 'none' }} />
+                <input type="checkbox" {...register('isStandardized')} className={styles.hiddenInput} />
                 {watch('isStandardized') ? 'Standardisé' : 'Non standardisé'}
               </label>
               <p className="helper-text">Basculer selon la nature du protocole.</p>
@@ -542,13 +543,13 @@ function TestForm() {
           <CardContent className="space-y-4">
             <div className="space-y-3">
               {(currentBibliography ?? []).length === 0 && (
-                <p className="helper-text" style={{ margin: 0 }}>
+                <p className={`helper-text ${styles.helperTight}`}>
                   Aucun lien pour le moment. Ajoutez votre première référence ci-dessous.
                 </p>
               )}
 
               {(currentBibliography ?? []).map((entry, index) => (
-                <div key={`${entry.label}-${index}`} className="property-value" style={{ gap: '0.35rem' }}>
+                <div key={`${entry.label}-${index}`} className={`property-value ${styles.bibliographyEntry}`}>
                   <Label htmlFor={`bibliography-label-${index}`}>Titre ou source</Label>
                   <Input
                     id={`bibliography-label-${index}`}
@@ -586,7 +587,7 @@ function TestForm() {
               ))}
             </div>
 
-            <div className="property-value" style={{ gap: '0.75rem' }}>
+            <div className={`property-value ${styles.bibliographyCreate}`}>
               <Label htmlFor="bibliography-new-label">Ajouter une référence</Label>
               <Input
                 id="bibliography-new-label"
@@ -606,7 +607,7 @@ function TestForm() {
                   Ajouter
                 </Button>
               </div>
-              <p className="helper-text" style={{ margin: 0 }}>
+              <p className={`helper-text ${styles.helperTight}`}>
                 Indiquez un titre court et une URL valide. Les liens seront enregistrés avec le test.
               </p>
             </div>
@@ -615,13 +616,13 @@ function TestForm() {
       </div>
 
       {(createMutation.isError || updateMutation.isError) && (
-        <p className="error-text" style={{ margin: 0 }}>
+        <p className={`error-text ${styles.flushError}`}>
           {createMutation.error?.message || updateMutation.error?.message || 'Une erreur est survenue.'}
         </p>
       )}
 
       {(createMutation.isSuccess || updateMutation.isSuccess) && !createMutation.isError && !updateMutation.isError && (
-        <p style={{ margin: 0, color: '#16a34a', fontWeight: 600 }}>
+        <p className={styles.successMessage}>
           Le test et ses relations ont été enregistrés.
         </p>
       )}

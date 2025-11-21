@@ -1,0 +1,24 @@
+.page {
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.sectionLabel {
+  margin: 0;
+}
+
+.introPanel {
+  padding: 1.5rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.introTitle {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.introText {
+  margin: 0;
+}

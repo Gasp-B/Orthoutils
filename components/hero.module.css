@@ -1,0 +1,14 @@
+.sectionLabel {
+  margin: 0;
+  opacity: 0.8;
+}
+
+.cardTitle {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.cardBody {
+  margin-top: 0.2rem;
+}

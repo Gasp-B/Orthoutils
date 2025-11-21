@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getTestsWithMetadata } from '@/lib/tests/queries';
 import type { TestDto } from '@/lib/validation/tests';
+import styles from './catalogue.module.css';
 
 function formatAgeRange(min: number | null, max: number | null) {
   if (min && max) {
@@ -41,17 +42,17 @@ export default async function CataloguePage() {
   }
 
   return (
-    <main className="container section-shell" style={{ padding: '1.5rem 0 2rem' }}>
+    <main className={`container section-shell ${styles.page}`}>
       <header className="section-shell">
         <div className="section-title">
           <span />
-          <p style={{ margin: 0 }}>Catalogue des tests</p>
+          <p className={styles.sectionLabel}>Catalogue des tests</p>
         </div>
         <div className="glass panel">
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center' }}>
-            <div className="stack" style={{ margin: 0 }}>
-              <h1 style={{ margin: 0, color: '#0f172a' }}>Tests d&apos;orthophonie référencés</h1>
-              <p style={{ margin: 0 }}>
+          <div className={styles.headerRow}>
+            <div className={`stack ${styles.headingStack}`}>
+              <h1 className={styles.headingTitle}>Tests d&apos;orthophonie référencés</h1>
+              <p className={styles.headingText}>
                 Retrouvez les évaluations publiées, leur objectif clinique, le public ciblé et les données pratiques pour
                 planifier vos séances.
               </p>
@@ -67,53 +68,44 @@ export default async function CataloguePage() {
         <div className="card-grid">
           {tests.map((test) => (
             <article key={test.id} className="glass panel">
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.6rem', alignItems: 'center' }}>
+              <div className={styles.cardHeader}>
                 <div>
-                  <p style={{ margin: 0, color: '#0f172a', fontWeight: 800 }}>{test.name}</p>
-                  <p className="text-subtle" style={{ margin: '0.1rem 0 0' }}>
+                  <p className={styles.cardTitle}>{test.name}</p>
+                  <p className={`text-subtle ${styles.cardSubtitle}`}>
                     {test.shortDescription ?? 'Description à venir.'}
                   </p>
                 </div>
-                <span
-                  style={{
-                    padding: '0.25rem 0.65rem',
-                    borderRadius: '999px',
-                    background: 'rgba(14,165,233,0.12)',
-                    color: '#0f172a',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                  }}
-                >
+                <span className={styles.durationBadge}>
                   {formatDuration(test.durationMinutes)}
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <div className={styles.badgeRow}>
                 <span className="badge">{formatAgeRange(test.ageMinMonths, test.ageMaxMonths)}</span>
                 <span className="badge">{test.population ?? 'Population générale'}</span>
                 <span className="badge">{test.isStandardized ? 'Standardisé' : 'Non standardisé'}</span>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.35rem', flexDirection: 'column' }}>
+              <div className={styles.metaList}>
                 {test.objective && (
-                  <p style={{ margin: 0 }}>
+                  <p className={styles.metaItem}>
                     <strong>Objectif :</strong> {test.objective}
                   </p>
                 )}
                 {test.materials && (
-                  <p style={{ margin: 0 }}>
+                  <p className={styles.metaItem}>
                     <strong>Matériel :</strong> {test.materials}
                   </p>
                 )}
                 {test.publisher && (
-                  <p style={{ margin: 0 }}>
+                  <p className={styles.metaItem}>
                     <strong>Éditeur :</strong> {test.publisher}
                   </p>
                 )}
               </div>
 
               {test.domains.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                <div className={styles.tagRow}>
                   {test.domains.map((domain) => (
                     <span key={domain} className="pill-muted">
                       {domain}
@@ -123,7 +115,7 @@ export default async function CataloguePage() {
               )}
 
               {test.tags.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                <div className={styles.tagRow}>
                   {test.tags.map((tag) => (
                     <span key={tag} className="badge">
                       {tag}
@@ -132,7 +124,7 @@ export default async function CataloguePage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+              <div className={styles.cardFooter}>
                 {test.buyLink ? (
                   <a className="ph-header__link" href={test.buyLink} rel="noreferrer" target="_blank">
                     Acheter / Consulter
@@ -149,8 +141,8 @@ export default async function CataloguePage() {
         </div>
 
         {tests.length === 0 && (
-          <div className="glass panel" style={{ marginTop: '0.5rem' }}>
-            <p className="text-subtle" style={{ margin: 0 }}>
+          <div className={`glass panel ${styles.emptyState}`}>
+            <p className={`text-subtle ${styles.emptyText}`}>
               {loadError ??
                 "Aucun test n'est référencé pour l'instant. Ajoutez vos premiers tests pour alimenter le catalogue."}
             </p>

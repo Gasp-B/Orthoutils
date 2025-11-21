@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import styles from './taxonomy-manager.module.css';
 import type { TaxonomyDeletionInput, TaxonomyMutationInput, TaxonomyResponse } from '@/lib/validation/tests';
 
 const taxonomyQueryKey = ['test-taxonomy'] as const;
@@ -159,28 +160,13 @@ function TaxonomyManager() {
   return (
     <div className="content-grid">
       {toastMessage && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            position: 'fixed',
-            top: '1rem',
-            right: '1rem',
-            padding: '0.75rem 1rem',
-            backgroundColor: '#ecfdf3',
-            color: '#166534',
-            border: '1px solid #bbf7d0',
-            borderRadius: '0.75rem',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-            zIndex: 10,
-          }}
-        >
+        <div role="status" aria-live="polite" className={styles.toast}>
           {toastMessage}
         </div>
       )}
 
       {errorMessage && (
-        <p className="error-text" style={{ gridColumn: '1 / -1', margin: 0 }} role="alert">
+        <p className={`error-text ${styles.fullWidthError}`} role="alert">
           {errorMessage}
         </p>
       )}
@@ -188,7 +174,7 @@ function TaxonomyManager() {
       <Card>
         <CardHeader>
           <CardTitle>Créer un domaine</CardTitle>
-          <p className="helper-text" style={{ margin: 0 }}>
+          <p className={`helper-text ${styles.helperTight}`}>
             Les domaines alimentent la liste « Domaines » du formulaire Ajouter / Éditer un test.
           </p>
         </CardHeader>
@@ -196,8 +182,8 @@ function TaxonomyManager() {
           <div className="space-y-2">
             <div className="notion-toolbar">
               <div>
-                <p style={{ margin: 0, fontWeight: 600 }}>Domaines</p>
-                <p className="helper-text" style={{ margin: 0 }}>
+                <p className={styles.toolbarTitle}>Domaines</p>
+                <p className={`helper-text ${styles.helperTight}`}>
                   {sortedDomains.length} domaine{sortedDomains.length > 1 ? 's' : ''}
                 </p>
               </div>
@@ -211,7 +197,7 @@ function TaxonomyManager() {
                   <p className="helper-text">Aucun domaine enregistré pour le moment.</p>
                 )}
                 {sortedDomains.map((domain) => (
-                  <div key={domain.id} className="notion-toolbar__group" style={{ justifyContent: 'space-between' }}>
+                  <div key={domain.id} className={`notion-toolbar__group ${styles.toolbarGroupJustify}`}>
                     <span>{domain.name}</span>
                     <Button
                       type="button"
@@ -240,7 +226,7 @@ function TaxonomyManager() {
             disabled={createMutation.isPending}
           />
           {domainExists && (
-            <p className="error-text" style={{ margin: 0 }}>
+            <p className={`error-text ${styles.helperTight}`}>
               Ce domaine existe déjà.
             </p>
           )}
@@ -262,7 +248,7 @@ function TaxonomyManager() {
       <Card>
         <CardHeader>
           <CardTitle>Créer un tag</CardTitle>
-          <p className="helper-text" style={{ margin: 0 }}>
+          <p className={`helper-text ${styles.helperTight}`}>
             Les tags enrichissent la recherche et les filtres dans les fiches tests.
           </p>
         </CardHeader>
@@ -270,8 +256,8 @@ function TaxonomyManager() {
           <div className="space-y-2">
             <div className="notion-toolbar">
               <div>
-                <p style={{ margin: 0, fontWeight: 600 }}>Tags</p>
-                <p className="helper-text" style={{ margin: 0 }}>
+                <p className={styles.toolbarTitle}>Tags</p>
+                <p className={`helper-text ${styles.helperTight}`}>
                   {sortedTags.length} tag{sortedTags.length > 1 ? 's' : ''}
                 </p>
               </div>
@@ -283,7 +269,7 @@ function TaxonomyManager() {
               <div className="space-y-2">
                 {sortedTags.length === 0 && <p className="helper-text">Aucun tag enregistré pour le moment.</p>}
                 {sortedTags.map((tag) => (
-                  <div key={tag.id} className="notion-toolbar__group" style={{ justifyContent: 'space-between' }}>
+                  <div key={tag.id} className={`notion-toolbar__group ${styles.toolbarGroupJustify}`}>
                     <span>{tag.name}</span>
                     <Button
                       type="button"
@@ -312,7 +298,7 @@ function TaxonomyManager() {
             disabled={createMutation.isPending}
           />
           {tagExists && (
-            <p className="error-text" style={{ margin: 0 }}>
+            <p className={`error-text ${styles.helperTight}`}>
               Ce tag existe déjà.
             </p>
           )}

@@ -1,3 +1,5 @@
+import styles from './hero.module.css';
+
 function Hero() {
   return (
     <section className="container hero-shell">
@@ -5,7 +7,7 @@ function Hero() {
         <div className="stack">
           <div className="section-title">
             <span />
-            <p style={{ margin: 0, opacity: 0.8 }}>Référentiels conçus et validés par des orthophonistes</p>
+            <p className={styles.sectionLabel}>Référentiels conçus et validés par des orthophonistes</p>
           </div>
           <h1 className="title-lg">
             Une bibliothèque clinique pour consulter des outils éprouvés et suivre leur validation
@@ -40,8 +42,8 @@ function Hero() {
             },
           ].map((item) => (
             <div key={item.title} className="glass panel support-card">
-              <p style={{ margin: 0, color: '#0f172a', fontWeight: 700 }}>{item.title}</p>
-              <p className="body-text" style={{ marginTop: '0.2rem' }}>
+              <p className={styles.cardTitle}>{item.title}</p>
+              <p className={`body-text ${styles.cardBody}`}>
                 {item.desc}
               </p>
             </div>
