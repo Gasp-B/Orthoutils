@@ -1,17 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { useEffect, useState, useTransition } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import CatalogueMegaMenu from '@/components/CatalogueMegaMenu';
 import type { CatalogueDomain } from '@/lib/navigation/catalogue';
 
 function Header() {
   const t = useTranslations('Header');
+  const locale = useLocale();
+  const pathname = usePathname();
+  const router = useRouter();
   const navErrorMessage = t('navError');
   const [catalogueDomains, setCatalogueDomains] = useState<CatalogueDomain[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isNavigating, startTransition] = useTransition();
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +40,7 @@ function Header() {
       } catch (err: unknown) {
         console.error('[Header] Failed to load catalogue:', err);
         if (!cancelled) {
-            setError(String(navErrorMessage));
+          setError(String(navErrorMessage));
         }
       } finally {
         if (!cancelled) {
@@ -51,6 +55,14 @@ function Header() {
       cancelled = true;
     };
   }, [navErrorMessage]);
+
+  const switchLocale = (nextLocale: 'fr' | 'en') => {
+    if (nextLocale === locale) return;
+
+    startTransition(() => {
+      router.replace(pathname, { locale: nextLocale });
+    });
+  };
 
   return (
     <header className="ph-header" role="banner">
@@ -74,7 +86,7 @@ function Header() {
           />
         </div>
 
-        <nav className="ph-header__nav" aria-label="Navigation principale">
+        <nav className="ph-header__nav" aria-label={t('navAria')}>
           {loading && (
             <span className="ph-header__link ph-header__link--muted">
               {t('navLoading')}
@@ -120,6 +132,34 @@ function Header() {
             </div>
           </div>
         </nav>
+
+        <div
+          className="ph-header__locale-switcher"
+          role="group"
+          aria-label={t('localeSwitcher.ariaLabel')}
+        >
+          <span className="ph-header__locale-label">{t('localeSwitcher.label')}</span>
+          <div className="ph-header__locale-options">
+            <button
+              type="button"
+              className="ph-header__locale-button"
+              aria-pressed={locale === 'fr'}
+              disabled={isNavigating || locale === 'fr'}
+              onClick={() => switchLocale('fr')}
+            >
+              {t('localeSwitcher.french')}
+            </button>
+            <button
+              type="button"
+              className="ph-header__locale-button"
+              aria-pressed={locale === 'en'}
+              disabled={isNavigating || locale === 'en'}
+              onClick={() => switchLocale('en')}
+            >
+              {t('localeSwitcher.english')}
+            </button>
+          </div>
+        </div>
       </div>
     </header>
   );
