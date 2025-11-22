@@ -83,7 +83,7 @@ function MultiSelect({ id, label, description, placeholder, options, values, onC
           {values.map((value) => (
             <Badge
               key={value}
-              variant="secondary"
+              variant="outline"
               className={styles.token}
               onClick={(event) => {
                 event.stopPropagation();
