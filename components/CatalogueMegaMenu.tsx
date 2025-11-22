@@ -1,0 +1,120 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import type { CatalogueDomain } from '@/lib/navigation/catalogue';
+
+type Props = {
+  domains: CatalogueDomain[];
+};
+
+function CatalogueMegaMenu({ domains }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeDomainId, setActiveDomainId] = useState<string | null>(domains[0]?.id ?? null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = 'catalogue-mega-menu';
+
+  useEffect(() => {
+    if (!domains.length) {
+      setActiveDomainId(null);
+      return;
+    }
+
+    if (!activeDomainId || !domains.some((domain) => domain.id === activeDomainId)) {
+      setActiveDomainId(domains[0]?.id ?? null);
+    }
+  }, [activeDomainId, domains]);
+
+  const activeDomain = useMemo(
+    () => domains.find((domain) => domain.id === activeDomainId) ?? domains[0],
+    [activeDomainId, domains],
+  );
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    }
+  };
+
+  if (!domains.length) {
+    return (
+      <Link className="ph-header__link" href="/catalogue">
+        Catalogue
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className={`ph-header__mega ${isOpen ? 'ph-header__mega--open' : ''}`}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+      onKeyDown={handleKeyDown}
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        className="ph-header__link ph-header__mega-trigger"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        aria-controls={menuId}
+        onFocus={() => setIsOpen(true)}
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        Catalogue
+        <span aria-hidden>▾</span>
+      </button>
+
+      <div
+        id={menuId}
+        role="menu"
+        className="ph-header__mega-panel"
+        aria-label="Navigation catalogue"
+        style={{ visibility: isOpen ? 'visible' : 'hidden' }}
+      >
+        <div className="ph-header__mega-grid">
+          <div className="ph-header__mega-column" aria-label="Domaines du catalogue">
+            <ul className="ph-header__mega-domains">
+              {domains.map((domain) => (
+                <li key={domain.id}>
+                  <Link
+                    href={`/catalogue/${domain.slug}`}
+                    className={`ph-header__mega-domain ${domain.id === activeDomain?.id ? 'is-active' : ''}`}
+                    onMouseEnter={() => setActiveDomainId(domain.id)}
+                    onFocus={() => {
+                      setIsOpen(true);
+                      setActiveDomainId(domain.id);
+                    }}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <span>{domain.label}</span>
+                    <span aria-hidden>›</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="ph-header__mega-column ph-header__mega-tags" aria-live="polite">
+            <p className="ph-header__mega-title">{activeDomain?.label ?? 'Tags'}</p>
+            <div className="ph-header__mega-tag-grid">
+              {(activeDomain?.tags ?? []).map((tag) => (
+                <Link
+                  key={`${activeDomain?.id ?? 'domain'}-${tag.id}`}
+                  href={`/catalogue/${activeDomain?.slug}/${tag.slug}`}
+                  className="ph-header__mega-tag"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {tag.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default CatalogueMegaMenu;

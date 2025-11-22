@@ -1,6 +1,10 @@
 import Link from 'next/link';
+import CatalogueMegaMenu from '@/components/CatalogueMegaMenu';
+import { getCatalogueTaxonomy } from '@/lib/navigation/catalogue';
 
-function Header() {
+async function Header() {
+  const catalogueDomains = await getCatalogueTaxonomy();
+
   return (
     <header className="ph-header" role="banner">
       <div className="ph-header__bar container">
@@ -24,9 +28,7 @@ function Header() {
         </div>
 
         <nav className="ph-header__nav" aria-label="Navigation principale">
-          <Link className="ph-header__link" href="/catalogue">
-            Catalogue
-          </Link>
+          <CatalogueMegaMenu domains={catalogueDomains} />
           <a className="ph-header__link" href="#collaboration">
             Communauté
           </a>

@@ -166,6 +166,118 @@ body {
   gap: 0.4rem;
 }
 
+.ph-header__mega {
+  position: relative;
+}
+
+.ph-header__mega-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ph-header__mega-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  display: grid;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  min-width: 720px;
+  max-width: 900px;
+  padding: 1rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  border: 1px solid rgba(14, 165, 233, 0.12);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.15);
+  z-index: 30;
+  pointer-events: none;
+}
+
+.ph-header__mega--open .ph-header__mega-panel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.ph-header__mega-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1rem;
+}
+
+.ph-header__mega-column {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(248, 251, 255, 0.6);
+  border: 1px solid rgba(14, 165, 233, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.ph-header__mega-domains {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.ph-header__mega-domain {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #0f172a;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.ph-header__mega-domain:hover,
+.ph-header__mega-domain:focus-visible,
+.ph-header__mega-domain.is-active {
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.16);
+  outline: none;
+}
+
+.ph-header__mega-tags {
+  background: linear-gradient(160deg, #ffffff 0%, #f2f8fd 100%);
+}
+
+.ph-header__mega-title {
+  margin: 0 0 0.65rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.ph-header__mega-tag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.45rem;
+}
+
+.ph-header__mega-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.12);
+  color: #0f172a;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.18);
+}
+
+.ph-header__mega-tag:hover,
+.ph-header__mega-tag:focus-visible {
+  background: rgba(14, 165, 233, 0.18);
+  outline: none;
+}
+
 .ph-header__submenu-link {
   padding: 0.5rem 0.6rem;
   border-radius: 12px;
