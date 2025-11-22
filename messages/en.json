@@ -2,5 +2,143 @@
   "Metadata": {
     "title": "Othoutils | Speech-language pathology clinical references",
     "description": "Catalog of clinical tools validated by speech-language pathologists with editorial governance and validation tracking."
+  },
+  "Header": {
+    "brandName": "Othoutils",
+    "brandAria": "Othoutils, back to the homepage",
+    "tagline": "Clinically vetted resources by speech-language pathologists",
+    "searchPlaceholder": "Search a tool or topic...",
+    "searchAria": "Search a tool or topic",
+    "navLoading": "Loading catalog…",
+    "navError": "Unable to load the catalog",
+    "community": "Community",
+    "news": "What's new",
+    "admin": "Administration",
+    "adminMenuLabel": "Administration menu",
+    "dashboard": "Dashboard",
+    "addTest": "Add a test",
+    "taxonomy": "Categories & tags",
+    "catalogue": "Catalog",
+    "megaMenuLabel": "Catalog navigation",
+    "domainsLabel": "Catalog domains",
+    "tagsLabel": "Tags"
+  },
+  "Hero": {
+    "sectionLabel": "References designed and validated by speech-language pathologists",
+    "title": "A clinical library to consult proven tools and track their validation",
+    "lead": "Built for clinics, hospitals, and rehab centers: Othoutils highlights questionnaires, batteries, and follow-up sheets already reviewed by healthcare professionals. Teams can then quietly propose documented adjustments that are reviewed before publication.",
+    "primaryCta": "Browse validated references",
+    "secondaryCta": "Understand the editorial validation",
+    "cards": {
+      "verifiedTitle": "Verified references",
+      "verifiedDesc": "Each sheet is reviewed by speech-language pathologists and published with the details practitioners need.",
+      "peerTitle": "Peer validation",
+      "peerDesc": "A clear review flow: draft, interdisciplinary review, then secure publishing.",
+      "readyTitle": "Ready for the field",
+      "readyDesc": "Bright, readable, and accessible interface for the clinic, hospital, or on the go."
+    }
+  },
+  "Referentials": {
+    "sectionLabel": "Structured references",
+    "loading": "Loading references from Supabase…",
+    "errorTitle": "Unable to retrieve the references",
+    "errorSubtitle": "Check your connection or reload the page. The request goes through Supabase with RLS enabled.",
+    "errors": {
+      "load": "Error while loading references"
+    },
+    "emptySubsections": "No subsections are associated yet.",
+    "emptyState": "No reference is available yet. Check that the data is present in Supabase."
+  },
+  "Tools": {
+    "sectionLabel": "Test registry",
+    "headingTitle": "Clinical catalog",
+    "headingText": "A quick view of the tests in the database, coming straight from Supabase via Drizzle to stay aligned with the schema.",
+    "ctas": {
+      "openCatalogue": "Open the catalog",
+      "viewSheet": "View {testName}",
+      "viewSheetLabel": "View sheet"
+    },
+    "errors": {
+      "load": "Tests cannot be retrieved right now. Check the Supabase connection or try again later."
+    },
+    "emptyState": "No test is available yet. Add entries in Supabase to feed the catalog.",
+    "collaboration": {
+      "sectionLabel": "Editorial governance",
+      "items": {
+        "workflow": "Keep drafts, validated sheets, and community content in clearly separated spaces.",
+        "committee": "Set up a multidisciplinary review board with automatic validation assignments.",
+        "archives": "Archive versions to track changes, comments, and therapeutic decisions."
+      }
+    },
+    "stats": {
+      "tests": {
+        "label": "Cataloged tests",
+        "detail": "Synced from Supabase"
+      },
+      "domains": {
+        "label": "Covered domains",
+        "detail": "Phonology, pragmatics, written language…"
+      },
+      "standardized": {
+        "label": "Standardized",
+        "detail": "Marked as normed"
+      }
+    }
+  },
+  "Catalogue": {
+    "metadata": {
+      "title": "Othoutils | Clinical catalog",
+      "description": "Tests, tools, and speech-language evaluations gathered in a curated catalog."
+    },
+    "sectionLabel": "Test catalog",
+    "headingTitle": "Listed speech-language tests",
+    "headingText": "Find published evaluations, their clinical objectives, target populations, and practical details to plan your sessions.",
+    "ctas": {
+      "addTest": "Add a test",
+      "viewSheet": "View {testName}"
+    },
+    "errors": {
+      "load": "The catalog cannot be displayed right now. Check the Supabase connection or try again shortly."
+    },
+    "meta": {
+      "objective": "Objective:",
+      "materials": "Materials:",
+      "publisher": "Publisher:"
+    },
+    "empty": {
+      "buyLink": "No purchase link provided"
+    },
+    "emptyState": "No test is cataloged yet. Add your first tests to populate the catalog."
+  },
+  "Footer": {
+    "note": "Made with care for speech-language pathology teams. Mobile-first, adaptive, and built for collaboration."
+  },
+  "Shared": {
+    "ageRange": {
+      "range": "{min} to {max} months",
+      "from": "From {min} months",
+      "until": "Up to {max} months",
+      "free": "No age limit"
+    },
+    "duration": {
+      "variable": "Variable duration",
+      "minutes": "{minutes} min"
+    },
+    "statuses": {
+      "standardized": "Standardized",
+      "nonStandardized": "Non-standardized",
+      "referential": "Reference"
+    },
+    "populationDefault": "General population",
+    "ctas": {
+      "retry": "Retry",
+      "buyOrConsult": "Buy / View",
+      "viewSheet": "View {testName}",
+      "viewSheetLabel": "View sheet"
+    },
+    "placeholders": {
+      "description": "Description coming soon.",
+      "objective": "Clinical objective to be documented."
+    }
   }
 }

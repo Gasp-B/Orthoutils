@@ -31,7 +31,9 @@ export async function generateMetadata({
   };
 }
 
-function HomePage() {
+async function HomePage() {
+  const t = await getTranslations('Footer');
+
   return (
     <>
       <Hero />
@@ -39,7 +41,7 @@ function HomePage() {
       <ToolsSection />
 
       <footer className="container footer">
-        Made with soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour vos collaborations.
+        {t('note')}
       </footer>
     </>
   );

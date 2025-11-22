@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import CatalogueMegaMenu from '@/components/CatalogueMegaMenu';
 import type { CatalogueDomain } from '@/lib/navigation/catalogue';
 
 function Header() {
+  const t = useTranslations('Header');
+  const navErrorMessage = t('navError');
   const [catalogueDomains, setCatalogueDomains] = useState<CatalogueDomain[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,12 +31,12 @@ function Header() {
 
         if (!cancelled) {
           // On suppose que l’API renvoie { domains: [...] }
-          setCatalogueDomains(data.domains ?? []);
+          setCatalogueDomains(Array.isArray(data.domains) ? data.domains : []);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('[Header] Failed to load catalogue:', err);
         if (!cancelled) {
-          setError('Impossible de charger le catalogue');
+            setError(String(navErrorMessage));
         }
       } finally {
         if (!cancelled) {
@@ -47,18 +50,18 @@ function Header() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [navErrorMessage]);
 
   return (
     <header className="ph-header" role="banner">
       <div className="ph-header__bar container">
-        <Link className="ph-header__brand" href="/" aria-label="Othoutils, retour à l&apos;accueil">
+        <Link className="ph-header__brand" href="/" aria-label={t('brandAria')}>
           <div className="ph-header__logo" aria-hidden>
             OT
           </div>
           <div>
-            <p className="ph-header__name">Othoutils</p>
-            <p className="ph-header__tagline">Ressources cliniques vérifiées par des orthophonistes</p>
+            <p className="ph-header__name">{t('brandName')}</p>
+            <p className="ph-header__tagline">{t('tagline')}</p>
           </div>
         </Link>
 
@@ -66,15 +69,15 @@ function Header() {
           <input
             type="search"
             name="search"
-            placeholder="Rechercher un outil, une thématique..."
-            aria-label="Rechercher un outil, une thématique"
+            placeholder={t('searchPlaceholder')}
+            aria-label={t('searchAria')}
           />
         </div>
 
         <nav className="ph-header__nav" aria-label="Navigation principale">
           {loading && (
             <span className="ph-header__link ph-header__link--muted">
-              Chargement du catalogue…
+              {t('navLoading')}
             </span>
           )}
 
@@ -89,29 +92,30 @@ function Header() {
           )}
 
           <a className="ph-header__link" href="#collaboration">
-            Communauté
+            {t('community')}
           </a>
           <a className="ph-header__link" href="#news">
-            Nouveautés
+            {t('news')}
           </a>
           <div className="ph-header__menu">
             <button
               className="ph-header__link ph-header__menu-toggle"
               type="button"
               aria-haspopup="true"
+              aria-expanded={false}
             >
-              Administration
+              {t('admin')}
               <span aria-hidden>▾</span>
             </button>
-            <div className="ph-header__submenu" aria-label="Menu administration">
+            <div className="ph-header__submenu" aria-label={t('adminMenuLabel')}>
               <Link className="ph-header__submenu-link" href="/administration">
-                Tableau de bord
+                {t('dashboard')}
               </Link>
               <Link className="ph-header__submenu-link" href="/tests/manage">
-                Ajouter un test
+                {t('addTest')}
               </Link>
               <Link className="ph-header__submenu-link" href="/administration/taxonomy">
-                Catégories &amp; tags
+                {t('taxonomy')}
               </Link>
             </div>
           </div>
