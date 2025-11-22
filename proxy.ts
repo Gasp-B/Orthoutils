@@ -49,7 +49,7 @@ function buildNonce() {
   return crypto.randomBytes(16).toString('base64');
 }
 
-function getSecurityHeaders(nonce: string) {
+function getSecurityHeaders(_nonce: string) {
   const contentSecurityPolicy = [
     "default-src 'self'",
     "base-uri 'self'",

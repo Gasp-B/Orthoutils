@@ -29,3 +29,128 @@
   color: #16a34a;
   font-weight: 600;
 }
+
+.propertySections {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.sectionBlock {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+  background: #f8fafc;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.multiSelectWrapper {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.multiSelectHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.multiSelectControl {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.multiSelectControl:hover {
+  border-color: #cbd5e1;
+}
+
+.multiSelectOpen {
+  border-color: #3b82f6;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.multiSelectTokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.token {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.chevron {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.multiSelectDropdown {
+  margin-top: 0.35rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+}
+
+.multiSelectSearch {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.optionsList {
+  max-height: 240px;
+  overflow-y: auto;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.optionItem {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.optionItem:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.optionItemActive {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.emptyState {
+  margin: 0;
+  padding: 0.75rem;
+  color: #94a3b8;
+  text-align: center;
+}
