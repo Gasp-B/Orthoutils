@@ -1,11 +1,16 @@
-// app/api/pathologies/route.ts
-
 import { NextResponse } from 'next/server';
-import { and, eq, ilike, or, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db/client';
-import { pathologies, pathologyTranslations } from '@/lib/db/schema';
 
 const db = getDb();
+
+type PathologyRow = {
+  id: string;
+  slug: string;
+  label: string;
+  description: string | null;
+  synonyms: string[] | null;
+};
 
 export async function GET(req: Request) {
   try {
@@ -15,78 +20,77 @@ export async function GET(req: Request) {
     const q = searchParams.get('q')?.trim();
     const limit = Number(searchParams.get('limit') ?? 20);
 
-    const baseQuery = db
-      .select({
-        id: pathologies.id,
-        slug: pathologies.slug,
-        label: pathologyTranslations.label,
-        description: pathologyTranslations.description,
-        synonyms: pathologyTranslations.synonyms,
-      })
-      .from(pathologies)
-      .leftJoin(
-        pathologyTranslations,
-        and(
-          eq(pathologyTranslations.pathologyId, pathologies.id),
-          eq(pathologyTranslations.locale, locale),
-        ),
-      );
-
-    const fallbackQuery = db
-      .select({
-        id: pathologies.id,
-        slug: pathologies.slug,
-        label: pathologyTranslations.label,
-        description: pathologyTranslations.description,
-        synonyms: pathologyTranslations.synonyms,
-      })
-      .from(pathologies)
-      .leftJoin(
-        pathologyTranslations,
-        and(
-          eq(pathologyTranslations.pathologyId, pathologies.id),
-          eq(pathologyTranslations.locale, 'fr'),
-        ),
-      );
-
+    // Pas de recherche : on renvoie juste la liste limitée, triée par label
     if (!q) {
-      const rows = await baseQuery.limit(limit);
+      const rows = await db.execute<PathologyRow>(
+        sql`
+          SELECT
+            p.id,
+            p.slug,
+            t.label,
+            t.description,
+            t.synonyms
+          FROM pathologies p
+          JOIN pathology_translations t
+            ON t.pathology_id = p.id
+           AND t.locale = ${locale}
+          ORDER BY t.label ASC
+          LIMIT ${limit}
+        `,
+      );
+
       return NextResponse.json({ items: rows });
     }
 
     const likeQ = `%${q}%`;
 
-    const synonymsCondition = sql`EXISTS (
-      SELECT 1
-      FROM unnest(${pathologyTranslations.synonyms}) AS s
-      WHERE s ILIKE ${likeQ}
-    )`;
+    // Recherche sur label + description dans la locale demandée
+    const rows = await db.execute<PathologyRow>(
+      sql`
+        SELECT
+          p.id,
+          p.slug,
+          t.label,
+          t.description,
+          t.synonyms
+        FROM pathologies p
+        JOIN pathology_translations t
+          ON t.pathology_id = p.id
+         AND t.locale = ${locale}
+        WHERE
+          t.label ILIKE ${likeQ}
+          OR t.description ILIKE ${likeQ}
+        ORDER BY t.label ASC
+        LIMIT ${limit}
+      `,
+    );
 
-    const rows = await baseQuery
-      .where(
-        or(
-          ilike(pathologyTranslations.label, likeQ),
-          ilike(pathologyTranslations.description, likeQ),
-          synonymsCondition,
-        ),
-      )
-      .limit(limit);
-
-    if (rows.length === 0) {
-      const frRows = await fallbackQuery
-        .where(
-          or(
-            ilike(pathologyTranslations.label, likeQ),
-            ilike(pathologyTranslations.description, likeQ),
-            synonymsCondition,
-          ),
-        )
-        .limit(limit);
-
-      return NextResponse.json({ items: frRows });
+    if (rows.length > 0) {
+      return NextResponse.json({ items: rows });
     }
 
-    return NextResponse.json({ items: rows });
+    // Fallback FR si aucune correspondance dans la locale
+    const frRows = await db.execute<PathologyRow>(
+      sql`
+        SELECT
+          p.id,
+          p.slug,
+          t.label,
+          t.description,
+          t.synonyms
+        FROM pathologies p
+        JOIN pathology_translations t
+          ON t.pathology_id = p.id
+         AND t.locale = 'fr'
+        WHERE
+          t.label ILIKE ${likeQ}
+          OR t.description ILIKE ${likeQ}
+        ORDER BY t.label ASC
+        LIMIT ${limit}
+      `,
+    );
+
+    return NextResponse.json({ items: frRows });
   } catch (err) {
     console.error('[GET /api/pathologies] Error:', err);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
