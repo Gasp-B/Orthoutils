@@ -167,17 +167,17 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
+  backdrop-filter: none;
   pointer-events: auto;
 }
 
 .popup {
   position: absolute;
-  background: #111827;
-  color: #f8fafc;
+  background: var(--card);
+  color: var(--card-foreground);
   border-radius: 0.9rem;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
-  border: 1px solid #1f2937;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  border: 1px solid var(--border);
   display: grid;
   gap: 0.75rem;
   padding: 0.85rem;
@@ -207,8 +207,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  background: #0b1224;
-  border: 1px solid #1f2937;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 0.7rem;
   padding: 0.65rem 0.75rem;
   min-height: 42px;
@@ -219,7 +219,7 @@
   align-items: center;
   gap: 0.25rem;
   cursor: pointer;
-  background: #1f2937;
-  border-color: #334155;
-  color: #e2e8f0;
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.35);
+  color: #0f172a;
 }
