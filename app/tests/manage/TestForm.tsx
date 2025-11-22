@@ -499,367 +499,226 @@ function TestForm() {
   }
 
   return (
-    <form className="notion-form" onSubmit={(event) => void onSubmit(event)}>
-      <div className="notion-toolbar">
-        <div className="notion-toolbar__group">
-          <Label htmlFor="test-selector">Fiche</Label>
-          <Select
-            id="test-selector"
-            value={selectedTestId ?? ''}
-            onChange={(event: ChangeEvent<HTMLSelectElement>) => setSelectedTestId(event.target.value || null)}
-          >
-            <option value="">Nouveau test</option>
-            {(tests ?? []).map((test) => (
-              <option key={test.id} value={test.id}>
-                {test.name}
-              </option>
-            ))}
-          </Select>
-          {selectedTestId ? <Badge variant="outline">Mode édition</Badge> : <Badge>Nouvelle fiche</Badge>}
-        </div>
-
-        <div className="notion-toolbar__group">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              reset(defaultValues);
-              setSelectedTestId(null);
-              setNewBibliography({ label: '', url: '' });
-            }}
-          >
-            Réinitialiser
-          </Button>
-          <Button type="submit" disabled={submitDisabled} aria-busy={submitDisabled}>
-            {submitLabel}
-          </Button>
-        </div>
+  <form className="notion-form" onSubmit={(event) => void onSubmit(event)}>
+    <div className="notion-toolbar">
+      <div className="notion-toolbar__group">
+        <Label htmlFor="test-selector">Fiche</Label>
+        <Select
+          id="test-selector"
+          value={selectedTestId ?? ''}
+          onChange={(event: ChangeEvent<HTMLSelectElement>) => setSelectedTestId(event.target.value || null)}
+        >
+          <option value="">Nouveau test</option>
+          {(tests ?? []).map((test) => (
+            <option key={test.id} value={test.id}>
+              {test.name}
+            </option>
+          ))}
+        </Select>
+        {selectedTestId ? <Badge variant="outline">Mode édition</Badge> : <Badge>Nouvelle fiche</Badge>}
       </div>
 
-      <Input
-        id="name"
-        className="notion-title-input"
-        placeholder="Nom du test (ex : Évaluation du langage)"
-        {...register('name')}
-      />
-      {errors.name && <p className="error-text">{errors.name.message}</p>}
+      <div className="notion-toolbar__group">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            reset(defaultValues);
+            setSelectedTestId(null);
+            setNewBibliography({ label: '', url: '' });
+          }}
+        >
+          Réinitialiser
+        </Button>
+        <Button type="submit" disabled={submitDisabled} aria-busy={submitDisabled}>
+          {submitLabel}
+        </Button>
+      </div>
+    </div>
 
-      <Card className="property-panel">
+    <Input
+      id="name"
+      className="notion-title-input"
+      placeholder="Nom du test (ex : Évaluation du langage)"
+      {...register('name')}
+    />
+    {errors.name && <p className="error-text">{errors.name.message}</p>}
+
+    {/* 1. Résumé détaillé + 2. Bibliographie + Infos complémentaires */}
+    <div className="content-grid">
+      {/* Résumé détaillé */}
+      <Card>
         <CardHeader>
-          <CardTitle>Propriétés</CardTitle>
-          <p className="helper-text">Pensez aux propriétés clés comme dans une fiche Notion.</p>
+          <CardTitle>Résumé détaillé</CardTitle>
         </CardHeader>
-        <CardContent className={styles.propertySections}>
-          <div className={styles.sectionBlock}>
-            <p className={styles.sectionTitle}>Ciblage & durée</p>
-            <div className="property-grid">
-              <div className="property-row">
-                <div className="property-label">Âge (mois)</div>
-                <div className="property-value">
-                  <div className={styles.ageGrid}>
-                    <Input
-                      id="ageMinMonths"
-                      type="number"
-                      placeholder="36"
-                      {...register('ageMinMonths', {
-                        setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-                      })}
-                    />
-                    <Input
-                      id="ageMaxMonths"
-                      type="number"
-                      placeholder="120"
-                      {...register('ageMaxMonths', {
-                        setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-                      })}
-                    />
-                  </div>
-                  {(errors.ageMinMonths || errors.ageMaxMonths) && (
-                    <p className="error-text">{errors.ageMinMonths?.message || errors.ageMaxMonths?.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="property-row">
-                <div className="property-label">Durée</div>
-                <div className="property-value">
-                  <Input
-                    id="durationMinutes"
-                    type="number"
-                    placeholder="45"
-                    {...register('durationMinutes', {
-                      setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-                    })}
-                  />
-                  {errors.durationMinutes && <p className="error-text">{errors.durationMinutes.message}</p>}
-                  <p className="helper-text">Temps moyen estimé en minutes.</p>
-                </div>
-              </div>
-
-              <div className="property-row">
-                <div className="property-label">Population</div>
-                <div className="property-value">
-                  <Input
-                    id="population"
-                    placeholder="Enfants, adolescents, adultes…"
-                    {...register('population', { setValueAs: (value) => (value === '' ? null : value) })}
-                  />
-                </div>
-              </div>
-            </div>
+        <CardContent>
+          <div className="property-value">
+            <Label htmlFor="shortDescription">Description longue</Label>
+            <Textarea
+              id="shortDescription"
+              placeholder="Présentez l'outil et ce qui le rend unique."
+              {...register('shortDescription', { setValueAs: (value) => (value === '' ? null : value) })}
+            />
           </div>
-
-          <div className={styles.sectionBlock}>
-            <p className={styles.sectionTitle}>Édition & accès</p>
-            <div className="property-grid">
-              <div className="property-row">
-                <div className="property-label">Éditeur</div>
-                <div className="property-value">
-                  <Input
-                    id="publisher"
-                    placeholder="Maison d'édition"
-                    {...register('publisher', { setValueAs: (value) => (value === '' ? null : value) })}
-                  />
-                  <Input
-                    id="priceRange"
-                    placeholder="Fourchette de prix"
-                    {...register('priceRange', { setValueAs: (value) => (value === '' ? null : value) })}
-                  />
-                </div>
-              </div>
-
-              <div className="property-row">
-                <div className="property-label">Achat</div>
-                <div className="property-value">
-                  <Input
-                    id="buyLink"
-                    placeholder="Lien d'achat (URL)"
-                    {...register('buyLink', { setValueAs: (value) => (value === '' ? null : value) })}
-                  />
-                  {errors.buyLink && <p className="error-text">{errors.buyLink.message}</p>}
-                  <Input
-                    id="materials"
-                    placeholder="Matériel requis"
-                    {...register('materials', { setValueAs: (value) => (value === '' ? null : value) })}
-                  />
-                </div>
-              </div>
-
-              <div className="property-row">
-                <div className="property-label">Standardisation</div>
-                <div className="property-value">
-                  <label className={cn('pill-toggle', watch('isStandardized') && 'is-active')}>
-                    <input type="checkbox" {...register('isStandardized')} className={styles.hiddenInput} />
-                    {watch('isStandardized') ? 'Standardisé' : 'Non standardisé'}
-                  </label>
-                  <p className="helper-text">Basculer selon la nature du protocole.</p>
-                </div>
-              </div>
-            </div>
+          <Separator />
+          <div className="property-value">
+            <Label htmlFor="objective">Objectif</Label>
+            <Textarea
+              id="objective"
+              placeholder="Que mesure ce test ? Dans quel contexte l'utiliser ?"
+              {...register('objective', { setValueAs: (value) => (value === '' ? null : value) })}
+            />
           </div>
-
-          <div className={styles.sectionBlock}>
-            <p className={styles.sectionTitle}>Taxonomie</p>
-            <div className="property-grid">
-              <div className="property-row">
-                <div className="property-label">Domaines</div>
-                <div className="property-value">
-                  <MultiSelect
-                    id="domains"
-                    label="Domaines"
-                    description="Affinez la fiche en ajoutant un ou plusieurs domaines."
-                    placeholder="Rechercher un domaine"
-                    options={(taxonomy?.domains ?? []).map((domain) => ({
-                      label: domain.label,
-                      value: domain.label,
-                    }))}
-                    values={currentDomains ?? []}
-                    onChange={(values) => setValue('domains', values, { shouldDirty: true })}
-                  />
-                </div>
-              </div>
-
-              <div className="property-row">
-                <div className="property-label">Tags</div>
-                <div className="property-value">
-                  <MultiSelect
-                    id="tags"
-                    label="Tags"
-                    description="Ajoutez des mots-clés pour faciliter la recherche."
-                    placeholder="Rechercher un tag"
-                    options={(taxonomy?.tags ?? []).map((tag) => ({
-                      label: tag.label,
-                      value: tag.label,
-                    }))}
-                    values={currentTags ?? []}
-                    onChange={(values) => setValue('tags', values, { shouldDirty: true })}
-                  />
-                </div>
-              </div>
-            </div>
+          <Separator />
+          <div className="property-value">
+            <Label htmlFor="notes">Notes internes</Label>
+            <Textarea
+              id="notes"
+              placeholder="Observations internes ou liens vers des ressources connexes."
+              {...register('notes', { setValueAs: (value) => (value === '' ? null : value) })}
+            />
           </div>
         </CardContent>
       </Card>
 
-      <div className="content-grid">
-        <Card>
-          <CardHeader>
-            <CardTitle>Résumé détaillé</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="property-value">
-              <Label htmlFor="shortDescription">Description longue</Label>
-              <Textarea
-                id="shortDescription"
-                placeholder="Présentez l'outil et ce qui le rend unique."
-                {...register('shortDescription', { setValueAs: (value) => (value === '' ? null : value) })}
-              />
-            </div>
-            <Separator />
-            <div className="property-value">
-              <Label htmlFor="objective">Objectif</Label>
-              <Textarea
-                id="objective"
-                placeholder="Que mesure ce test ? Dans quel contexte l'utiliser ?"
-                {...register('objective', { setValueAs: (value) => (value === '' ? null : value) })}
-              />
-            </div>
-            <Separator />
-            <div className="property-value">
-              <Label htmlFor="notes">Notes internes</Label>
-              <Textarea
-                id="notes"
-                placeholder="Observations internes ou liens vers des ressources connexes."
-                {...register('notes', { setValueAs: (value) => (value === '' ? null : value) })}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations complémentaires</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="property-value">
-              <Label htmlFor="population-secondary">Public cible</Label>
-              <Input
-                id="population-secondary"
-                placeholder="Compléter le public si besoin"
-                value={populationValue ?? ''}
-                onChange={(event) =>
-                  setValue('population', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
-                }
-              />
-            </div>
-            <Separator />
-            <div className="property-value">
-              <Label htmlFor="materials-secondary">Matériel détaillé</Label>
-              <Textarea
-                id="materials-secondary"
-                placeholder="Listez le matériel précis, les grilles ou supports nécessaires."
-                value={materialsValue ?? ''}
-                onChange={(event) =>
-                  setValue('materials', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Bibliographie</CardTitle>
-            <p className="helper-text">Ajoutez des liens vers des articles, vidéos ou références utiles.</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              {(currentBibliography ?? []).length === 0 && (
-                <p className={`helper-text ${styles.helperTight}`}>
-                  Aucun lien pour le moment. Ajoutez votre première référence ci-dessous.
-                </p>
-              )}
-
-              {(currentBibliography ?? []).map((entry, index) => (
-                <div key={`${entry.label}-${index}`} className={`property-value ${styles.bibliographyEntry}`}>
-                  <Label htmlFor={`bibliography-label-${index}`}>Titre ou source</Label>
-                  <Input
-                    id={`bibliography-label-${index}`}
-                    value={entry.label}
-                    onChange={(event) => updateBibliographyItem(index, 'label', event.target.value)}
-                    placeholder="Article, vidéo, ouvrage…"
-                  />
-                  {errors.bibliography?.[index]?.label && (
-                    <p className="error-text">{errors.bibliography?.[index]?.label?.message}</p>
-                  )}
-
-                  <Label htmlFor={`bibliography-url-${index}`}>Lien</Label>
-                  <div className="notion-toolbar__group">
-                    <Input
-                      id={`bibliography-url-${index}`}
-                      type="url"
-                      value={entry.url}
-                      onChange={(event) => updateBibliographyItem(index, 'url', event.target.value)}
-                      placeholder="https://example.com/ressource"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeBibliographyItem(index)}
-                    >
-                      Supprimer
-                    </Button>
-                  </div>
-                  {errors.bibliography?.[index]?.url && (
-                    <p className="error-text">{errors.bibliography?.[index]?.url?.message}</p>
-                  )}
-                  <Separator />
-                </div>
-              ))}
-            </div>
-
-            <div className={`property-value ${styles.bibliographyCreate}`}>
-              <Label htmlFor="bibliography-new-label">Ajouter une référence</Label>
-              <Input
-                id="bibliography-new-label"
-                placeholder="Titre de la ressource"
-                value={newBibliography.label}
-                onChange={(event) => setNewBibliography((prev) => ({ ...prev, label: event.target.value }))}
-              />
-              <div className="notion-toolbar__group">
-                <Input
-                  id="bibliography-new-url"
-                  type="url"
-                  placeholder="https://exemple.com/ressource"
-                  value={newBibliography.url}
-                  onChange={(event) => setNewBibliography((prev) => ({ ...prev, url: event.target.value }))}
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addBibliographyItem}>
-                  Ajouter
-                </Button>
-              </div>
+      {/* Bibliographie (2ème bloc) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bibliographie</CardTitle>
+          <p className="helper-text">Ajoutez des liens vers des articles, vidéos ou références utiles.</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            {(currentBibliography ?? []).length === 0 && (
               <p className={`helper-text ${styles.helperTight}`}>
-                Indiquez un titre court et une URL valide. Les liens seront enregistrés avec le test.
+                Aucun lien pour le moment. Ajoutez votre première référence ci-dessous.
               </p>
+            )}
+
+            {(currentBibliography ?? []).map((entry, index) => (
+              <div key={`${entry.label}-${index}`} className={`property-value ${styles.bibliographyEntry}`}>
+                <Label htmlFor={`bibliography-label-${index}`}>Titre ou source</Label>
+                <Input
+                  id={`bibliography-label-${index}`}
+                  value={entry.label}
+                  onChange={(event) => updateBibliographyItem(index, 'label', event.target.value)}
+                  placeholder="Article, vidéo, ouvrage…"
+                />
+                {errors.bibliography?.[index]?.label && (
+                  <p className="error-text">{errors.bibliography?.[index]?.label?.message}</p>
+                )}
+
+                <Label htmlFor={`bibliography-url-${index}`}>Lien</Label>
+                <div className="notion-toolbar__group">
+                  <Input
+                    id={`bibliography-url-${index}`}
+                    type="url"
+                    value={entry.url}
+                    onChange={(event) => updateBibliographyItem(index, 'url', event.target.value)}
+                    placeholder="https://example.com/ressource"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeBibliographyItem(index)}
+                  >
+                    Supprimer
+                  </Button>
+                </div>
+                {errors.bibliography?.[index]?.url && (
+                  <p className="error-text">{errors.bibliography?.[index]?.url?.message}</p>
+                )}
+                <Separator />
+              </div>
+            ))}
+          </div>
+
+          <div className={`property-value ${styles.bibliographyCreate}`}>
+            <Label htmlFor="bibliography-new-label">Ajouter une référence</Label>
+            <Input
+              id="bibliography-new-label"
+              placeholder="Titre de la ressource"
+              value={newBibliography.label}
+              onChange={(event) => setNewBibliography((prev) => ({ ...prev, label: event.target.value }))}
+            />
+            <div className="notion-toolbar__group">
+              <Input
+                id="bibliography-new-url"
+                type="url"
+                placeholder="https://exemple.com/ressource"
+                value={newBibliography.url}
+                onChange={(event) => setNewBibliography((prev) => ({ ...prev, url: event.target.value }))}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={addBibliographyItem}>
+                Ajouter
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <p className={`helper-text ${styles.helperTight}`}>
+              Indiquez un titre court et une URL valide. Les liens seront enregistrés avec le test.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
-      {(createMutation.isError || updateMutation.isError) && (
-        <p className={`error-text ${styles.flushError}`}>
-          {createMutation.error?.message || updateMutation.error?.message || 'Une erreur est survenue.'}
-        </p>
-      )}
+      {/* Informations complémentaires (3e carte dans la grid, mais avant Propriétés) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Informations complémentaires</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="property-value">
+            <Label htmlFor="population-secondary">Public cible</Label>
+            <Input
+              id="population-secondary"
+              placeholder="Compléter le public si besoin"
+              value={populationValue ?? ''}
+              onChange={(event) =>
+                setValue('population', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
+              }
+            />
+          </div>
+          <Separator />
+          <div className="property-value">
+            <Label htmlFor="materials-secondary">Matériel détaillé</Label>
+            <Textarea
+              id="materials-secondary"
+              placeholder="Listez le matériel précis, les grilles ou supports nécessaires."
+              value={materialsValue ?? ''}
+              onChange={(event) =>
+                setValue('materials', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
 
-      {(createMutation.isSuccess || updateMutation.isSuccess) && !createMutation.isError && !updateMutation.isError && (
-        <p className={styles.successMessage}>
-          Le test et ses relations ont été enregistrés.
-        </p>
-      )}
-    </form>
-  );
+    {/* 3. Propriétés (déplacé après le contenu détaillé + biblio) */}
+    <Card className="property-panel">
+      <CardHeader>
+        <CardTitle>Propriétés</CardTitle>
+        <p className="helper-text">Pensez aux propriétés clés comme dans une fiche Notion.</p>
+      </CardHeader>
+      <CardContent className={styles.propertySections}>
+        {/* ... tout ton bloc Ciblage & durée / Edition & accès / Taxonomie inchangé ... */}
+        {/* (reprends ici tel quel ton CardContent original) */}
+      </CardContent>
+    </Card>
+
+    {(createMutation.isError || updateMutation.isError) && (
+      <p className={`error-text ${styles.flushError}`}>
+        {createMutation.error?.message || updateMutation.error?.message || 'Une erreur est survenue.'}
+      </p>
+    )}
+
+    {(createMutation.isSuccess || updateMutation.isSuccess) && !createMutation.isError && !updateMutation.isError && (
+      <p className={styles.successMessage}>
+        Le test et ses relations ont été enregistrés.
+      </p>
+    )}
+  </form>
+);
 }
 
 export default TestForm;
