@@ -1,7 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import type { CatalogueDomain } from '@/lib/navigation/catalogue';
 
 type Props = {
@@ -10,27 +16,30 @@ type Props = {
 
 function CatalogueMegaMenu({ domains }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeDomainId, setActiveDomainId] = useState<string | null>(domains[0]?.id ?? null);
+  const [activeDomainId, setActiveDomainId] = useState<string | null>(
+    domains[0]?.id ?? null,
+  );
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuId = 'catalogue-mega-menu';
 
+  // Garde un domaine actif cohérent même si la liste change
   useEffect(() => {
     if (!domains.length) {
       setActiveDomainId(null);
       return;
     }
 
-    if (!activeDomainId || !domains.some((domain) => domain.id === activeDomainId)) {
+    if (!activeDomainId || !domains.some((d) => d.id === activeDomainId)) {
       setActiveDomainId(domains[0]?.id ?? null);
     }
   }, [activeDomainId, domains]);
 
   const activeDomain = useMemo(
-    () => domains.find((domain) => domain.id === activeDomainId) ?? domains[0],
+    () => domains.find((d) => d.id === activeDomainId) ?? domains[0],
     [activeDomainId, domains],
   );
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
       setIsOpen(false);
       triggerRef.current?.focus();
@@ -47,11 +56,12 @@ function CatalogueMegaMenu({ domains }: Props) {
 
   return (
     <div
-      className={`ph-header__mega ${isOpen ? 'ph-header__mega--open' : ''}`}
+      className="ph-header__mega-wrapper"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
       onKeyDown={handleKeyDown}
     >
+      {/* Trigger */}
       <button
         ref={triggerRef}
         type="button"
@@ -59,28 +69,31 @@ function CatalogueMegaMenu({ domains }: Props) {
         aria-haspopup="true"
         aria-expanded={isOpen}
         aria-controls={menuId}
-        onFocus={() => setIsOpen(true)}
         onClick={() => setIsOpen((open) => !open)}
+        onFocus={() => setIsOpen(true)}
       >
         Catalogue
         <span aria-hidden>▾</span>
       </button>
 
+      {/* Mega menu */}
       <div
         id={menuId}
         role="menu"
-        className="ph-header__mega-panel"
+        className={`ph-header__mega-panel ${isOpen ? 'is-open' : ''}`}
         aria-label="Navigation catalogue"
-        style={{ visibility: isOpen ? 'visible' : 'hidden' }}
       >
         <div className="ph-header__mega-grid">
+          {/* Colonne domaines */}
           <div className="ph-header__mega-column" aria-label="Domaines du catalogue">
             <ul className="ph-header__mega-domains">
               {domains.map((domain) => (
                 <li key={domain.id}>
                   <Link
                     href={`/catalogue/${domain.slug}`}
-                    className={`ph-header__mega-domain ${domain.id === activeDomain?.id ? 'is-active' : ''}`}
+                    className={`ph-header__mega-domain ${
+                      domain.id === activeDomain?.id ? 'is-active' : ''
+                    }`}
                     onMouseEnter={() => setActiveDomainId(domain.id)}
                     onFocus={() => {
                       setIsOpen(true);
@@ -96,8 +109,11 @@ function CatalogueMegaMenu({ domains }: Props) {
             </ul>
           </div>
 
+          {/* Colonne tags */}
           <div className="ph-header__mega-column ph-header__mega-tags" aria-live="polite">
-            <p className="ph-header__mega-title">{activeDomain?.label ?? 'Tags'}</p>
+            <p className="ph-header__mega-title">
+              {activeDomain?.label ?? 'Tags'}
+            </p>
             <div className="ph-header__mega-tag-grid">
               {(activeDomain?.tags ?? []).map((tag) => (
                 <Link
