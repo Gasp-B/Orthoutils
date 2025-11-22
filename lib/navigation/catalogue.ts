@@ -46,10 +46,10 @@ export async function getCatalogueTaxonomy(): Promise<CatalogueDomain[]> {
     }
   }
 
-  const fallbackTags = Array.from(tagsById.values());
-
   return domainRows.map((domain) => ({
     ...domain,
-    tags: tagsByDomain.get(domain.id) ?? fallbackTags,
+    // Si aucun tag n’est lié à ce domaine → tableau vide
+    tags: tagsByDomain.get(domain.id) ?? [],
   }));
+
 }
