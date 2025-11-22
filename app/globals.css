@@ -168,6 +168,7 @@ body {
 
 .ph-header__mega {
   position: relative;
+  display: inline-block;
 }
 
 .ph-header__mega-trigger {
@@ -178,7 +179,7 @@ body {
 
 .ph-header__mega-panel {
   position: absolute;
-  top: calc(100% + 8px);
+  top: 100%;
   left: 0;
   display: grid;
   opacity: 0;
