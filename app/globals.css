@@ -166,7 +166,7 @@ body {
   gap: 0.4rem;
 }
 
-.ph-header__mega {
+.ph-header__mega-wrapper {
   position: relative;
   display: inline-block;
 }
@@ -196,7 +196,7 @@ body {
   pointer-events: none;
 }
 
-.ph-header__mega--open .ph-header__mega-panel {
+.ph-header__mega-panel.is-open {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
