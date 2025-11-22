@@ -104,12 +104,12 @@ function Header() {
               <span aria-hidden>▾</span>
             </button>
             <div className="ph-header__submenu" aria-label="Menu administration">
-              <a className="ph-header__submenu-link" href="/administration">
+              <Link className="ph-header__submenu-link" href="/administration">
                 Tableau de bord
-              </a>
-              <a className="ph-header__submenu-link" href="/tests/manage">
+              </Link>
+              <Link className="ph-header__submenu-link" href="/tests/manage">
                 Ajouter un test
-              </a>
+              </Link>
               <Link className="ph-header__submenu-link" href="/administration/taxonomy">
                 Catégories &amp; tags
               </Link>

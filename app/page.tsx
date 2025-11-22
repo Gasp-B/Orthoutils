@@ -1,21 +1,11 @@
-import Hero from '../components/Hero';
-import ReferentialsSection from '../components/ReferentialsSection';
-import ToolsSection from '../components/ToolsSection';
+import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
+import { defaultLocale } from '@/i18n/routing';
+
+export const dynamic = 'force-static';
 
 function HomePage() {
-  return (
-    <>
-      <Hero />
-      <ReferentialsSection />
-      <ToolsSection />
-
-      <footer className="container footer">
-        Made with soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour vos collaborations.
-      </footer>
-    </>
-  );
+  redirect(`/${defaultLocale}`);
 }
 
 export default HomePage;
