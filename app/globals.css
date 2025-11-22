@@ -184,7 +184,7 @@ body {
   display: grid;
   opacity: 0;
   transform: translateY(6px);
-  transition: opacity 140ms ease, transform 140ms ease;
+  transition: opacity 40ms ease, transform 40ms ease;
   min-width: 720px;
   max-width: 900px;
   padding: 1rem;

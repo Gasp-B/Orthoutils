@@ -61,7 +61,7 @@ function CatalogueMegaMenu({ domains }: Props) {
 
     closeTimeoutRef.current = setTimeout(() => {
       setIsOpen(false);
-    }, 80);
+    }, 20);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
