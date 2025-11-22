@@ -17,4 +17,6 @@ export const pathnames = {
     fr: '/outils',
   },
   '/administration': '/administration',
+  '/administration/taxonomy': '/administration/taxonomy',
+  '/tests/manage': '/tests/manage',
 } satisfies Pathnames<typeof locales>;
