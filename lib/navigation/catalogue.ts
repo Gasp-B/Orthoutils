@@ -24,6 +24,7 @@ export async function getCatalogueTaxonomy(): Promise<CatalogueDomain[]> {
       .innerJoin(testTags, eq(testDomains.testId, testTags.testId)),
   ]);
 
+  // 🔧 bugfix: ...tag (pas .tag)
   const tagsById = new Map<string, CatalogueTag>(
     tagRows.map((tag) => [tag.id, { ...tag, slug: slugify(tag.label) }]),
   );
@@ -32,10 +33,7 @@ export async function getCatalogueTaxonomy(): Promise<CatalogueDomain[]> {
 
   for (const relation of domainTagRelations) {
     const tag = tagsById.get(relation.tagId);
-
-    if (!tag) {
-      continue;
-    }
+    if (!tag) continue;
 
     const existing = tagsByDomain.get(relation.domainId) ?? [];
 
@@ -45,10 +43,9 @@ export async function getCatalogueTaxonomy(): Promise<CatalogueDomain[]> {
     }
   }
 
+  // 🔧 pas de fallbackTags → domaine sans tests = aucun tag
   return domainRows.map((domain) => ({
     ...domain,
-    // Si aucun tag n’est lié à ce domaine → tableau vide
     tags: tagsByDomain.get(domain.id) ?? [],
   }));
-
 }
