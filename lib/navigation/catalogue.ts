@@ -26,7 +26,8 @@ export async function getCatalogueTaxonomy(): Promise<CatalogueDomain[]> {
 
   const tagsById = new Map<string, CatalogueTag>(
     tagRows.map((tag) => [tag.id, { ...tag, slug: slugify(tag.label) }]),
-  );
+);
+
 
   const tagsByDomain = new Map<string, CatalogueTag[]>();
 
