@@ -1,46 +1,45 @@
+import { getTranslations } from 'next-intl/server';
 import styles from './hero.module.css';
 
-function Hero() {
+async function Hero() {
+  const t = await getTranslations('Hero');
+
+  const supportCards = [
+    {
+      title: t('cards.verifiedTitle'),
+      desc: t('cards.verifiedDesc'),
+    },
+    {
+      title: t('cards.peerTitle'),
+      desc: t('cards.peerDesc'),
+    },
+    {
+      title: t('cards.readyTitle'),
+      desc: t('cards.readyDesc'),
+    },
+  ];
+
   return (
     <section className="container hero-shell">
       <div className="glass hero-grid">
         <div className="stack">
           <div className="section-title">
             <span />
-            <p className={styles.sectionLabel}>Référentiels conçus et validés par des orthophonistes</p>
+            <p className={styles.sectionLabel}>{t('sectionLabel')}</p>
           </div>
-          <h1 className="title-lg">
-            Une bibliothèque clinique pour consulter des outils éprouvés et suivre leur validation
-          </h1>
-          <p className="hero-lead section-note">
-            Pensé pour les cabinets, centres hospitaliers et services de rééducation : Othoutils met en avant les
-            questionnaires, batteries et fiches de suivi déjà relus par des professionnels de santé. Les équipes peuvent
-            ensuite proposer, en toute discrétion, des ajustements documentés et relus avant diffusion.
-          </p>
+          <h1 className="title-lg">{t('title')}</h1>
+          <p className="hero-lead section-note">{t('lead')}</p>
           <div className="hero-actions">
             <a href="#catalogue" className="primary-btn">
-              Consulter les référentiels validés
+              {t('primaryCta')}
             </a>
             <a href="#collaboration" className="secondary-btn">
-              Comprendre la validation éditoriale
+              {t('secondaryCta')}
             </a>
           </div>
         </div>
         <div className="hero-support">
-          {[
-            {
-              title: 'Référentiels vérifiés',
-              desc: 'Chaque fiche est relue par des orthophonistes et publiée avec les précisions nécessaires au terrain.',
-            },
-            {
-              title: 'Validation par pairs',
-              desc: 'Un circuit de relecture clair : brouillon, relecture interdisciplinaire puis diffusion sécurisée.',
-            },
-            {
-              title: 'Prêt pour le terrain',
-              desc: 'Interface lumineuse, lisible et accessible pour travailler au cabinet, à l’hôpital ou en mobilité.',
-            },
-          ].map((item) => (
+          {supportCards.map((item) => (
             <div key={item.title} className="glass panel support-card">
               <p className={styles.cardTitle}>{item.title}</p>
               <p className={`body-text ${styles.cardBody}`}>

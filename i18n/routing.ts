@@ -12,9 +12,20 @@ export const pathnames = {
     en: '/catalogue',
     fr: '/catalogue',
   },
+  '/catalogue/[slug]': {
+    en: '/catalogue/[slug]',
+    fr: '/catalogue/[slug]',
+  },
+  '/catalogue/[slug]/[tag]': {
+    en: '/catalogue/[slug]/[tag]',
+    fr: '/catalogue/[slug]/[tag]',
+  },
   '/tools': {
     en: '/tools',
     fr: '/outils',
   },
+  '/tools/new': '/tools/new',
   '/administration': '/administration',
+  '/administration/taxonomy': '/administration/taxonomy',
+  '/tests/manage': '/tests/manage',
 } satisfies Pathnames<typeof locales>;

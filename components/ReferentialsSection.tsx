@@ -1,25 +1,37 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { referentialsResponseSchema, type ReferentialDto } from '@/lib/validation/referentials';
 import styles from './referentials-section.module.css';
 
-async function fetchReferentials() {
-  const response = await fetch('/api/referentials', { cache: 'no-store' });
-
-  if (!response.ok) {
-    const { error } = (await response.json().catch(() => ({ error: null }))) as { error?: string | null };
-    throw new Error(error ?? "Erreur lors du chargement des référentiels");
-  }
-
-  const data = (await response.json()) as unknown;
-  return referentialsResponseSchema.parse(data).referentials;
-}
-
 function ReferentialsSection() {
+  const t = useTranslations('Referentials');
+  const shared = useTranslations('Shared');
+
   const { data: referentials = [], isLoading, isError, refetch } = useQuery<ReferentialDto[]>({
     queryKey: ['referentials'],
-    queryFn: fetchReferentials,
+    queryFn: async () => {
+      const response = await fetch('/api/referentials', { cache: 'no-store' });
+
+      if (!response.ok) {
+        let errorMessage = t('errors.load');
+
+        try {
+          const payload = (await response.json()) as { error?: unknown };
+          if (typeof payload.error === 'string') {
+            errorMessage = payload.error;
+          }
+        } catch {
+          // Ignore parsing issues and keep the localized message
+        }
+
+        throw new Error(String(errorMessage));
+      }
+
+      const data = (await response.json()) as unknown;
+      return referentialsResponseSchema.parse(data).referentials;
+    },
     staleTime: 1000 * 60,
     retry: false,
   });
@@ -28,21 +40,19 @@ function ReferentialsSection() {
     <section id="referentiels" className="container section-shell">
       <div className="section-title">
         <span />
-        <p className={styles.sectionLabel}>Référentiels structurés</p>
+        <p className={styles.sectionLabel}>{t('sectionLabel')}</p>
       </div>
 
-      {isLoading && <p className="text-subtle">Chargement des référentiels depuis Supabase…</p>}
+      {isLoading && <p className="text-subtle">{t('loading')}</p>}
 
       {isError && (
         <div className={`glass panel ${styles.errorPanel}`}>
           <div>
-            <p className={styles.errorTitle}>Impossible de récupérer les référentiels</p>
-            <p className={`text-subtle ${styles.errorSubtitle}`}>
-              Vérifiez la connexion ou rechargez la page. La requête passe par Supabase avec RLS activé.
-            </p>
+            <p className={styles.errorTitle}>{t('errorTitle')}</p>
+            <p className={`text-subtle ${styles.errorSubtitle}`}>{t('errorSubtitle')}</p>
           </div>
           <button className="secondary-btn" type="button" onClick={() => void refetch()}>
-            Réessayer
+            {shared('ctas.retry')}
           </button>
         </div>
       )}
@@ -59,7 +69,7 @@ function ReferentialsSection() {
                   </p>
                 )}
               </div>
-              <span className="badge validated">Référentiel</span>
+              <span className="badge validated">{shared('statuses.referential')}</span>
             </div>
 
             <div className={`tag-row ${styles.subsectionRow}`}>
@@ -69,7 +79,7 @@ function ReferentialsSection() {
                 </span>
               ))}
               {referential.subsections.length === 0 && (
-                <span className="text-subtle">Aucune sous-catégorie associée pour le moment.</span>
+                <span className="text-subtle">{t('emptySubsections')}</span>
               )}
             </div>
 
@@ -90,7 +100,7 @@ function ReferentialsSection() {
 
       {!isLoading && !isError && referentials.length === 0 && (
         <p className={`text-subtle ${styles.emptyState}`}>
-          Aucun référentiel n'est disponible pour le moment. Vérifiez que les données sont bien présentes dans Supabase.
+          {t('emptyState')}
         </p>
       )}
     </section>

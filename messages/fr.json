@@ -2,5 +2,143 @@
   "Metadata": {
     "title": "Othoutils | Référentiels cliniques orthophoniques",
     "description": "Catalogue d’outils cliniques validés par des orthophonistes avec gouvernance éditoriale et suivi des validations."
+  },
+  "Header": {
+    "brandName": "Othoutils",
+    "brandAria": "Othoutils, retour à l'accueil",
+    "tagline": "Ressources cliniques vérifiées par des orthophonistes",
+    "searchPlaceholder": "Rechercher un outil, une thématique...",
+    "searchAria": "Rechercher un outil, une thématique",
+    "navLoading": "Chargement du catalogue…",
+    "navError": "Impossible de charger le catalogue",
+    "community": "Communauté",
+    "news": "Nouveautés",
+    "admin": "Administration",
+    "adminMenuLabel": "Menu administration",
+    "dashboard": "Tableau de bord",
+    "addTest": "Ajouter un test",
+    "taxonomy": "Catégories & tags",
+    "catalogue": "Catalogue",
+    "megaMenuLabel": "Navigation catalogue",
+    "domainsLabel": "Domaines du catalogue",
+    "tagsLabel": "Tags"
+  },
+  "Hero": {
+    "sectionLabel": "Référentiels conçus et validés par des orthophonistes",
+    "title": "Une bibliothèque clinique pour consulter des outils éprouvés et suivre leur validation",
+    "lead": "Pensé pour les cabinets, centres hospitaliers et services de rééducation : Othoutils met en avant les questionnaires, batteries et fiches de suivi déjà relus par des professionnels de santé. Les équipes peuvent ensuite proposer, en toute discrétion, des ajustements documentés et relus avant diffusion.",
+    "primaryCta": "Consulter les référentiels validés",
+    "secondaryCta": "Comprendre la validation éditoriale",
+    "cards": {
+      "verifiedTitle": "Référentiels vérifiés",
+      "verifiedDesc": "Chaque fiche est relue par des orthophonistes et publiée avec les précisions nécessaires au terrain.",
+      "peerTitle": "Validation par pairs",
+      "peerDesc": "Un circuit de relecture clair : brouillon, relecture interdisciplinaire puis diffusion sécurisée.",
+      "readyTitle": "Prêt pour le terrain",
+      "readyDesc": "Interface lumineuse, lisible et accessible pour travailler au cabinet, à l’hôpital ou en mobilité."
+    }
+  },
+  "Referentials": {
+    "sectionLabel": "Référentiels structurés",
+    "loading": "Chargement des référentiels depuis Supabase…",
+    "errorTitle": "Impossible de récupérer les référentiels",
+    "errorSubtitle": "Vérifiez la connexion ou rechargez la page. La requête passe par Supabase avec RLS activé.",
+    "errors": {
+      "load": "Erreur lors du chargement des référentiels"
+    },
+    "emptySubsections": "Aucune sous-catégorie associée pour le moment.",
+    "emptyState": "Aucun référentiel n'est disponible pour le moment. Vérifiez que les données sont bien présentes dans Supabase."
+  },
+  "Tools": {
+    "sectionLabel": "Référentiel des tests",
+    "headingTitle": "Catalogue clinique",
+    "headingText": "Une vue rapide des tests présents en base, directement issus de Supabase via Drizzle pour une cohérence totale avec le schéma.",
+    "ctas": {
+      "openCatalogue": "Ouvrir le catalogue",
+      "viewSheet": "Consulter {testName}",
+      "viewSheetLabel": "Voir la fiche"
+    },
+    "errors": {
+      "load": "Impossible de récupérer les tests pour le moment. Vérifiez la connexion à la base Supabase ou réessayez plus tard."
+    },
+    "emptyState": "Aucun test n'est disponible pour l'instant. Ajoutez des entrées dans Supabase pour alimenter le catalogue.",
+    "collaboration": {
+      "sectionLabel": "Gouvernance éditoriale",
+      "items": {
+        "workflow": "Assurez un espace clair entre brouillons, fiches validées et contenus communautaires.",
+        "committee": "Constituez un comité de relecture pluridisciplinaire avec attribution automatique des validations.",
+        "archives": "Archivez les versions pour suivre les modifications, commentaires et décisions thérapeutiques."
+      }
+    },
+    "stats": {
+      "tests": {
+        "label": "Tests référencés",
+        "detail": "Synchronisés depuis Supabase"
+      },
+      "domains": {
+        "label": "Domaines couverts",
+        "detail": "Phonologie, pragmatique, langage écrit…"
+      },
+      "standardized": {
+        "label": "Standardisés",
+        "detail": "Marqués comme normés"
+      }
+    }
+  },
+  "Catalogue": {
+    "metadata": {
+      "title": "Othoutils | Catalogue clinique",
+      "description": "Tests, outils et évaluations orthophoniques réunis dans un catalogue éditorialisé."
+    },
+    "sectionLabel": "Catalogue des tests",
+    "headingTitle": "Tests d'orthophonie référencés",
+    "headingText": "Retrouvez les évaluations publiées, leur objectif clinique, le public ciblé et les données pratiques pour planifier vos séances.",
+    "ctas": {
+      "addTest": "Ajouter un test",
+      "viewSheet": "Consulter {testName}"
+    },
+    "errors": {
+      "load": "Le catalogue ne peut pas être affiché pour le moment. Vérifiez la connexion à Supabase ou réessayez dans un instant."
+    },
+    "meta": {
+      "objective": "Objectif :",
+      "materials": "Matériel :",
+      "publisher": "Éditeur :"
+    },
+    "empty": {
+      "buyLink": "Pas de lien d'achat renseigné"
+    },
+    "emptyState": "Aucun test n'est référencé pour l'instant. Ajoutez vos premiers tests pour alimenter le catalogue."
+  },
+  "Footer": {
+    "note": "Made with soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour vos collaborations."
+  },
+  "Shared": {
+    "ageRange": {
+      "range": "{min} à {max} mois",
+      "from": "Dès {min} mois",
+      "until": "Jusqu'à {max} mois",
+      "free": "Âge libre"
+    },
+    "duration": {
+      "variable": "Durée variable",
+      "minutes": "{minutes} min"
+    },
+    "statuses": {
+      "standardized": "Standardisé",
+      "nonStandardized": "Non standardisé",
+      "referential": "Référentiel"
+    },
+    "populationDefault": "Population générale",
+    "ctas": {
+      "retry": "Réessayer",
+      "buyOrConsult": "Acheter / Consulter",
+      "viewSheet": "Consulter {testName}",
+      "viewSheetLabel": "Voir la fiche"
+    },
+    "placeholders": {
+      "description": "Description à venir.",
+      "objective": "Objectif clinique à documenter."
+    }
   }
 }

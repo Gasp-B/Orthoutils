@@ -1,25 +1,41 @@
-import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { getTestsWithMetadata } from '@/lib/tests/queries';
 import type { TestDto } from '@/lib/validation/tests';
 import styles from './tools-section.module.css';
 
-function formatAgeRange(min: number | null, max: number | null) {
+function formatAgeRange(
+  translateShared: Awaited<ReturnType<typeof getTranslations>>,
+  min: number | null,
+  max: number | null,
+) {
   if (min && max) {
-    return `${min} à ${max} mois`;
+    return translateShared('ageRange.range', { max, min });
   }
 
   if (min) {
-    return `Dès ${min} mois`;
+    return translateShared('ageRange.from', { min });
   }
 
   if (max) {
-    return `Jusqu'à ${max} mois`;
+    return translateShared('ageRange.until', { max });
   }
 
-  return 'Âge libre';
+  return translateShared('ageRange.free');
+}
+
+function formatDuration(translateShared: Awaited<ReturnType<typeof getTranslations>>, minutes: number | null) {
+  if (!minutes) {
+    return translateShared('duration.variable');
+  }
+
+  return translateShared('duration.minutes', { minutes });
 }
 
 async function ToolsSection() {
+  const t = await getTranslations('Tools');
+  const shared = await getTranslations('Shared');
+
   let tests: TestDto[] = [];
   let loadError: string | null = null;
 
@@ -27,16 +43,19 @@ async function ToolsSection() {
     tests = await getTestsWithMetadata();
   } catch (error) {
     console.error('Erreur lors du chargement du catalogue des tests', error);
-    loadError =
-      "Impossible de récupérer les tests pour le moment. Vérifiez la connexion à la base Supabase ou réessayez plus tard.";
+    loadError = t('errors.load');
   }
   const featured = tests.slice(0, 3);
   const domains = Array.from(new Set(tests.flatMap((test) => test.domains)));
 
   const computedStats = [
-    { label: 'Tests référencés', value: tests.length, detail: 'Synchronisés depuis Supabase' },
-    { label: 'Domaines couverts', value: domains.length, detail: 'Phonologie, pragmatique, langage écrit…' },
-    { label: 'Standardisés', value: tests.filter((test) => test.isStandardized).length, detail: 'Marqués comme normés' },
+    { label: t('stats.tests.label'), value: tests.length, detail: t('stats.tests.detail') },
+    { label: t('stats.domains.label'), value: domains.length, detail: t('stats.domains.detail') },
+    {
+      label: t('stats.standardized.label'),
+      value: tests.filter((test) => test.isStandardized).length,
+      detail: t('stats.standardized.detail'),
+    },
   ];
 
   return (
@@ -44,20 +63,17 @@ async function ToolsSection() {
       <section id="catalogue" className="container section-shell">
         <div className="section-title">
           <span />
-          <p className={styles.sectionLabel}>Référentiel des tests</p>
+          <p className={styles.sectionLabel}>{t('sectionLabel')}</p>
         </div>
 
         <div className="glass panel">
           <div className={styles.headerRow}>
             <div className={`stack ${styles.headingStack}`}>
-              <h2 className={styles.headingTitle}>Catalogue clinique</h2>
-              <p className={styles.headingText}>
-                Une vue rapide des tests présents en base, directement issus de Supabase via Drizzle pour une cohérence
-                totale avec le schéma.
-              </p>
+              <h2 className={styles.headingTitle}>{t('headingTitle')}</h2>
+              <p className={styles.headingText}>{t('headingText')}</p>
             </div>
             <Link className="ph-header__pill" href="/catalogue">
-              Ouvrir le catalogue
+              {t('ctas.openCatalogue')}
             </Link>
           </div>
         </div>
@@ -69,14 +85,14 @@ async function ToolsSection() {
                 <div>
                   <p className={styles.cardTitle}>{test.name}</p>
                   <p className={`text-subtle ${styles.cardSubtitle}`}>
-                    {test.shortDescription ?? 'Description à venir.'}
+                    {test.shortDescription ?? shared('placeholders.description')}
                   </p>
                 </div>
-                <span className="badge">{formatAgeRange(test.ageMinMonths, test.ageMaxMonths)}</span>
+                <span className="badge">{formatAgeRange(shared, test.ageMinMonths, test.ageMaxMonths)}</span>
               </div>
 
               <p className={styles.objectiveText}>
-                {test.objective ?? 'Objectif clinique à documenter.'}
+                {test.objective ?? shared('placeholders.objective')}
               </p>
 
               <div className={styles.tagRow}>
@@ -98,9 +114,13 @@ async function ToolsSection() {
               )}
 
               <div className={`action-row ${styles.actionRow}`}>
-                <span className="text-subtle">{test.durationMinutes ? `${test.durationMinutes} min` : 'Durée variable'}</span>
-                <Link className="ph-header__link" href={`/catalogue/${test.slug}`} aria-label={`Consulter ${test.name}`}>
-                  Voir la fiche
+                <span className="text-subtle">{formatDuration(shared, test.durationMinutes)}</span>
+                <Link
+                  className="ph-header__link"
+                  href={{ pathname: '/catalogue/[slug]', params: { slug: test.slug } }}
+                  aria-label={t('ctas.viewSheet', { testName: test.name })}
+                >
+                  {t('ctas.viewSheetLabel')}
                 </Link>
               </div>
             </article>
@@ -110,8 +130,7 @@ async function ToolsSection() {
         {tests.length === 0 && (
           <div className={`glass panel ${styles.emptyState}`}>
             <p className={`text-subtle ${styles.emptyText}`}>
-              {loadError ??
-                "Aucun test n'est disponible pour l'instant. Ajoutez des entrées dans Supabase pour alimenter le catalogue."}
+              {loadError ?? t('emptyState')}
             </p>
           </div>
         )}
@@ -122,12 +141,12 @@ async function ToolsSection() {
           <div className="glass panel">
             <div className="section-title">
               <span />
-              <p className={styles.sectionLabel}>Gouvernance éditoriale</p>
+              <p className={styles.sectionLabel}>{t('collaboration.sectionLabel')}</p>
             </div>
             <ul className="list">
-              <li>Assurez un espace clair entre brouillons, fiches validées et contenus communautaires.</li>
-              <li>Constituez un comité de relecture pluridisciplinaire avec attribution automatique des validations.</li>
-              <li>Archivez les versions pour suivre les modifications, commentaires et décisions thérapeutiques.</li>
+              <li>{t('collaboration.items.workflow')}</li>
+              <li>{t('collaboration.items.committee')}</li>
+              <li>{t('collaboration.items.archives')}</li>
             </ul>
             <div className="stat-grid">
               {computedStats.map((stat) => (

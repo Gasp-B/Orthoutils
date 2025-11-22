@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import {
   useEffect,
   useMemo,
@@ -8,6 +8,7 @@ import {
   useState,
   type KeyboardEvent,
 } from 'react';
+import { Link } from '@/i18n/navigation';
 import type { CatalogueDomain } from '@/lib/navigation/catalogue';
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 };
 
 function CatalogueMegaMenu({ domains }: Props) {
+  const t = useTranslations('Header');
   const [isOpen, setIsOpen] = useState(false);
   const [activeDomainId, setActiveDomainId] = useState<string | null>(
     domains[0]?.id ?? null,
@@ -49,7 +51,7 @@ function CatalogueMegaMenu({ domains }: Props) {
   if (!domains.length) {
     return (
       <Link className="ph-header__link" href="/catalogue">
-        Catalogue
+        {t('catalogue')}
       </Link>
     );
   }
@@ -72,7 +74,7 @@ function CatalogueMegaMenu({ domains }: Props) {
         onClick={() => setIsOpen((open) => !open)}
         onFocus={() => setIsOpen(true)}
       >
-        Catalogue
+        {t('catalogue')}
         <span aria-hidden>▾</span>
       </button>
 
@@ -81,16 +83,16 @@ function CatalogueMegaMenu({ domains }: Props) {
         id={menuId}
         role="menu"
         className={`ph-header__mega-panel ${isOpen ? 'is-open' : ''}`}
-        aria-label="Navigation catalogue"
+        aria-label={t('megaMenuLabel')}
       >
         <div className="ph-header__mega-grid">
           {/* Colonne domaines */}
-          <div className="ph-header__mega-column" aria-label="Domaines du catalogue">
+          <div className="ph-header__mega-column" aria-label={t('domainsLabel')}>
             <ul className="ph-header__mega-domains">
               {domains.map((domain) => (
                 <li key={domain.id}>
                   <Link
-                    href={`/catalogue/${domain.slug}`}
+                    href={{ pathname: '/catalogue/[slug]', params: { slug: domain.slug } }}
                     className={`ph-header__mega-domain ${
                       domain.id === activeDomain?.id ? 'is-active' : ''
                     }`}
@@ -112,19 +114,26 @@ function CatalogueMegaMenu({ domains }: Props) {
           {/* Colonne tags */}
           <div className="ph-header__mega-column ph-header__mega-tags" aria-live="polite">
             <p className="ph-header__mega-title">
-              {activeDomain?.label ?? 'Tags'}
+              {activeDomain?.label ?? t('tagsLabel')}
             </p>
             <div className="ph-header__mega-tag-grid">
-              {(activeDomain?.tags ?? []).map((tag) => (
-                <Link
-                  key={`${activeDomain?.id ?? 'domain'}-${tag.id}`}
-                  href={`/catalogue/${activeDomain?.slug}/${tag.slug}`}
-                  className="ph-header__mega-tag"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {tag.label}
-                </Link>
-              ))}
+              {(activeDomain?.tags ?? []).map((tag) => {
+                if (!activeDomain) return null;
+
+                return (
+                  <Link
+                    key={`${activeDomain.id}-${tag.id}`}
+                    href={{
+                      pathname: '/catalogue/[slug]/[tag]',
+                      params: { slug: activeDomain.slug, tag: tag.slug },
+                    }}
+                    className="ph-header__mega-tag"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {tag.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>
