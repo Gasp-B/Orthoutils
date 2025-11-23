@@ -30,10 +30,22 @@ export const toolsResponseSchema = z.object({
 export type ToolDto = z.infer<typeof toolSchema>;
 export type ToolStatus = z.infer<typeof toolStatusSchema>;
 
-export const createToolSchema = z.object({
-  name: z.string().min(1, 'Le nom est requis'),
-  category: z.string().min(1, 'La catégorie est requise'),
-  type: z.string().min(1, 'Le type est requis'),
-  tags: z.array(z.string().min(1)).min(1, 'Ajoutez au moins un tag'),
-  source: z.string().url('La source doit être une URL valide'),
-});
+export type CreateToolMessages = {
+  nameRequired: string;
+  categoryRequired: string;
+  typeRequired: string;
+  tagsRequired: string;
+  sourceUrl: string;
+};
+
+export const createToolSchema = (messages: CreateToolMessages) =>
+  z.object({
+    name: z.string().min(1, messages.nameRequired),
+    category: z.string().min(1, messages.categoryRequired),
+    type: z.string().min(1, messages.typeRequired),
+    tags: z.array(z.string().min(1)).min(1, messages.tagsRequired),
+    source: z.string().url(messages.sourceUrl),
+  });
+
+export type CreateToolSchema = ReturnType<typeof createToolSchema>;
+export type CreateToolPayload = z.infer<CreateToolSchema>;

@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { getTranslations } from 'next-intl/server';
 import { getDb } from '@/lib/db/client';
 import { tools, toolsCatalog } from '@/lib/db/schema';
 import { createToolSchema, toolsResponseSchema, type ToolStatus } from '@/lib/validation/tools';
+import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 
 type CatalogRow = {
   id: string;
@@ -28,6 +30,37 @@ type CommunityRow = {
   source: string;
   createdAt: Date | string;
 };
+
+function resolveLocale(request: NextRequest): Locale {
+  const requestedLocale =
+    request.headers.get('x-orthoutil-locale') ?? request.headers.get('accept-language');
+
+  if (!requestedLocale) {
+    return defaultLocale;
+  }
+
+  const normalizedLocale = requestedLocale.split(',')[0]?.split('-')[0]?.trim();
+
+  if (normalizedLocale && locales.includes(normalizedLocale as Locale)) {
+    return normalizedLocale as Locale;
+  }
+
+  return defaultLocale;
+}
+
+async function getToolValidationResources(locale: Locale) {
+  const t = await getTranslations({ locale, namespace: 'ToolForm' });
+
+  const schema = createToolSchema({
+    nameRequired: t('validation.name.required'),
+    categoryRequired: t('validation.category.required'),
+    typeRequired: t('validation.type.required'),
+    tagsRequired: t('validation.tags.required'),
+    sourceUrl: t('validation.source.url'),
+  });
+
+  return { schema, fallbackError: t('validation.fallback') };
+}
 
 export async function GET() {
   try {
@@ -121,9 +154,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const locale = resolveLocale(request);
+  const { schema, fallbackError } = await getToolValidationResources(locale);
+
   try {
     const json = await request.json();
-    const payload = createToolSchema.parse(json);
+    const payload = schema.parse(json);
 
     const [inserted] = await getDb()
       .insert(tools)
@@ -166,7 +202,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ tool: responseBody }, { status: 201 });
   } catch (error) {
     console.error('Failed to create tool', error);
-    const message = error instanceof Error ? error.message : 'Impossible de créer l\'outil';
+    const message = error instanceof Error && error.message ? error.message : fallbackError;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
