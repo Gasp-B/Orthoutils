@@ -9,9 +9,9 @@ type Props = {
 };
 
 const statusClass: Record<ToolStatus, string> = {
-  Validé: 'badge validated',
-  'En cours de revue': 'badge review',
-  Communauté: 'badge community',
+  validated: 'badge validated',
+  review: 'badge review',
+  community: 'badge community',
 };
 
 function ToolCard({ tool }: Props) {
@@ -21,10 +21,11 @@ function ToolCard({ tool }: Props) {
   const hasType = Boolean(tool.type);
   const hasSource = Boolean(tool.source);
   const statusLabels: Record<ToolStatus, string> = {
-    Validé: t('status.validated'),
-    'En cours de revue': t('status.review'),
-    Communauté: t('status.community'),
+    validated: t('status.validated'),
+    review: t('status.review'),
+    community: t('status.community'),
   };
+  const statusLabel = tool.statusLabel ?? statusLabels[tool.status];
   const typeLabel = hasType ? t('labels.type', { type: tool.type ?? '' }) : null;
   const descriptionContent = hasDescription
     ? tool.description
@@ -38,7 +39,7 @@ function ToolCard({ tool }: Props) {
           <p className={styles.title}>{tool.title}</p>
           <p className={styles.category}>{tool.category}</p>
         </div>
-        <span className={statusClass[tool.status]}>{statusLabels[tool.status]}</span>
+        <span className={statusClass[tool.status]}>{statusLabel}</span>
       </div>
       <p className={styles.description}>{descriptionContent}</p>
       <div className="tag-row">

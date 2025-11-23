@@ -615,5 +615,10 @@
       "success": "The sheet has been created. It will appear in the catalog under the “Community” label.",
       "error": "An error occurred."
     }
+  },
+  "ApiTools": {
+    "errors": {
+      "fetch": "Unable to retrieve tools"
+    }
   }
 }

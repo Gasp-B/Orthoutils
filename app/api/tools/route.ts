@@ -18,6 +18,7 @@ type CatalogRow = {
   notes: string | null;
   targetPopulation: string | null;
   status: ToolStatus;
+  statusLabel?: string;
   createdAt: Date | string;
   type: string | null;
   source: string | null;
@@ -33,21 +34,49 @@ type CommunityRow = {
   createdAt: Date | string;
 };
 
+function normalizeLocale(rawLocale: string | null): Locale | null {
+  if (!rawLocale) {
+    return null;
+  }
+
+  const normalized = rawLocale.split(',')[0]?.split('-')[0]?.trim();
+
+  if (normalized && locales.includes(normalized as Locale)) {
+    return normalized as Locale;
+  }
+
+  return null;
+}
+
 function resolveLocale(request: NextRequest): Locale {
+  const localeFromQuery = normalizeLocale(request.nextUrl.searchParams.get('locale'));
+  if (localeFromQuery) {
+    return localeFromQuery;
+  }
+
   const requestedLocale =
     request.headers.get('x-orthoutil-locale') ?? request.headers.get('accept-language');
+  const localeFromHeader = normalizeLocale(requestedLocale);
 
-  if (!requestedLocale) {
-    return defaultLocale;
+  return localeFromHeader ?? defaultLocale;
+}
+
+function resolveStatusKey(value: string | null): ToolStatus {
+  const normalized = value?.toLowerCase().trim();
+
+  if (normalized === 'validé' || normalized === 'validated') {
+    return 'validated';
   }
 
-  const normalizedLocale = requestedLocale.split(',')[0]?.split('-')[0]?.trim();
-
-  if (normalizedLocale && locales.includes(normalizedLocale as Locale)) {
-    return normalizedLocale as Locale;
+  if (normalized === 'en cours de revue' || normalized === 'under review') {
+    return 'review';
   }
 
-  return defaultLocale;
+  if (normalized === 'communauté' || normalized === 'community') {
+    return 'community';
+  }
+
+  return 'review';
 }
 
 async function getToolValidationResources(locale: Locale) {
@@ -126,6 +155,7 @@ export async function GET(request: NextRequest) {
 
           if ('name' in tool) {
             const community = tool as CommunityRow;
+            const status = 'community' as const;
             return {
               id: community.id,
               title: community.name,
@@ -176,14 +206,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to fetch tools from Supabase', error);
-    const message = error instanceof Error ? error.message : 'Impossible de récupérer les outils';
-    return NextResponse.json({ error: message }, { status: 500 });
+    const fallbackMessage = apiTranslations('errors.fetch');
+    return NextResponse.json({ error: fallbackMessage }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   const locale = resolveLocale(request);
   const { schema, fallbackError } = await getToolValidationResources(locale);
+  const toolCardTranslations = await getTranslations({ locale, namespace: 'ToolCard' });
 
   try {
     const json = await request.json();
