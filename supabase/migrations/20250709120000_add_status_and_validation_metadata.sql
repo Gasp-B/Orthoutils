@@ -16,6 +16,10 @@ ALTER TABLE public.tools_catalog
   ADD COLUMN IF NOT EXISTS validated_by uuid REFERENCES auth.users(id),
   ADD COLUMN IF NOT EXISTS validated_at timestamptz;
 
+-- Remove the existing text default before switching to the enum to avoid cast failures.
+ALTER TABLE public.tools_catalog
+  ALTER COLUMN status DROP DEFAULT;
+
 UPDATE public.tools_catalog
 SET status = CASE lower(trim(status))
   WHEN 'validé' THEN 'published'
@@ -41,6 +45,10 @@ ALTER TABLE public.tools
   ADD COLUMN IF NOT EXISTS validated_by uuid REFERENCES auth.users(id),
   ADD COLUMN IF NOT EXISTS validated_at timestamptz;
 
+-- Remove the existing text default before switching to the enum to avoid cast failures.
+ALTER TABLE public.tools
+  ALTER COLUMN status DROP DEFAULT;
+
 UPDATE public.tools
 SET status = 'published';
 
@@ -54,6 +62,10 @@ ALTER TABLE public.tests DROP CONSTRAINT IF EXISTS tests_status_check;
 ALTER TABLE public.tests
   ADD COLUMN IF NOT EXISTS validated_by uuid REFERENCES auth.users(id),
   ADD COLUMN IF NOT EXISTS validated_at timestamptz;
+
+-- Remove the existing text default before switching to the enum to avoid cast failures.
+ALTER TABLE public.tests
+  ALTER COLUMN status DROP DEFAULT;
 
 UPDATE public.tests
 SET status = 'published';
