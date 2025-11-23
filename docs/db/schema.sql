@@ -8,6 +8,15 @@ CREATE TABLE sections (
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
+CREATE TABLE sections_translations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  section_id uuid NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+  locale text NOT NULL,
+  label text NOT NULL,
+  description text,
+  UNIQUE (section_id, locale)
+);
+
 CREATE TABLE subsections (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE,
@@ -15,6 +24,17 @@ CREATE TABLE subsections (
   color_label text,
   notes text,
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE TABLE subsections_translations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  subsection_id uuid NOT NULL REFERENCES subsections(id) ON DELETE CASCADE,
+  locale text NOT NULL,
+  label text NOT NULL,
+  format_label text,
+  color_label text,
+  notes text,
+  UNIQUE (subsection_id, locale)
 );
 
 CREATE TABLE section_subsections (
@@ -39,6 +59,18 @@ CREATE TABLE tools_catalog (
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
+CREATE TABLE tools_catalog_translations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tool_catalog_id uuid NOT NULL REFERENCES tools_catalog(id) ON DELETE CASCADE,
+  locale text NOT NULL,
+  title text NOT NULL,
+  category text NOT NULL,
+  description text,
+  notes text,
+  target_population text,
+  UNIQUE (tool_catalog_id, locale)
+);
+
 ALTER TABLE tools_catalog ENABLE ROW LEVEL SECURITY;
 
 -- Community-submitted tools.
@@ -52,7 +84,21 @@ CREATE TABLE tools (
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
+CREATE TABLE tools_translations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tool_id uuid NOT NULL REFERENCES tools(id) ON DELETE CASCADE,
+  locale text NOT NULL,
+  name text NOT NULL,
+  category text NOT NULL,
+  type text NOT NULL,
+  UNIQUE (tool_id, locale)
+);
+
 ALTER TABLE tools ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sections_translations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subsections_translations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tools_catalog_translations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tools_translations ENABLE ROW LEVEL SECURITY;
 
 -- Test catalog domain.
 CREATE TABLE tests (

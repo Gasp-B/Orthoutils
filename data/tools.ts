@@ -5,7 +5,7 @@ export type Tool = {
   category: 'Questionnaire' | 'Test standardisé' | 'Suivi patient';
   population: string;
   tags: string[];
-  status: 'Validé' | 'En cours de revue' | 'Communauté';
+  status: 'validated' | 'review' | 'community';
 };
 
 export const tools: Tool[] = [
@@ -17,7 +17,7 @@ export const tools: Tool[] = [
     category: 'Test standardisé',
     population: 'Adultes',
     tags: ['aphasie', 'langage', 'diagnostic'],
-    status: 'Validé',
+    status: 'validated',
   },
   {
     id: 'edo',
@@ -26,7 +26,7 @@ export const tools: Tool[] = [
     category: 'Questionnaire',
     population: "Enfants 3-10 ans",
     tags: ['dépistage', 'langage oral'],
-    status: 'En cours de revue',
+    status: 'review',
   },
   {
     id: 'logico',
@@ -36,6 +36,6 @@ export const tools: Tool[] = [
     category: 'Suivi patient',
     population: 'Tous publics',
     tags: ['suivi', 'collaboration', 'progression'],
-    status: 'Communauté',
+    status: 'community',
   },
 ];
