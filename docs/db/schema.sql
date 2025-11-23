@@ -1,6 +1,8 @@
 -- Schema snapshot for taxonomy storage and test catalog.
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+CREATE TYPE validation_status AS ENUM ('draft', 'in_review', 'published', 'archived');
+
 CREATE TABLE sections (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE,
@@ -55,7 +57,7 @@ CREATE TABLE tools_catalog (
   links jsonb NOT NULL DEFAULT '[]'::jsonb,
   notes text,
   target_population text,
-  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  status validation_status NOT NULL DEFAULT 'draft'::validation_status,
   validated_by uuid REFERENCES auth.users(id),
   validated_at timestamptz,
   created_by uuid REFERENCES auth.users(id),
@@ -84,7 +86,7 @@ CREATE TABLE tools (
   type text NOT NULL,
   tags text[] NOT NULL DEFAULT '{}',
   source text NOT NULL,
-  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  status validation_status NOT NULL DEFAULT 'draft'::validation_status,
   validated_by uuid REFERENCES auth.users(id),
   validated_at timestamptz,
   created_by uuid REFERENCES auth.users(id),
@@ -116,7 +118,7 @@ CREATE TABLE tests (
   is_standardized boolean DEFAULT false,
   buy_link text,
   bibliography jsonb NOT NULL DEFAULT '[]'::jsonb,
-  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  status validation_status NOT NULL DEFAULT 'draft'::validation_status,
   validated_by uuid REFERENCES auth.users(id),
   validated_at timestamptz,
   created_by uuid REFERENCES auth.users(id),

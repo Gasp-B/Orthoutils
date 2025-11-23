@@ -1,23 +1,25 @@
-# Migration rollout: status metadata then status-aware RLS
+# Migration rollout: status enum first, status-based RLS second
 
-This plan documents the two-part rollout required to support publication states and moderation metadata.
+Two migrations ship the new publication workflow. The schema migration must run before the policies migration.
 
-## 1) Status metadata + backfill (must run first)
-- **Goal:** Normalize status values to `draft`/`published`/`archived` while adding `validated_by`, `validated_at`, and `created_by` for `tools_catalog`, `tools`, and `tests`.
+## 1) Schema + data backfill (runs first)
+- **Goal:** introduce the `validation_status` enum (`draft | in_review | published | archived`), convert `status` to that type, and add validation metadata.
+- **Scope:** `tools_catalog`, `tools`, `tests`.
 - **Changes:**
-  - Drop legacy `status` constraints, set default to `draft`, and reintroduce a check constraint for the normalized enum.
-  - Backfill legacy values to the new statuses (e.g., `Validé` → `published`, `En cours de revue`/`Communauté` → `draft`).
-  - Add the validator/creator metadata columns and keep them nullable to preserve existing rows.
-- **Notes:** Use a single Drizzle-generated migration to ensure constraint changes, defaults, and backfill occur atomically. This migration unblocks the status-based policies in step 2.
+  - Create `validation_status` enum.
+  - Add `validated_by uuid` and `validated_at timestamptz` (nullable).
+  - Convert `status` to `validation_status` with default `draft`.
+  - Backfill: set all existing `tests` and `tools` rows to `published`. For `tools_catalog`, map legacy text values to the enum (e.g., `validé/validée` → `published`; `en cours de revue`/`communauté` → `in_review`; unknown → `draft`).
 
-## 2) Status-based RLS (must run second)
-- **Goal:** Gate visibility on `status`, allowing anyone to read `published` rows while restricting drafts/archived content and all writes to moderators (`role` = `admin` or `editor`) or the service role.
-- **Changes:**
-  - Create helper functions `is_admin_or_editor()` and `has_moderation_access()` that leverage JWT roles.
-  - Add `can_view_status(target_status text)` to encapsulate published visibility checks.
-  - Apply SELECT + ALL policies on tools, tests, catalog, and their translation/junction tables using the helpers.
-- **Notes:** This migration depends on the normalized status enum and metadata columns introduced in step 1.
+## 2) Status-based RLS (runs second)
+- **Goal:** lock reads/writes to status-aware rules and moderation roles.
+- **Policies:**
+  - Public (anon + authenticated) can `SELECT` only rows where `status = 'published'`.
+  - Moderators (`role` = `admin`/`editor` or `service_role`) can read/write all statuses.
+  - Writes on status tables require moderation role **and** keep `validated_by/validated_at` NULL unless `status = 'published'` (and non-NULL when published).
+  - Translation/junction tables mirror parent visibility for public, full control for moderators.
+  - Legacy policies are dropped before applying the new set.
 
 ## Execution order and CI
-- Name the migrations so the status/metadata migration timestamp is **earlier** than the RLS migration (e.g., `20250709120000_add_status_and_validation_metadata.sql` then `20250710120000_status_based_rls.sql`). Supabase CLI applies files lexicographically, so the timestamps enforce the correct ordering.
-- The GitHub Action (`.github/workflows/supabase-migrations.yml`) already runs `supabase migration up --include-all`, which applies pending migrations in sorted order. Adding the files with the timestamps above is sufficient for CI to execute the two steps sequentially.
+- The timestamps enforce ordering: `20250709120000_add_status_and_validation_metadata.sql` (schema) then `20250710120000_status_based_rls.sql` (policies).
+- GitHub Action `.github/workflows/supabase-migrations.yml` already runs `supabase migration up --include-all`, applying migrations lexicographically, so CI will process schema first, policies second.
