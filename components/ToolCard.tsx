@@ -25,6 +25,7 @@ function ToolCard({ tool }: Props) {
     review: t('status.review'),
     community: t('status.community'),
   };
+  const statusLabel = tool.statusLabel ?? statusLabels[tool.status];
   const typeLabel = hasType ? t('labels.type', { type: tool.type ?? '' }) : null;
   const descriptionContent = hasDescription
     ? tool.description
@@ -38,7 +39,7 @@ function ToolCard({ tool }: Props) {
           <p className={styles.title}>{tool.title}</p>
           <p className={styles.category}>{tool.category}</p>
         </div>
-        <span className={statusClass[tool.status]}>{statusLabels[tool.status]}</span>
+        <span className={statusClass[tool.status]}>{statusLabel}</span>
       </div>
       <p className={styles.description}>{descriptionContent}</p>
       <div className="tag-row">

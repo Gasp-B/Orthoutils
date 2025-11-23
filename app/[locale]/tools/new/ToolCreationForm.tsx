@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { useLocale, useTranslations } from 'next-intl';
-import type { CreateToolPayload } from '@/lib/validation/tools';
+import type { CreateToolPayload, ToolDto } from '@/lib/validation/tools';
 import styles from './tool-creation-form.module.css';
 
 const defaultValues = {
@@ -18,7 +18,7 @@ const defaultValues = {
 };
 
 type ApiResponse = {
-  tool?: CreateToolPayload & { id: string };
+  tool?: ToolDto;
   error?: string;
 };
 

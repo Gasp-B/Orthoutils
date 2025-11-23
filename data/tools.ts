@@ -34,7 +34,7 @@ export const tools: Tool[] = [
     description:
       'Tableau de bord collaboratif pour suivre les plans de soins, notes de séances et exercices assignés.',
     category: 'Suivi patient',
-    population: 'Tous publics',
+    population: 'All audiences',
     tags: ['suivi', 'collaboration', 'progression'],
     status: 'community',
   },

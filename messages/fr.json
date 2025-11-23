@@ -679,5 +679,10 @@
             "success": "La fiche a été créée. Elle apparaîtra dans le catalogue sous l'étiquette « Communauté ».",
             "error": "Une erreur est survenue."
         }
+    },
+    "ApiTools": {
+        "errors": {
+            "fetch": "Impossible de récupérer les outils"
+        }
     }
 }
