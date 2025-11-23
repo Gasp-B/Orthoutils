@@ -31,7 +31,7 @@ async function NewToolPage({ params }: PageParams) {
         <p className={`text-subtle ${styles.introText}`}>
           {t.rich('intro.preview', {
             catalogLink: (chunks) => (
-              <Link href="/#catalogue" className="top-banner__link">
+              <Link href={{ pathname: '/', hash: 'catalogue' }} className="top-banner__link">
                 {chunks}
               </Link>
             ),
