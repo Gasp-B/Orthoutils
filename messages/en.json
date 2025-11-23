@@ -111,6 +111,11 @@
       "viewDetails": "View detailed sheet"
     }
   },
+  "ApiTools": {
+    "errors": {
+      "fetch": "The tools could not be retrieved right now. Please try again later."
+    }
+  },
   "Catalogue": {
     "metadata": {
       "title": "Othoutils | Clinical catalog",

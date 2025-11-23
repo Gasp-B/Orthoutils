@@ -92,11 +92,11 @@
             }
         }
     },
-    "ToolCard": {
-        "status": {
-            "validated": "Validé",
-            "review": "En cours de revue",
-            "community": "Communauté"
+  "ToolCard": {
+    "status": {
+      "validated": "Validé",
+      "review": "En cours de revue",
+      "community": "Communauté"
         },
         "labels": {
             "type": "Type : {type}",
@@ -108,12 +108,17 @@
             "population": "Tous publics"
         },
         "cta": {
-            "viewDetails": "Voir la fiche détaillée"
-        }
-    },
-    "Catalogue": {
-        "metadata": {
-            "title": "Othoutils | Catalogue clinique",
+      "viewDetails": "Voir la fiche détaillée"
+    }
+  },
+  "ApiTools": {
+    "errors": {
+      "fetch": "Impossible de récupérer les outils pour le moment. Merci de réessayer plus tard."
+    }
+  },
+  "Catalogue": {
+    "metadata": {
+      "title": "Othoutils | Catalogue clinique",
             "description": "Tests, outils et évaluations orthophoniques réunis dans un catalogue éditorialisé."
         },
         "sectionLabel": "Catalogue des tests",

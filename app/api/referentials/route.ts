@@ -1,99 +1,168 @@
-import { NextResponse } from 'next/server';
-import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
+import { and, eq, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { NextResponse, type NextRequest } from 'next/server';
+import { defaultLocale, locales, type Locale } from '@/i18n/routing';
+import { getDb } from '@/lib/db/client';
+import {
+  sections,
+  sectionsTranslations,
+  sectionSubsections,
+  subsections,
+  subsectionsTranslations,
+  subsectionTags,
+  tags,
+  tagsTranslations,
+} from '@/lib/db/schema';
 import { referentialsResponseSchema } from '@/lib/validation/referentials';
 
-type ReferentialRow = {
-  id: string;
-  name: string;
-  description: string | null;
-  section_subsections: Array<{
-    subsection: {
-      id: string;
-      name: string;
-      format_label: string | null;
-      color_label: string | null;
-      notes: string | null;
-      subsection_tags: Array<{
-        tag: {
-          id: string;
-          name: string;
-        } | null;
-      }> | null;
-    } | null;
-  }> | null;
-};
+function resolveLocale(request: NextRequest): Locale {
+  const requestedLocale = request.headers.get('x-orthoutil-locale') ?? request.headers.get('accept-language');
 
-type ReferentialSubsectionRow = NonNullable<
-  NonNullable<ReferentialRow['section_subsections']>[number]['subsection']
->;
-type ReferentialTagRow = NonNullable<
-  NonNullable<ReferentialSubsectionRow['subsection_tags']>[number]['tag']
->;
+  if (!requestedLocale) {
+    return defaultLocale;
+  }
 
-export async function GET() {
+  const normalizedLocale = requestedLocale.split(',')[0]?.split('-')[0]?.trim();
+
+  if (normalizedLocale && locales.includes(normalizedLocale as Locale)) {
+    return normalizedLocale as Locale;
+  }
+
+  return defaultLocale;
+}
+
+export async function GET(request: NextRequest) {
+  const locale = resolveLocale(request);
+
   try {
-    const supabase = createRouteHandlerSupabaseClient();
+    const localizedSection = alias(sectionsTranslations, 'localized_section');
+    const fallbackSection = alias(sectionsTranslations, 'fallback_section');
+    const localizedSubsection = alias(subsectionsTranslations, 'localized_subsection');
+    const fallbackSubsection = alias(subsectionsTranslations, 'fallback_subsection');
+    const localizedTag = alias(tagsTranslations, 'localized_tag');
+    const fallbackTag = alias(tagsTranslations, 'fallback_tag');
 
-    const { data, error } = await supabase
-      .from('sections')
-      .select(
-        [
-          'id',
-          'name',
-          'description',
-          `section_subsections:section_subsections (
-            subsection:subsections (
-              id,
-              name,
-              format_label,
-              color_label,
-              notes,
-              subsection_tags:subsection_tags (
-                tag:tags (
-                  id,
-                  name
-                )
-              )
-            )
-          )`,
-        ].join(','),
+    const sectionLabelExpression = sql<string>`COALESCE(${localizedSection.label}, ${fallbackSection.label}, ${sections.name})`;
+    const sectionDescriptionExpression = sql<string | null>`COALESCE(${localizedSection.description}, ${fallbackSection.description}, ${sections.description})`;
+    const subsectionLabelExpression = sql<string>`COALESCE(${localizedSubsection.label}, ${fallbackSubsection.label}, ${subsections.name})`;
+    const subsectionFormatLabelExpression = sql<string | null>`COALESCE(${localizedSubsection.formatLabel}, ${fallbackSubsection.formatLabel}, ${subsections.formatLabel})`;
+    const subsectionColorLabelExpression = sql<string | null>`COALESCE(${localizedSubsection.colorLabel}, ${fallbackSubsection.colorLabel}, ${subsections.colorLabel})`;
+    const subsectionNotesExpression = sql<string | null>`COALESCE(${localizedSubsection.notes}, ${fallbackSubsection.notes}, ${subsections.notes})`;
+    const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
+
+    const rows = await getDb()
+      .select({
+        sectionId: sections.id,
+        sectionLabel: sectionLabelExpression,
+        sectionDescription: sectionDescriptionExpression,
+        subsectionId: subsections.id,
+        subsectionLabel: subsectionLabelExpression,
+        subsectionFormatLabel: subsectionFormatLabelExpression,
+        subsectionColorLabel: subsectionColorLabelExpression,
+        subsectionNotes: subsectionNotesExpression,
+        tagId: tags.id,
+        tagLabel: tagLabelExpression,
+        tagColorLabel: tags.colorLabel,
+      })
+      .from(sections)
+      .leftJoin(localizedSection, and(eq(localizedSection.sectionId, sections.id), eq(localizedSection.locale, locale)))
+      .leftJoin(fallbackSection, and(eq(fallbackSection.sectionId, sections.id), eq(fallbackSection.locale, defaultLocale)))
+      .leftJoin(sectionSubsections, eq(sectionSubsections.sectionId, sections.id))
+      .leftJoin(subsections, eq(sectionSubsections.subsectionId, subsections.id))
+      .leftJoin(
+        localizedSubsection,
+        and(eq(localizedSubsection.subsectionId, subsections.id), eq(localizedSubsection.locale, locale)),
       )
-      .order('name', { ascending: true })
-      .order('name', { foreignTable: 'section_subsections.subsection' });
+      .leftJoin(
+        fallbackSubsection,
+        and(eq(fallbackSubsection.subsectionId, subsections.id), eq(fallbackSubsection.locale, defaultLocale)),
+      )
+      .leftJoin(subsectionTags, eq(subsections.id, subsectionTags.subsectionId))
+      .leftJoin(tags, eq(subsectionTags.tagId, tags.id))
+      .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
+      .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
+      .orderBy(sectionLabelExpression, subsectionLabelExpression, tagLabelExpression);
 
-    if (error) {
-      throw error;
+    const sectionsById = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        description: string | null;
+        subsections: Map<
+          string,
+          {
+            id: string;
+            name: string;
+            formatLabel: string | null;
+            colorLabel: string | null;
+            notes: string | null;
+            tags: Map<string, { id: string; name: string; colorLabel: string | null }>;
+          }
+        >;
+      }
+    >();
+
+    for (const row of rows) {
+      if (!row.sectionId || !row.sectionLabel) {
+        continue;
+      }
+
+      const section =
+        sectionsById.get(row.sectionId) ??
+        {
+          id: row.sectionId,
+          name: row.sectionLabel,
+          description: row.sectionDescription ?? null,
+          subsections: new Map(),
+        };
+
+      if (!sectionsById.has(row.sectionId)) {
+        sectionsById.set(row.sectionId, section);
+      }
+
+      if (!row.subsectionId || !row.subsectionLabel) {
+        continue;
+      }
+
+      const subsection =
+        section.subsections.get(row.subsectionId) ??
+        {
+          id: row.subsectionId,
+          name: row.subsectionLabel,
+          formatLabel: row.subsectionFormatLabel ?? null,
+          colorLabel: row.subsectionColorLabel ?? null,
+          notes: row.subsectionNotes ?? null,
+          tags: new Map(),
+        };
+
+      if (!section.subsections.has(row.subsectionId)) {
+        section.subsections.set(row.subsectionId, subsection);
+      }
+
+      if (row.tagId && row.tagLabel) {
+        subsection.tags.set(row.tagId, {
+          id: row.tagId,
+          name: row.tagLabel,
+          colorLabel: row.tagColorLabel ?? null,
+        });
+      }
     }
 
-    const rows = ((data as unknown as ReferentialRow[] | null) ?? []);
-
     const payload = referentialsResponseSchema.parse({
-      referentials:
-        rows.map((section) => ({
-          id: section.id,
-          name: section.name,
-          description: section.description ?? null,
-          subsections:
-            section.section_subsections
-              ?.map((link) => link.subsection)
-              .filter((subsection): subsection is ReferentialSubsectionRow => Boolean(subsection))
-              .map((subsection) => ({
-                id: subsection.id,
-                name: subsection.name,
-                formatLabel: subsection.format_label ?? null,
-                colorLabel: subsection.color_label ?? null,
-                notes: subsection.notes ?? null,
-                tags:
-                  subsection.subsection_tags
-                    ?.map((subsectionTag) => subsectionTag.tag)
-                    .filter((tag): tag is ReferentialTagRow => Boolean(tag))
-                    .map((tag) => ({
-                      id: tag.id,
-                      name: tag.name,
-                      colorLabel: null,
-                    })) ?? [],
-              })) ?? [],
-        })) ?? [],
+      referentials: Array.from(sectionsById.values()).map((section) => ({
+        id: section.id,
+        name: section.name,
+        description: section.description ?? null,
+        subsections: Array.from(section.subsections.values()).map((subsection) => ({
+          id: subsection.id,
+          name: subsection.name,
+          formatLabel: subsection.formatLabel ?? null,
+          colorLabel: subsection.colorLabel ?? null,
+          notes: subsection.notes ?? null,
+          tags: Array.from(subsection.tags.values()),
+        })),
+      })),
     });
 
     return NextResponse.json(payload, {

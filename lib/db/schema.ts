@@ -18,6 +18,28 @@ export const toolsCatalog = pgTable('tools_catalog', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const toolsCatalogTranslations = pgTable(
+  'tools_catalog_translations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    toolCatalogId: uuid('tool_catalog_id')
+      .notNull()
+      .references(() => toolsCatalog.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    title: text('title').notNull(),
+    category: text('category').notNull(),
+    description: text('description'),
+    notes: text('notes'),
+    targetPopulation: text('target_population'),
+  },
+  (table) => ({
+    localeConstraint: uniqueIndex('tools_catalog_translations_tool_catalog_id_locale_key').on(
+      table.toolCatalogId,
+      table.locale,
+    ),
+  }),
+);
+
 export type ToolRecord = typeof toolsCatalog.$inferSelect;
 
 export const tools = pgTable('tools', {
@@ -30,12 +52,45 @@ export const tools = pgTable('tools', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const toolsTranslations = pgTable(
+  'tools_translations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    toolId: uuid('tool_id')
+      .notNull()
+      .references(() => tools.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    name: text('name').notNull(),
+    category: text('category').notNull(),
+    type: text('type').notNull(),
+  },
+  (table) => ({
+    localeConstraint: uniqueIndex('tools_translations_tool_id_locale_key').on(table.toolId, table.locale),
+  }),
+);
+
 export const sections = pgTable('sections', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   description: text('description'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const sectionsTranslations = pgTable(
+  'sections_translations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sectionId: uuid('section_id')
+      .notNull()
+      .references(() => sections.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    label: text('label').notNull(),
+    description: text('description'),
+  },
+  (table) => ({
+    localeConstraint: uniqueIndex('sections_translations_section_id_locale_key').on(table.sectionId, table.locale),
+  }),
+);
 
 export const subsections = pgTable('subsections', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -45,6 +100,27 @@ export const subsections = pgTable('subsections', {
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const subsectionsTranslations = pgTable(
+  'subsections_translations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    subsectionId: uuid('subsection_id')
+      .notNull()
+      .references(() => subsections.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    label: text('label').notNull(),
+    formatLabel: text('format_label'),
+    colorLabel: text('color_label'),
+    notes: text('notes'),
+  },
+  (table) => ({
+    localeConstraint: uniqueIndex('subsections_translations_subsection_id_locale_key').on(
+      table.subsectionId,
+      table.locale,
+    ),
+  }),
+);
 
 export const sectionSubsections = pgTable(
   'section_subsections',
