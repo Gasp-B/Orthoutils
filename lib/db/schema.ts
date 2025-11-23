@@ -1,22 +1,49 @@
-import { boolean, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  integer,
+  jsonb,
+  pgSchema,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-export const toolsCatalog = pgTable('tools_catalog', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  title: text('title').notNull(),
-  category: text('category').notNull(),
-  colorLabel: text('color_label'),
-  tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
-  description: text('description'),
-  links: jsonb('links')
-    .notNull()
-    .$type<Array<{ label: string; url: string }>>()
-    .default(sql`'[]'::jsonb`),
-  notes: text('notes'),
-  targetPopulation: text('target_population'),
-  status: text('status').notNull().default('Validé'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+const auth = pgSchema('auth');
+
+export const authUsers = auth.table('users', {
+  id: uuid('id').primaryKey(),
 });
+
+export const toolsCatalog = pgTable(
+  'tools_catalog',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    category: text('category').notNull(),
+    colorLabel: text('color_label'),
+    tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+    description: text('description'),
+    links: jsonb('links')
+      .notNull()
+      .$type<Array<{ label: string; url: string }>>()
+      .default(sql`'[]'::jsonb`),
+    notes: text('notes'),
+    targetPopulation: text('target_population'),
+    status: text('status').notNull().default('draft'),
+    validatedBy: uuid('validated_by').references(() => authUsers.id),
+    validatedAt: timestamp('validated_at', { withTimezone: true }),
+    createdBy: uuid('created_by').references(() => authUsers.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    statusCheck: check('tools_catalog_status_check', sql`${table.status} in ('draft','published','archived')`),
+  }),
+);
 
 export const toolsCatalogTranslations = pgTable(
   'tools_catalog_translations',
@@ -42,15 +69,25 @@ export const toolsCatalogTranslations = pgTable(
 
 export type ToolRecord = typeof toolsCatalog.$inferSelect;
 
-export const tools = pgTable('tools', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull(),
-  category: text('category').notNull(),
-  type: text('type').notNull(),
-  tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
-  source: text('source').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const tools = pgTable(
+  'tools',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    category: text('category').notNull(),
+    type: text('type').notNull(),
+    tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+    source: text('source').notNull(),
+    status: text('status').notNull().default('draft'),
+    validatedBy: uuid('validated_by').references(() => authUsers.id),
+    validatedAt: timestamp('validated_at', { withTimezone: true }),
+    createdBy: uuid('created_by').references(() => authUsers.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    statusCheck: check('tools_status_check', sql`${table.status} in ('draft','published','archived')`),
+  }),
+);
 
 export const toolsTranslations = pgTable(
   'tools_translations',
@@ -174,20 +211,30 @@ export const subsectionTags = pgTable(
   }),
 );
 
-export const tests = pgTable('tests', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  ageMinMonths: integer('age_min_months'),
-  ageMaxMonths: integer('age_max_months'),
-  durationMinutes: integer('duration_minutes'),
-  isStandardized: boolean('is_standardized').default(false),
-  buyLink: text('buy_link'),
-  bibliography: jsonb('bibliography')
-    .notNull()
-    .$type<Array<{ label: string; url: string }>>()
-    .default(sql`'[]'::jsonb`),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const tests = pgTable(
+  'tests',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ageMinMonths: integer('age_min_months'),
+    ageMaxMonths: integer('age_max_months'),
+    durationMinutes: integer('duration_minutes'),
+    isStandardized: boolean('is_standardized').default(false),
+    buyLink: text('buy_link'),
+    bibliography: jsonb('bibliography')
+      .notNull()
+      .$type<Array<{ label: string; url: string }>>()
+      .default(sql`'[]'::jsonb`),
+    status: text('status').notNull().default('draft'),
+    validatedBy: uuid('validated_by').references(() => authUsers.id),
+    validatedAt: timestamp('validated_at', { withTimezone: true }),
+    createdBy: uuid('created_by').references(() => authUsers.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    statusCheck: check('tests_status_check', sql`${table.status} in ('draft','published','archived')`),
+  }),
+);
 
 export type TestRecord = typeof tests.$inferSelect;
 

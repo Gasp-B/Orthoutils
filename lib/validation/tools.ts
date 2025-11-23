@@ -5,7 +5,7 @@ export const toolLinkSchema = z.object({
   url: z.string().url(),
 });
 
-export const toolStatusSchema = z.enum(['validated', 'review', 'community']);
+export const toolStatusSchema = z.enum(['draft', 'published', 'archived']);
 
 export const toolSchema = z.object({
   id: z.string().uuid(),

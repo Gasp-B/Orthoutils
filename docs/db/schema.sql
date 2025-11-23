@@ -55,7 +55,10 @@ CREATE TABLE tools_catalog (
   links jsonb NOT NULL DEFAULT '[]'::jsonb,
   notes text,
   target_population text,
-  status text NOT NULL DEFAULT 'Validé',
+  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  validated_by uuid REFERENCES auth.users(id),
+  validated_at timestamptz,
+  created_by uuid REFERENCES auth.users(id),
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
@@ -81,6 +84,10 @@ CREATE TABLE tools (
   type text NOT NULL,
   tags text[] NOT NULL DEFAULT '{}',
   source text NOT NULL,
+  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  validated_by uuid REFERENCES auth.users(id),
+  validated_at timestamptz,
+  created_by uuid REFERENCES auth.users(id),
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
@@ -109,6 +116,10 @@ CREATE TABLE tests (
   is_standardized boolean DEFAULT false,
   buy_link text,
   bibliography jsonb NOT NULL DEFAULT '[]'::jsonb,
+  status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  validated_by uuid REFERENCES auth.users(id),
+  validated_at timestamptz,
+  created_by uuid REFERENCES auth.users(id),
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
   updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
