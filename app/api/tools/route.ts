@@ -29,6 +29,7 @@ type CommunityRow = {
   name: string;
   category: string;
   type: string;
+  status: string;
   tags: string[];
   source: string;
   createdAt: Date | string;
@@ -78,19 +79,25 @@ async function getToolValidationResources(locale: Locale) {
 function resolveStatusKey(value: string | null): ToolStatus {
   const normalized = value?.toLowerCase().trim();
 
+  if (normalized === 'draft' || normalized === 'published' || normalized === 'archived') {
+    return normalized as ToolStatus;
+  }
+
   if (normalized === 'validé' || normalized === 'validated') {
-    return 'validated';
+    return 'published';
   }
 
-  if (normalized === 'en cours de revue' || normalized === 'under review') {
-    return 'review';
+  if (
+    normalized === 'en cours de revue' ||
+    normalized === 'under review' ||
+    normalized === 'community' ||
+    normalized === 'communauté' ||
+    normalized === 'review'
+  ) {
+    return 'draft';
   }
 
-  if (normalized === 'communauté' || normalized === 'community') {
-    return 'community';
-  }
-
-  return 'review';
+  return 'draft';
 }
 
 export async function GET(request: NextRequest) {
@@ -141,6 +148,7 @@ export async function GET(request: NextRequest) {
           name: toolNameExpression,
           category: toolCategoryExpression,
           type: toolTypeExpression,
+          status: tools.status,
           tags: tools.tags,
           source: tools.source,
           createdAt: tools.createdAt,
@@ -157,7 +165,7 @@ export async function GET(request: NextRequest) {
 
           if ('name' in tool) {
             const community = tool as CommunityRow;
-            const status = 'community' as const;
+            const status = resolveStatusKey(community.status);
             return {
               id: community.id,
               title: community.name,
@@ -237,6 +245,7 @@ export async function POST(request: NextRequest) {
         name: tools.name,
         category: tools.category,
         type: tools.type,
+        status: tools.status,
         tags: tools.tags,
         source: tools.source,
         createdAt: tools.createdAt,
@@ -277,6 +286,8 @@ export async function POST(request: NextRequest) {
         },
       });
 
+    const status = resolveStatusKey(inserted.status);
+
     const responseBody = toolsResponseSchema.shape.tools.element.parse({
       id: inserted.id,
       title: inserted.name,
@@ -287,8 +298,8 @@ export async function POST(request: NextRequest) {
       links: [],
       notes: null,
       targetPopulation: toolCardTranslations('fallback.population'),
-      status: 'community' as const,
-      statusLabel: toolCardTranslations('status.community'),
+      status,
+      statusLabel: toolCardTranslations(`status.${status}`),
       createdAt:
         inserted.createdAt instanceof Date
           ? inserted.createdAt.toISOString()

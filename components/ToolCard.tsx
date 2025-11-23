@@ -9,9 +9,9 @@ type Props = {
 };
 
 const statusClass: Record<ToolStatus, string> = {
-  validated: 'badge validated',
-  review: 'badge review',
-  community: 'badge community',
+  draft: 'badge draft',
+  published: 'badge published',
+  archived: 'badge archived',
 };
 
 function ToolCard({ tool }: Props) {
@@ -21,9 +21,9 @@ function ToolCard({ tool }: Props) {
   const hasType = Boolean(tool.type);
   const hasSource = Boolean(tool.source);
   const statusLabels: Record<ToolStatus, string> = {
-    validated: t('status.validated'),
-    review: t('status.review'),
-    community: t('status.community'),
+    draft: t('status.draft'),
+    published: t('status.published'),
+    archived: t('status.archived'),
   };
   const statusLabel = tool.statusLabel ?? statusLabels[tool.status];
   const typeLabel = hasType ? t('labels.type', { type: tool.type ?? '' }) : null;

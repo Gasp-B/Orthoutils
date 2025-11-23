@@ -94,9 +94,9 @@
   },
   "ToolCard": {
     "status": {
-      "validated": "Validated",
-      "review": "Under review",
-      "community": "Community"
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
     },
     "labels": {
       "type": "Type: {type}",
