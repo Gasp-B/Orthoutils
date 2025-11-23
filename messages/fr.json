@@ -92,6 +92,25 @@
             }
         }
     },
+    "ToolCard": {
+        "status": {
+            "validated": "Validé",
+            "review": "En cours de revue",
+            "community": "Communauté"
+        },
+        "labels": {
+            "type": "Type : {type}",
+            "source": "Source",
+            "sourceAria": "Consulter la source de {toolName}"
+        },
+        "fallback": {
+            "description": "Cet outil n'a pas encore de description détaillée.",
+            "population": "Tous publics"
+        },
+        "cta": {
+            "viewDetails": "Voir la fiche détaillée"
+        }
+    },
     "Catalogue": {
         "metadata": {
             "title": "Othoutils | Catalogue clinique",

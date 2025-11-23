@@ -92,6 +92,25 @@
       }
     }
   },
+  "ToolCard": {
+    "status": {
+      "validated": "Validated",
+      "review": "Under review",
+      "community": "Community"
+    },
+    "labels": {
+      "type": "Type: {type}",
+      "source": "Source",
+      "sourceAria": "View the source for {toolName}"
+    },
+    "fallback": {
+      "description": "This tool does not yet have a detailed description.",
+      "population": "All audiences"
+    },
+    "cta": {
+      "viewDetails": "View detailed sheet"
+    }
+  },
   "Catalogue": {
     "metadata": {
       "title": "Othoutils | Clinical catalog",

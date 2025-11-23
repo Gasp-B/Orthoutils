@@ -1,4 +1,7 @@
+"use client";
+
 import type { ToolDto, ToolStatus } from '@/lib/validation/tools';
+import { useTranslations } from 'next-intl';
 import styles from './tool-card.module.css';
 
 type Props = {
@@ -12,9 +15,21 @@ const statusClass: Record<ToolStatus, string> = {
 };
 
 function ToolCard({ tool }: Props) {
+  const t = useTranslations('ToolCard');
+
   const hasDescription = Boolean(tool.description);
   const hasType = Boolean(tool.type);
   const hasSource = Boolean(tool.source);
+  const statusLabels: Record<ToolStatus, string> = {
+    Validé: t('status.validated'),
+    'En cours de revue': t('status.review'),
+    Communauté: t('status.community'),
+  };
+  const typeLabel = hasType ? t('labels.type', { type: tool.type ?? '' }) : null;
+  const descriptionContent = hasDescription
+    ? tool.description
+    : typeLabel ?? t('fallback.description');
+  const targetPopulation = tool.targetPopulation ?? t('fallback.population');
 
   return (
     <article className="glass panel panel-muted">
@@ -23,27 +38,21 @@ function ToolCard({ tool }: Props) {
           <p className={styles.title}>{tool.title}</p>
           <p className={styles.category}>{tool.category}</p>
         </div>
-        <span className={statusClass[tool.status]}>{tool.status}</span>
+        <span className={statusClass[tool.status]}>{statusLabels[tool.status]}</span>
       </div>
-      <p className={styles.description}>
-        {hasDescription
-          ? tool.description
-          : hasType
-            ? `Type : ${tool.type}`
-            : "Cet outil n'a pas encore de description détaillée."}
-      </p>
+      <p className={styles.description}>{descriptionContent}</p>
       <div className="tag-row">
-        <span className="tag">{tool.targetPopulation ?? 'Tous publics'}</span>
-        {hasType && <span className="tag">Type : {tool.type}</span>}
+        <span className="tag">{targetPopulation}</span>
+        {typeLabel && <span className="tag">{typeLabel}</span>}
         {hasSource && (
           <a
             href={tool.source ?? '#'}
             className="tag"
             target="_blank"
             rel="noreferrer"
-            aria-label={`Consulter la source de ${tool.title}`}
+            aria-label={t('labels.sourceAria', { toolName: tool.title })}
           >
-            Source
+            {t('labels.source')}
           </a>
         )}
         {tool.tags.map((tag) => (
@@ -53,7 +62,7 @@ function ToolCard({ tool }: Props) {
         ))}
       </div>
       <div className="tool-actions">
-        <button className="primary-btn">Voir la fiche détaillée</button>
+        <button className="primary-btn">{t('cta.viewDetails')}</button>
       </div>
     </article>
   );
