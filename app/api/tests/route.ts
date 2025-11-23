@@ -59,6 +59,10 @@ function selectTranslation<T extends { locale: string }>(
 async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[]> {
   const supabase = createRouteHandlerSupabaseClient();
 
+  if (!supabase) {
+    throw new Error('Supabase client unavailable');
+  }
+
   const { data: testRows, error: testsError } = await supabase
     .from('tests')
     .select(

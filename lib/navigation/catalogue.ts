@@ -2,7 +2,7 @@ import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import { slugify } from '@/lib/utils/slug';
 import { defaultLocale, type Locale } from '@/i18n/routing';
 
-type SupabaseClient = ReturnType<typeof createRouteHandlerSupabaseClient>;
+type SupabaseClient = NonNullable<ReturnType<typeof createRouteHandlerSupabaseClient>>;
 
 type DomainTranslationRow = { domain_id: string; locale: string; label: string; slug: string };
 type TagTranslationRow = { tag_id: string; locale: string; label: string };
@@ -18,6 +18,10 @@ export async function getCatalogueTaxonomy(
 ): Promise<CatalogueDomain[]> {
   const supabase = client ?? createRouteHandlerSupabaseClient();
 
+  if (!supabase) {
+    throw new Error('Supabase client unavailable');
+  }
+
   const [testsResult] = await Promise.all([
     supabase.from('tests').select('id').eq('status', 'published').returns<{ id: string }[]>(),
   ]);
@@ -26,7 +30,7 @@ export async function getCatalogueTaxonomy(
     throw testsResult.error;
   }
 
-  const publishedTestIds = (testsResult.data ?? []).map((row) => row.id as string);
+  const publishedTestIds = (testsResult.data ?? []).map((row) => row.id);
 
   if (publishedTestIds.length === 0) {
     return [];

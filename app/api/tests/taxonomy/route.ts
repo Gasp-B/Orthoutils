@@ -18,6 +18,13 @@ export async function GET(request: NextRequest) {
     const locale = locales.includes(requestedLocale) ? requestedLocale : defaultLocale;
     const supabase = createRouteHandlerSupabaseClient();
 
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Impossible de récupérer les domaines et tags' },
+        { status: 500 },
+      );
+    }
+
     const [domainTranslationsResult, tagTranslationsResult, domainIdsResult, tagIdsResult] = await Promise.all([
       supabase
         .from('domains_translations')
@@ -49,8 +56,8 @@ export async function GET(request: NextRequest) {
 
     const domainTranslations = (domainTranslationsResult.data ?? []) as DomainTranslationRow[];
     const tagTranslations = (tagTranslationsResult.data ?? []) as TagTranslationRow[];
-    const domainIds = (domainIdsResult.data ?? []).map((row) => row.id as string);
-    const tagIds = (tagIdsResult.data ?? []).map((row) => row.id as string);
+    const domainIds = (domainIdsResult.data ?? []).map((row) => row.id);
+    const tagIds = (tagIdsResult.data ?? []).map((row) => row.id);
 
     const domainsById = new Map<string, DomainTranslationRow[]>();
     for (const translation of domainTranslations) {

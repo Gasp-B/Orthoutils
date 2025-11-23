@@ -68,7 +68,7 @@ function resolveStatusKey(value: string | null): ToolStatus {
   const normalized = value?.toLowerCase().trim();
 
   if (normalized === 'draft' || normalized === 'published' || normalized === 'archived') {
-    return normalized as ToolStatus;
+    return normalized;
   }
 
   if (normalized === 'validé' || normalized === 'validated') {
@@ -167,6 +167,10 @@ export async function GET(request: NextRequest) {
 
   const supabase = createRouteHandlerSupabaseClient();
 
+  if (!supabase) {
+    return NextResponse.json({ error: apiTranslations('errors.fetch') }, { status: 500 });
+  }
+
   try {
     const [catalogResult, communityResult] = await Promise.all([
       supabase
@@ -243,7 +247,7 @@ export async function GET(request: NextRequest) {
           const createdAt = tool.created_at ?? new Date().toISOString();
 
           if ('name' in tool) {
-            const community = tool as ToolRow;
+            const community = tool;
             const translations = toolTranslationsById.get(community.id) ?? [];
             const translation = selectTranslation(translations, locale);
             const status = resolveStatusKey(community.status);
@@ -266,7 +270,7 @@ export async function GET(request: NextRequest) {
             } satisfies CatalogRow & { type: string | null; source: string | null };
           }
 
-          const catalog = tool as ToolCatalogRow;
+          const catalog = tool;
           const translations = catalogTranslationsById.get(catalog.id) ?? [];
           const translation = selectTranslation(translations, locale);
           const hasTargetPopulation = Boolean(

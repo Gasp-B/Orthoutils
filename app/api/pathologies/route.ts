@@ -21,6 +21,10 @@ export async function GET(req: Request) {
     const limit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 20;
     const supabase = createRouteHandlerSupabaseClient();
 
+    if (!supabase) {
+      return NextResponse.json({ error: 'server_error' }, { status: 500 });
+    }
+
     const translationFilters = (searchLocale: Locale) => {
       const query = supabase
         .from('pathology_translations')

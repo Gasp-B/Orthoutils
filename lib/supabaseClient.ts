@@ -2,27 +2,38 @@ import { createBrowserClient, createServerClient, type CookieOptions } from '@su
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-const supabaseServiceKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+const browserSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const browserSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const serverSupabaseUrl = process.env.SUPABASE_URL ?? browserSupabaseUrl;
+const serverServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 
 type GenericSupabaseClient = SupabaseClient<Record<string, unknown>>;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+const isBrowserEnvConfigured = Boolean(browserSupabaseUrl && browserSupabaseAnonKey);
+const isServerEnvConfigured = Boolean(serverSupabaseUrl && serverServiceRoleKey);
+
+if (!isBrowserEnvConfigured) {
   console.warn(
-    "Les variables d'environnement Supabase ne sont pas définies. Ajoutez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY pour activer la persistance côté client.",
+    "Les variables d'environnement Supabase pour le navigateur ne sont pas définies. Ajoutez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY pour activer le client côté navigateur.",
+  );
+}
+
+if (!isServerEnvConfigured) {
+  console.warn(
+    "Les variables d'environnement Supabase côté serveur sont manquantes. Ajoutez SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY pour activer les clients privilégiés.",
   );
 }
 
 const browserClient =
-  supabaseUrl && supabaseAnonKey ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
+  isBrowserEnvConfigured && browserSupabaseUrl && browserSupabaseAnonKey
+    ? createBrowserClient(browserSupabaseUrl, browserSupabaseAnonKey)
+    : null;
 
 export const supabaseClient = browserClient;
 
 export const supabaseAdmin =
-  supabaseUrl && supabaseServiceKey
-    ? (createClient(supabaseUrl, supabaseServiceKey, {
+  isServerEnvConfigured && serverSupabaseUrl && serverServiceRoleKey
+    ? (createClient(serverSupabaseUrl, serverServiceRoleKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
@@ -30,15 +41,14 @@ export const supabaseAdmin =
       }) as GenericSupabaseClient)
     : null;
 
-function assertValue<T>(value: T | null | undefined, message: string) {
-  if (!value) {
-    throw new Error(message);
+export function createRouteHandlerSupabaseClient(): GenericSupabaseClient | null {
+  if (!isServerEnvConfigured || !serverSupabaseUrl || !serverServiceRoleKey) {
+    console.warn(
+      '[supabase] Impossible de créer le client serveur : SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis.',
+    );
+    return null;
   }
 
-  return value;
-}
-
-export function createRouteHandlerSupabaseClient(): GenericSupabaseClient {
   const cookieStore = cookies();
 
   const getCookieValue = (name: string): string | undefined => {
@@ -52,18 +62,13 @@ export function createRouteHandlerSupabaseClient(): GenericSupabaseClient {
     return undefined;
   };
 
-  const client = createServerClient<Record<string, unknown>, 'public'>(
-    assertValue(supabaseUrl, 'NEXT_PUBLIC_SUPABASE_URL est requis'),
-    assertValue(supabaseAnonKey, 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY est requis'),
-    {
-      cookies: {
-        get: getCookieValue,
-        set(_name: string, _value: string, _options: CookieOptions) {},
-        remove(_name: string, _options: CookieOptions) {},
-      },
+  const client = createServerClient<Record<string, unknown>, 'public'>(serverSupabaseUrl, serverServiceRoleKey, {
+    cookies: {
+      get: getCookieValue,
+      set(_name: string, _value: string, _options: CookieOptions) {},
+      remove(_name: string, _options: CookieOptions) {},
     },
-  );
+  });
 
   return client as GenericSupabaseClient;
 }
-
