@@ -1,0 +1,34 @@
+name: Dump Supabase prod schema
+
+on:
+  # Lancement manuel depuis l’onglet "Actions"
+  workflow_dispatch:
+
+jobs:
+  dump-schema:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: |
+          curl -fsSL https://get.supabase.com/cli | sh
+          echo "$HOME/.supabase/bin" >> $GITHUB_PATH
+
+      - name: Dump Supabase schema (schema-only)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p docs
+          supabase db dump \
+            --db-url "$SUPABASE_DB_URL" \
+            --schema-only \
+            > docs/remote_schema_supabase_prod.sql
+
+      - name: Upload schema as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-schema-prod
+          path: docs/remote_schema_supabase_prod.sql
