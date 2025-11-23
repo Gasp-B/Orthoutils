@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { useTranslations } from 'next-intl';
-import { createToolSchema } from '@/lib/validation/tools';
+import { useLocale, useTranslations } from 'next-intl';
+import type { CreateToolPayload } from '@/lib/validation/tools';
 import styles from './tool-creation-form.module.css';
 
 const defaultValues = {
@@ -16,8 +16,6 @@ const defaultValues = {
   tags: '',
   source: '',
 };
-
-type CreateToolPayload = z.infer<typeof createToolSchema>;
 
 type ApiResponse = {
   tool?: CreateToolPayload & { id: string };
@@ -36,11 +34,13 @@ const createFormSchema = (t: ReturnType<typeof useTranslations>) =>
 type FormSchema = ReturnType<typeof createFormSchema>;
 type FormValues = z.infer<FormSchema>;
 
-async function submitTool(payload: CreateToolPayload, fallbackMessage: string) {
+async function submitTool(payload: CreateToolPayload, fallbackMessage: string, locale: string) {
   const response = await fetch('/api/tools', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Accept-Language': locale,
+      'X-Orthoutil-Locale': locale,
     },
     body: JSON.stringify(payload),
   });
@@ -56,6 +56,7 @@ async function submitTool(payload: CreateToolPayload, fallbackMessage: string) {
 function ToolCreationForm() {
   const queryClient = useQueryClient();
   const t = useTranslations('ToolForm');
+  const locale = useLocale();
 
   const formSchema = useMemo<FormSchema>(() => createFormSchema(t), [t]);
 
@@ -70,7 +71,7 @@ function ToolCreationForm() {
   });
 
   const mutation = useMutation({
-    mutationFn: (payload: CreateToolPayload) => submitTool(payload, t('validation.fallback')),
+    mutationFn: (payload: CreateToolPayload) => submitTool(payload, t('validation.fallback'), locale),
     onSuccess: () => {
       reset(defaultValues);
       void queryClient.invalidateQueries({ queryKey: ['tools'] });
