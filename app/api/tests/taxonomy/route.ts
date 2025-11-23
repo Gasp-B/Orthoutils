@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
-import { getDb } from '@/lib/db/client';
-import { domains, domainsTranslations, tags, tagsTranslations } from '@/lib/db/schema';
+import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import {
   taxonomyDeletionSchema,
   taxonomyMutationSchema,
@@ -11,37 +8,100 @@ import {
 } from '@/lib/validation/tests';
 import { createDomain, createTag, deleteDomain, deleteTag } from '@/lib/tests/taxonomy';
 
+type DomainTranslationRow = { domain_id: string; locale: string; label: string; slug: string };
+type TagTranslationRow = { tag_id: string; locale: string; label: string };
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const requestedLocale = (searchParams.get('locale') as Locale | null) ?? defaultLocale;
     const locale = locales.includes(requestedLocale) ? requestedLocale : defaultLocale;
-    const localizedDomain = alias(domainsTranslations, 'localized_domain');
-    const fallbackDomain = alias(domainsTranslations, 'fallback_domain');
-    const localizedTag = alias(tagsTranslations, 'localized_tag');
-    const fallbackTag = alias(tagsTranslations, 'fallback_tag');
-    const domainLabelExpression = sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`;
-    const domainSlugExpression = sql<string>`COALESCE(${localizedDomain.slug}, ${fallbackDomain.slug}, '')`;
-    const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
+    const supabase = createRouteHandlerSupabaseClient();
 
-    const [domainRows, tagRows] = await Promise.all([
-      getDb()
-        .select({ id: domains.id, label: domainLabelExpression, slug: domainSlugExpression })
-        .from(domains)
-        .leftJoin(localizedDomain, and(eq(localizedDomain.domainId, domains.id), eq(localizedDomain.locale, locale)))
-        .leftJoin(fallbackDomain, and(eq(fallbackDomain.domainId, domains.id), eq(fallbackDomain.locale, defaultLocale)))
-        .orderBy(domainLabelExpression),
-      getDb()
-        .select({ id: tags.id, label: tagLabelExpression })
-        .from(tags)
-        .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
-        .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
-        .orderBy(tagLabelExpression),
+    const [domainTranslationsResult, tagTranslationsResult, domainIdsResult, tagIdsResult] = await Promise.all([
+      supabase
+        .from('domains_translations')
+        .select('domain_id, locale, label, slug')
+        .in('locale', [locale, defaultLocale]),
+      supabase
+        .from('tags_translations')
+        .select('tag_id, locale, label')
+        .in('locale', [locale, defaultLocale]),
+      supabase.from('domains').select('id').returns<{ id: string }[]>(),
+      supabase.from('tags').select('id').returns<{ id: string }[]>(),
     ]);
 
+    if (domainTranslationsResult.error) {
+      throw domainTranslationsResult.error;
+    }
+
+    if (tagTranslationsResult.error) {
+      throw tagTranslationsResult.error;
+    }
+
+    if (domainIdsResult.error) {
+      throw domainIdsResult.error;
+    }
+
+    if (tagIdsResult.error) {
+      throw tagIdsResult.error;
+    }
+
+    const domainTranslations = (domainTranslationsResult.data ?? []) as DomainTranslationRow[];
+    const tagTranslations = (tagTranslationsResult.data ?? []) as TagTranslationRow[];
+    const domainIds = (domainIdsResult.data ?? []).map((row) => row.id as string);
+    const tagIds = (tagIdsResult.data ?? []).map((row) => row.id as string);
+
+    const domainsById = new Map<string, DomainTranslationRow[]>();
+    for (const translation of domainTranslations) {
+      const existing = domainsById.get(translation.domain_id) ?? [];
+      existing.push(translation);
+      domainsById.set(translation.domain_id, existing);
+    }
+
+    const tagsById = new Map<string, TagTranslationRow[]>();
+    for (const translation of tagTranslations) {
+      const existing = tagsById.get(translation.tag_id) ?? [];
+      existing.push(translation);
+      tagsById.set(translation.tag_id, existing);
+    }
+
+    const localizedDomains = domainIds
+      .map((id) => {
+        const translations = domainsById.get(id) ?? [];
+        const localized = translations.find((row) => row.locale === locale);
+        const fallback = translations.find((row) => row.locale === defaultLocale);
+        const label = localized?.label ?? fallback?.label;
+        const slug = localized?.slug ?? fallback?.slug;
+
+        if (!label || !slug) {
+          return null;
+        }
+
+        return { id, label, slug };
+      })
+      .filter((domain): domain is { id: string; label: string; slug: string } => Boolean(domain))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    const localizedTags = tagIds
+      .map((id) => {
+        const translations = tagsById.get(id) ?? [];
+        const localized = translations.find((row) => row.locale === locale);
+        const fallback = translations.find((row) => row.locale === defaultLocale);
+        const label = localized?.label ?? fallback?.label;
+
+        if (!label) {
+          return null;
+        }
+
+        return { id, label };
+      })
+      .filter((tag): tag is { id: string; label: string } => Boolean(tag))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
     const payload = taxonomyResponseSchema.parse({
-      domains: domainRows,
-      tags: tagRows,
+      domains: localizedDomains,
+      tags: localizedTags,
     });
 
     return NextResponse.json(payload, {

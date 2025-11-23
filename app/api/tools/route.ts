@@ -1,10 +1,9 @@
-import { and, eq, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getTranslations } from 'next-intl/server';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 import { getDb } from '@/lib/db/client';
-import { tools, toolsCatalog, toolsCatalogTranslations, toolsTranslations } from '@/lib/db/schema';
+import { tools, toolsTranslations } from '@/lib/db/schema';
+import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import { createToolSchema, toolsResponseSchema, type ToolStatus } from '@/lib/validation/tools';
 
 type CatalogRow = {
@@ -22,17 +21,6 @@ type CatalogRow = {
   createdAt: Date | string;
   type: string | null;
   source: string | null;
-};
-
-type CommunityRow = {
-  id: string;
-  name: string;
-  category: string;
-  type: string;
-  status: string;
-  tags: string[];
-  source: string;
-  createdAt: Date | string;
 };
 
 function normalizeLocale(rawLocale: string | null): Locale | null {
@@ -105,73 +93,167 @@ export async function GET(request: NextRequest) {
   const toolCardTranslations = await getTranslations({ locale, namespace: 'ToolCard' });
   const apiTranslations = await getTranslations({ locale, namespace: 'ApiTools' });
 
+  type ToolCatalogRow = {
+    id: string;
+    title: string;
+    category: string;
+    color_label: string | null;
+    tags: string[] | null;
+    description: string | null;
+    links: Array<{ label: string; url: string }> | null;
+    notes: string | null;
+    target_population: string | null;
+    status: string | null;
+    created_at: string | null;
+  };
+
+  type ToolCatalogTranslationRow = {
+    tool_catalog_id: string;
+    locale: string;
+    title: string;
+    category: string;
+    description: string | null;
+    notes: string | null;
+    target_population: string | null;
+  };
+
+  type ToolRow = {
+    id: string;
+    name: string;
+    category: string;
+    type: string | null;
+    status: string | null;
+    tags: string[] | null;
+    source: string | null;
+    created_at: string | null;
+  };
+
+  type ToolTranslationRow = {
+    tool_id: string;
+    locale: string;
+    name: string;
+    category: string;
+    type: string;
+  };
+
+  const selectTranslation = <T extends { locale: string }>(
+    rows: T[],
+    currentLocale: Locale,
+  ): T | undefined => {
+    const localized = rows.find((row) => row.locale === currentLocale);
+
+    if (localized) {
+      return localized;
+    }
+
+    return rows.find((row) => row.locale === defaultLocale);
+  };
+
+  const normalizeLinks = (value: unknown): Array<{ label: string; url: string }> => {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value.filter(
+      (link): link is { label: string; url: string } =>
+        typeof link === 'object' &&
+        !!link &&
+        'label' in link &&
+        'url' in link &&
+        typeof (link as { label?: unknown }).label === 'string' &&
+        typeof (link as { url?: unknown }).url === 'string',
+    );
+  };
+
+  const supabase = createRouteHandlerSupabaseClient();
+
   try {
-    const localizedCatalog = alias(toolsCatalogTranslations, 'localized_catalog');
-    const fallbackCatalog = alias(toolsCatalogTranslations, 'fallback_catalog');
-    const localizedTool = alias(toolsTranslations, 'localized_tool');
-    const fallbackTool = alias(toolsTranslations, 'fallback_tool');
-
-    const catalogTitleExpression = sql<string>`COALESCE(${localizedCatalog.title}, ${fallbackCatalog.title}, ${toolsCatalog.title})`;
-    const catalogCategoryExpression = sql<string>`COALESCE(${localizedCatalog.category}, ${fallbackCatalog.category}, ${toolsCatalog.category})`;
-    const catalogDescriptionExpression = sql<string | null>`COALESCE(${localizedCatalog.description}, ${fallbackCatalog.description}, ${toolsCatalog.description})`;
-    const catalogNotesExpression = sql<string | null>`COALESCE(${localizedCatalog.notes}, ${fallbackCatalog.notes}, ${toolsCatalog.notes})`;
-    const catalogTargetPopulationExpression = sql<string | null>`COALESCE(${localizedCatalog.targetPopulation}, ${fallbackCatalog.targetPopulation}, ${toolsCatalog.targetPopulation})`;
-
-    const toolNameExpression = sql<string>`COALESCE(${localizedTool.name}, ${fallbackTool.name}, ${tools.name})`;
-    const toolCategoryExpression = sql<string>`COALESCE(${localizedTool.category}, ${fallbackTool.category}, ${tools.category})`;
-    const toolTypeExpression = sql<string>`COALESCE(${localizedTool.type}, ${fallbackTool.type}, ${tools.type})`;
-
-    const [catalogRows, communityRows] = await Promise.all([
-      getDb()
-        .select({
-          id: toolsCatalog.id,
-          title: catalogTitleExpression,
-          category: catalogCategoryExpression,
-          colorLabel: toolsCatalog.colorLabel,
-          tags: toolsCatalog.tags,
-          description: catalogDescriptionExpression,
-          links: toolsCatalog.links,
-          notes: catalogNotesExpression,
-          targetPopulation: catalogTargetPopulationExpression,
-          status: toolsCatalog.status,
-          createdAt: toolsCatalog.createdAt,
-        })
-        .from(toolsCatalog)
-        .leftJoin(localizedCatalog, and(eq(localizedCatalog.toolCatalogId, toolsCatalog.id), eq(localizedCatalog.locale, locale)))
-        .leftJoin(
-          fallbackCatalog,
-          and(eq(fallbackCatalog.toolCatalogId, toolsCatalog.id), eq(fallbackCatalog.locale, defaultLocale)),
-        ),
-      getDb()
-        .select({
-          id: tools.id,
-          name: toolNameExpression,
-          category: toolCategoryExpression,
-          type: toolTypeExpression,
-          status: tools.status,
-          tags: tools.tags,
-          source: tools.source,
-          createdAt: tools.createdAt,
-        })
-        .from(tools)
-        .leftJoin(localizedTool, and(eq(localizedTool.toolId, tools.id), eq(localizedTool.locale, locale)))
-        .leftJoin(fallbackTool, and(eq(fallbackTool.toolId, tools.id), eq(fallbackTool.locale, defaultLocale))),
+    const [catalogResult, communityResult] = await Promise.all([
+      supabase
+        .from('tools_catalog')
+        .select(
+          'id, title, category, color_label, tags, description, links, notes, target_population, status, created_at',
+        )
+        .eq('status', 'published'),
+      supabase
+        .from('tools')
+        .select('id, name, category, type, status, tags, source, created_at')
+        .eq('status', 'published'),
     ]);
+
+    if (catalogResult.error) {
+      throw catalogResult.error;
+    }
+
+    if (communityResult.error) {
+      throw communityResult.error;
+    }
+
+    const catalogRows = (catalogResult.data ?? []) as ToolCatalogRow[];
+    const communityRows = (communityResult.data ?? []) as ToolRow[];
+
+    const catalogIds = catalogRows.map((row) => row.id);
+    const toolIds = communityRows.map((row) => row.id);
+
+    const [catalogTranslationsResult, toolTranslationsResult] = await Promise.all([
+      catalogIds.length > 0
+        ? supabase
+            .from('tools_catalog_translations')
+            .select('tool_catalog_id, locale, title, category, description, notes, target_population')
+            .in('tool_catalog_id', catalogIds)
+            .in('locale', [locale, defaultLocale])
+        : { data: [], error: null },
+      toolIds.length > 0
+        ? supabase
+            .from('tools_translations')
+            .select('tool_id, locale, name, category, type')
+            .in('tool_id', toolIds)
+            .in('locale', [locale, defaultLocale])
+        : { data: [], error: null },
+    ]);
+
+    if (catalogTranslationsResult.error) {
+      throw catalogTranslationsResult.error;
+    }
+
+    if (toolTranslationsResult.error) {
+      throw toolTranslationsResult.error;
+    }
+
+    const catalogTranslations = (catalogTranslationsResult.data ?? []) as ToolCatalogTranslationRow[];
+    const toolTranslations = (toolTranslationsResult.data ?? []) as ToolTranslationRow[];
+
+    const catalogTranslationsById = new Map<string, ToolCatalogTranslationRow[]>();
+    for (const translation of catalogTranslations) {
+      const existing = catalogTranslationsById.get(translation.tool_catalog_id) ?? [];
+      existing.push(translation);
+      catalogTranslationsById.set(translation.tool_catalog_id, existing);
+    }
+
+    const toolTranslationsById = new Map<string, ToolTranslationRow[]>();
+    for (const translation of toolTranslations) {
+      const existing = toolTranslationsById.get(translation.tool_id) ?? [];
+      existing.push(translation);
+      toolTranslationsById.set(translation.tool_id, existing);
+    }
 
     const payload = toolsResponseSchema.parse({
       tools: [...catalogRows, ...communityRows]
         .map((tool) => {
-          const createdAt = tool.createdAt instanceof Date ? tool.createdAt.toISOString() : tool.createdAt;
+          const createdAt = tool.created_at ?? new Date().toISOString();
 
           if ('name' in tool) {
-            const community = tool as CommunityRow;
+            const community = tool as ToolRow;
+            const translations = toolTranslationsById.get(community.id) ?? [];
+            const translation = selectTranslation(translations, locale);
             const status = resolveStatusKey(community.status);
+
             return {
               id: community.id,
-              title: community.name,
-              category: community.category,
+              title: translation?.name ?? community.name,
+              category: translation?.category ?? community.category,
               colorLabel: null,
-              tags: community.tags ?? [],
+              tags: Array.isArray(community.tags) ? community.tags : [],
               description: null,
               links: [],
               notes: null,
@@ -179,31 +261,36 @@ export async function GET(request: NextRequest) {
               status,
               statusLabel: toolCardTranslations(`status.${status}`),
               createdAt,
-              type: community.type,
-              source: community.source,
-            } satisfies CatalogRow & { type: string; source: string };
+              type: translation?.type ?? community.type ?? null,
+              source: community.source ?? null,
+            } satisfies CatalogRow & { type: string | null; source: string | null };
           }
 
-          const catalog = tool as CatalogRow;
-          const hasTargetPopulation = Boolean(catalog.targetPopulation && catalog.targetPopulation.length > 0);
+          const catalog = tool as ToolCatalogRow;
+          const translations = catalogTranslationsById.get(catalog.id) ?? [];
+          const translation = selectTranslation(translations, locale);
+          const hasTargetPopulation = Boolean(
+            (translation?.target_population ?? catalog.target_population)?.length,
+          );
           const status = resolveStatusKey(catalog.status);
+
           return {
             id: catalog.id,
-            title: catalog.title,
-            category: catalog.category,
-            colorLabel: catalog.colorLabel ?? null,
-            tags: catalog.tags ?? [],
-            description: catalog.description ?? null,
-            links: catalog.links ?? [],
-            notes: catalog.notes ?? null,
+            title: translation?.title ?? catalog.title,
+            category: translation?.category ?? catalog.category,
+            colorLabel: catalog.color_label ?? null,
+            tags: Array.isArray(catalog.tags) ? catalog.tags : [],
+            description: translation?.description ?? catalog.description ?? null,
+            links: normalizeLinks(catalog.links),
+            notes: translation?.notes ?? catalog.notes ?? null,
             targetPopulation: hasTargetPopulation
-              ? catalog.targetPopulation
+              ? translation?.target_population ?? catalog.target_population
               : toolCardTranslations('fallback.population'),
             status,
             statusLabel: toolCardTranslations(`status.${status}`),
             createdAt,
             type: null,
-            source: catalog.links?.[0]?.url ?? null,
+            source: normalizeLinks(catalog.links)[0]?.url ?? null,
           } satisfies CatalogRow;
         })
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
