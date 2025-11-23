@@ -1,5 +1,28 @@
-import { boolean, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+
+export const publicationStatusEnum = pgEnum('publication_status', ['draft', 'published', 'archived']);
+
+export const authUsers = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey(),
+  },
+  {
+    schema: 'auth',
+  },
+);
 
 export const toolsCatalog = pgTable('tools_catalog', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -14,7 +37,9 @@ export const toolsCatalog = pgTable('tools_catalog', {
     .default(sql`'[]'::jsonb`),
   notes: text('notes'),
   targetPopulation: text('target_population'),
-  status: text('status').notNull().default('Validé'),
+  status: publicationStatusEnum('status').notNull().default('published'),
+  validatedBy: uuid('validated_by').references(() => authUsers.id),
+  validatedAt: timestamp('validated_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -49,6 +74,9 @@ export const tools = pgTable('tools', {
   type: text('type').notNull(),
   tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
   source: text('source').notNull(),
+  status: publicationStatusEnum('status').notNull().default('published'),
+  validatedBy: uuid('validated_by').references(() => authUsers.id),
+  validatedAt: timestamp('validated_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -185,6 +213,9 @@ export const tests = pgTable('tests', {
     .notNull()
     .$type<Array<{ label: string; url: string }>>()
     .default(sql`'[]'::jsonb`),
+  status: publicationStatusEnum('status').notNull().default('published'),
+  validatedBy: uuid('validated_by').references(() => authUsers.id),
+  validatedAt: timestamp('validated_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

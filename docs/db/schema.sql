@@ -1,6 +1,8 @@
 -- Schema snapshot for taxonomy storage and test catalog.
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+CREATE TYPE publication_status AS ENUM ('draft', 'published', 'archived');
+
 CREATE TABLE sections (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE,
@@ -55,7 +57,9 @@ CREATE TABLE tools_catalog (
   links jsonb NOT NULL DEFAULT '[]'::jsonb,
   notes text,
   target_population text,
-  status text NOT NULL DEFAULT 'Validé',
+  status publication_status NOT NULL DEFAULT 'published',
+  validated_by uuid REFERENCES auth.users(id),
+  validated_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
@@ -81,6 +85,9 @@ CREATE TABLE tools (
   type text NOT NULL,
   tags text[] NOT NULL DEFAULT '{}',
   source text NOT NULL,
+  status publication_status NOT NULL DEFAULT 'published',
+  validated_by uuid REFERENCES auth.users(id),
+  validated_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
@@ -109,6 +116,9 @@ CREATE TABLE tests (
   is_standardized boolean DEFAULT false,
   buy_link text,
   bibliography jsonb NOT NULL DEFAULT '[]'::jsonb,
+  status publication_status NOT NULL DEFAULT 'published',
+  validated_by uuid REFERENCES auth.users(id),
+  validated_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
   updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
