@@ -1,96 +1,67 @@
 import { NextResponse } from 'next/server';
-import { sql } from 'drizzle-orm';
-import { getDb } from '@/lib/db/client';
-
-const db = getDb();
-
-type PathologyRow = {
-  id: string;
-  slug: string;
-  label: string;
-  description: string | null;
-  synonyms: string[] | null;
-};
+import { defaultLocale, type Locale } from '@/i18n/routing';
+import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-
-    const locale = searchParams.get('locale') ?? 'fr';
+    const locale = (searchParams.get('locale') as Locale | null) ?? defaultLocale;
+    const normalizedLocale = locale ?? defaultLocale;
     const q = searchParams.get('q')?.trim();
     const limit = Number(searchParams.get('limit') ?? 20);
+    const supabase = createRouteHandlerSupabaseClient();
 
-    // Pas de recherche : on renvoie juste la liste limitée, triée par label
-    if (!q) {
-      const rows = await db.execute<PathologyRow>(
-        sql`
-          SELECT
-            p.id,
-            p.slug,
-            t.label,
-            t.description,
-            t.synonyms
-          FROM pathologies p
-          JOIN pathology_translations t
-            ON t.pathology_id = p.id
-           AND t.locale = ${locale}
-          ORDER BY t.label ASC
-          LIMIT ${limit}
-        `,
-      );
+    const translationFilters = (searchLocale: Locale) => {
+      const query = supabase
+        .from('pathology_translations')
+        .select('pathology_id, locale, label, description, synonyms, pathologies(id, slug)')
+        .eq('locale', searchLocale)
+        .order('label', { ascending: true })
+        .limit(limit);
 
-      return NextResponse.json({ items: rows });
+      if (q) {
+        const like = `%${q}%`;
+        query.or(`label.ilike.${like},description.ilike.${like}`);
+      }
+
+      return query;
+    };
+
+    const { data, error } = await translationFilters(normalizedLocale);
+
+    if (error) {
+      throw error;
     }
 
-    const likeQ = `%${q}%`;
+    const hasResults = (data ?? []).length > 0;
 
-    // Recherche sur label + description dans la locale demandée
-    const rows = await db.execute<PathologyRow>(
-      sql`
-        SELECT
-          p.id,
-          p.slug,
-          t.label,
-          t.description,
-          t.synonyms
-        FROM pathologies p
-        JOIN pathology_translations t
-          ON t.pathology_id = p.id
-         AND t.locale = ${locale}
-        WHERE
-          t.label ILIKE ${likeQ}
-          OR t.description ILIKE ${likeQ}
-        ORDER BY t.label ASC
-        LIMIT ${limit}
-      `,
-    );
+    if (!hasResults && normalizedLocale !== defaultLocale) {
+      const { data: fallbackData, error: fallbackError } = await translationFilters(defaultLocale);
 
-    if (rows.length > 0) {
-      return NextResponse.json({ items: rows });
+      if (fallbackError) {
+        throw fallbackError;
+      }
+
+      return NextResponse.json({
+        items: (fallbackData ?? []).map((row) => ({
+          id: row.pathologies?.id ?? row.pathology_id,
+          slug: row.pathologies?.slug ?? '',
+          label: row.label,
+          description: row.description,
+          synonyms: row.synonyms ?? [],
+        })),
+      });
     }
 
-    // Fallback FR si aucune correspondance dans la locale
-    const frRows = await db.execute<PathologyRow>(
-      sql`
-        SELECT
-          p.id,
-          p.slug,
-          t.label,
-          t.description,
-          t.synonyms
-        FROM pathologies p
-        JOIN pathology_translations t
-          ON t.pathology_id = p.id
-         AND t.locale = 'fr'
-        WHERE
-          t.label ILIKE ${likeQ}
-          OR t.description ILIKE ${likeQ}
-        ORDER BY t.label ASC
-        LIMIT ${limit}
-      `,
-    );
-
-    return NextResponse.json({ items: frRows });
+    return NextResponse.json({
+      items: (data ?? []).map((row) => ({
+        id: row.pathologies?.id ?? row.pathology_id,
+        slug: row.pathologies?.slug ?? '',
+        label: row.label,
+        description: row.description,
+        synonyms: row.synonyms ?? [],
+      })),
+    });
   } catch (err) {
     console.error('[GET /api/pathologies] Error:', err);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
