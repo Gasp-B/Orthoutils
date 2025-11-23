@@ -16,14 +16,14 @@ jobs:
         with:
           version: latest
 
-      - name: Dump Supabase schema (schema-only)
+      - name: Dump Supabase schema (public schema only)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           mkdir -p docs
           supabase db dump \
             --db-url "$SUPABASE_DB_URL" \
-            --schema-only \
+            -s public \
             > docs/remote_schema_supabase_prod.sql
 
       - name: Upload schema as artifact
