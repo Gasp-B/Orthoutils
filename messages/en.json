@@ -134,7 +134,8 @@
     "meta": {
       "objective": "Objective:",
       "materials": "Materials:",
-      "publisher": "Publisher:"
+      "publisher": "Publisher:",
+      "pathologies": "Pathologies:"
     },
     "empty": {
       "buyLink": "No purchase link provided"
@@ -422,6 +423,11 @@
           "label": "Tags",
           "description": "Add keywords to improve search.",
           "placeholder": "Search for a tag"
+        },
+        "pathologies": {
+          "label": "Pathologies",
+          "description": "Associate related pathologies to improve filtering and discovery.",
+          "placeholder": "Search for a pathology"
         }
       },
       "sections": {
@@ -469,10 +475,12 @@
         "searchPlaceholder": "Search…",
         "filterAria": "Filter {label}",
         "clear": "Clear",
+        "close": "Close",
         "emptySelection": "No item selected yet.",
         "emptyResults": "No result",
         "add": "Add",
-        "remove": "Remove"
+        "remove": "Remove",
+        "loading": "Loading…"
       }
     },
     "feedback": {

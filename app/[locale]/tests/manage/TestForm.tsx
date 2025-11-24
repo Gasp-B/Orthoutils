@@ -57,6 +57,14 @@ type ApiResponse = {
   error?: string;
 };
 
+type PathologyOption = {
+  id: string;
+  label: string;
+  slug: string;
+  description: string | null;
+  synonyms: string[];
+};
+
 const defaultValues: FormValues = {
   id: undefined,
   name: '',
@@ -88,6 +96,23 @@ async function fetchTests(locale: Locale) {
   const json = (await response.json()) as ApiResponse;
   const parsed = testsResponseSchema.parse({ tests: json.tests ?? [] });
   return parsed.tests;
+}
+
+async function fetchPathologies(locale: Locale, query?: string) {
+  const searchParams = new URLSearchParams({ locale });
+
+  if (query?.trim()) {
+    searchParams.set('q', query.trim());
+  }
+
+  const response = await fetch(`/api/pathologies?${searchParams.toString()}`);
+
+  if (!response.ok) {
+    throw new Error('fetchPathologies');
+  }
+
+  const json = (await response.json()) as { items?: PathologyOption[] };
+  return json.items ?? [];
 }
 
 async function createTest(payload: FormValues, locale: Locale, fallbackMessage: string) {
@@ -125,9 +150,12 @@ function TestForm({ locale }: TestFormProps) {
   const queryClient = useQueryClient();
   const form = useTranslations('ManageTests.form');
   const feedback = useTranslations('ManageTests.feedback');
+  const multiSelect = useTranslations('ManageTests.form.multiSelect');
   const { data: tests } = useQuery({ queryKey: ['tests', locale], queryFn: () => fetchTests(locale) });
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [newBibliography, setNewBibliography] = useState({ label: '', url: '' });
+  const [isPathologyDialogOpen, setIsPathologyDialogOpen] = useState(false);
+  const [pathologyQuery, setPathologyQuery] = useState('');
   const errorTranslationKeyByMessage: Record<string, string> = {
     fetchTests: 'errors.fetchTests',
     'Impossible de récupérer les tests': 'errors.fetchTests',
@@ -166,12 +194,84 @@ function TestForm({ locale }: TestFormProps) {
     mode: 'onBlur',
   });
 
+  const {
+    data: pathologyOptions = [],
+    isPending: isLoadingPathologies,
+    isError: isPathologyError,
+  } = useQuery({
+    queryKey: ['pathologies', locale, pathologyQuery],
+    queryFn: () => fetchPathologies(locale, pathologyQuery),
+  });
+
   const currentDomains = watch('domains');
   const currentTags = watch('tags');
-  const currentPathologies = watch('pathologies');
+  const currentPathologies = watch('pathologies') ?? [];
   const currentBibliography = watch('bibliography');
   const populationValue = watch('population');
   const materialsValue = watch('materials');
+
+  const normalizedPathologies = useMemo(
+    () => new Set(currentPathologies.map((pathology) => pathology.trim()).filter(Boolean)),
+    [currentPathologies],
+  );
+
+  const filteredPathologyOptions = useMemo(() => {
+    const filter = pathologyQuery.trim().toLowerCase();
+    const options = pathologyOptions ?? [];
+
+    if (!filter) {
+      return options;
+    }
+
+    return options.filter((option) => option.label.toLowerCase().includes(filter));
+  }, [pathologyOptions, pathologyQuery]);
+
+  const canCreatePathology = useMemo(() => {
+    const value = pathologyQuery.trim();
+
+    if (!value) {
+      return false;
+    }
+
+    const normalized = value.toLowerCase();
+    return (
+      !normalizedPathologies.has(value) &&
+      !(pathologyOptions ?? []).some((option) => option.label.toLowerCase() === normalized)
+    );
+  }, [pathologyOptions, pathologyQuery, normalizedPathologies]);
+
+  const togglePathology = (label: string) => {
+    const normalized = label.trim();
+
+    if (!normalized) {
+      return;
+    }
+
+    const next = new Set(normalizedPathologies);
+
+    if (next.has(normalized)) {
+      next.delete(normalized);
+    } else {
+      next.add(normalized);
+    }
+
+    setValue('pathologies', Array.from(next), { shouldDirty: true, shouldValidate: true });
+  };
+
+  const clearPathologies = () => {
+    setValue('pathologies', [], { shouldDirty: true, shouldValidate: true });
+  };
+
+  const addPathologyFromQuery = () => {
+    const value = pathologyQuery.trim();
+
+    if (!value) {
+      return;
+    }
+
+    togglePathology(value);
+    setPathologyQuery('');
+  };
 
   useEffect(() => {
     if (!selectedTestId) {
@@ -560,6 +660,63 @@ function TestForm({ locale }: TestFormProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Taxonomie */}
+      <Card className="property-panel">
+        <CardHeader>
+          <CardTitle>{form('sections.taxonomy.title')}</CardTitle>
+          <p className="helper-text">{form('fields.pathologies.description')}</p>
+        </CardHeader>
+        <CardContent className={styles.propertySections}>
+          <div className={styles.sectionBlock}>
+            <p className={styles.sectionTitle}>{form('sections.taxonomy.pathologiesLabel')}</p>
+            <div className={styles.multiSelectWrapper}>
+              <div className={styles.multiSelectHeader}>
+                <Label htmlFor="pathologies-selector">{form('sections.taxonomy.pathologiesLabel')}</Label>
+                <p className="helper-text">{form('fields.pathologies.description')}</p>
+              </div>
+
+              <button
+                id="pathologies-selector"
+                type="button"
+                className={cn(
+                  styles.multiSelectControl,
+                  isPathologyDialogOpen && styles.multiSelectOpen,
+                )}
+                onClick={() => setIsPathologyDialogOpen(true)}
+                aria-label={multiSelect('dialogLabel', {
+                  label: form('sections.taxonomy.pathologiesLabel'),
+                })}
+                aria-expanded={isPathologyDialogOpen}
+                aria-haspopup="dialog"
+              >
+                <div className={styles.multiSelectTokens}>
+                  {normalizedPathologies.size > 0 ? (
+                    Array.from(normalizedPathologies).map((pathology) => (
+                      <Badge
+                        key={pathology}
+                        variant="secondary"
+                        className={styles.token}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          togglePathology(pathology);
+                        }}
+                      >
+                        {pathology}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-subtle">{multiSelect('placeholder')}</span>
+                  )}
+                </div>
+                <span className={styles.chevron}>⌄</span>
+              </button>
+
+              {errors.pathologies && <p className="error-text">{errors.pathologies.message}</p>}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
 
     {/* 3. Propriétés (déplacé après le contenu détaillé + biblio) */}
@@ -732,6 +889,105 @@ function TestForm({ locale }: TestFormProps) {
       <p className={styles.successMessage}>
         {feedback('success.saved')}
       </p>
+    )}
+
+    {isPathologyDialogOpen && (
+      <div className={styles.popupLayer}>
+        <div className={styles.popupBackdrop} onClick={() => setIsPathologyDialogOpen(false)} />
+        <div
+          className={styles.popup}
+          role="dialog"
+          aria-modal="true"
+          aria-label={multiSelect('dialogLabel', {
+            label: form('sections.taxonomy.pathologiesLabel'),
+          })}
+        >
+          <div className={styles.popupHeader}>
+            <p className={styles.popupTitle}>
+              {multiSelect('dialogTitle', { label: form('sections.taxonomy.pathologiesLabel') })}
+            </p>
+            <p className="helper-text">
+              {multiSelect('filterHelper', { label: form('sections.taxonomy.pathologiesLabel') })}
+            </p>
+          </div>
+
+          <div className={styles.searchBar}>
+            <Input
+              id="pathologies-search"
+              value={pathologyQuery}
+              onChange={(event) => setPathologyQuery(event.target.value)}
+              placeholder={multiSelect('searchPlaceholder')}
+              aria-label={multiSelect('filterAria', { label: form('sections.taxonomy.pathologiesLabel') })}
+            />
+            <Button type="button" variant="ghost" size="sm" onClick={clearPathologies}>
+              {multiSelect('clear')}
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setIsPathologyDialogOpen(false)}>
+              {multiSelect('close')}
+            </Button>
+          </div>
+
+          <div className={styles.selectedBadges}>
+            {normalizedPathologies.size === 0 ? (
+              <span className="text-subtle">{multiSelect('emptySelection')}</span>
+            ) : (
+              Array.from(normalizedPathologies).map((pathology) => (
+                <Badge
+                  key={pathology}
+                  variant="secondary"
+                  className={styles.selectedToken}
+                  onClick={() => togglePathology(pathology)}
+                >
+                  {pathology}
+                </Badge>
+              ))
+            )}
+          </div>
+
+          <Separator />
+
+          <div className={styles.optionsList} role="listbox" aria-label={form('sections.taxonomy.pathologiesLabel')}>
+            {isPathologyError && (
+              <p className={styles.emptyState}>{feedback('errors.generic')}</p>
+            )}
+
+            {isLoadingPathologies && (
+              <p className={styles.emptyState}>{multiSelect('loading')}</p>
+            )}
+
+            {!isLoadingPathologies && filteredPathologyOptions.length === 0 && !canCreatePathology && (
+              <p className={styles.emptyState}>{multiSelect('emptyResults')}</p>
+            )}
+
+            {!isLoadingPathologies &&
+              filteredPathologyOptions.map((option) => {
+                const isSelected = normalizedPathologies.has(option.label);
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={cn(styles.optionItem, isSelected && styles.optionItemActive)}
+                    onClick={() => togglePathology(option.label)}
+                    aria-pressed={isSelected}
+                  >
+                    <span className={styles.optionLabel}>{option.label}</span>
+                    <Badge className={styles.optionBadge} variant={isSelected ? 'default' : 'outline'}>
+                      {isSelected ? multiSelect('remove') : multiSelect('add')}
+                    </Badge>
+                  </button>
+                );
+              })}
+
+            {canCreatePathology && (
+              <Button type="button" variant="secondary" onClick={addPathologyFromQuery}>
+                {multiSelect('add')}
+                {` “${pathologyQuery.trim()}”`}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
     )}
   </form>
 );

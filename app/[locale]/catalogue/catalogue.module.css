@@ -74,6 +74,12 @@
   flex-wrap: wrap;
 }
 
+.pathologyBadge {
+  background: rgba(94, 234, 212, 0.18);
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  color: #0f172a;
+}
+
 .cardFooter {
   display: flex;
   justify-content: space-between;
