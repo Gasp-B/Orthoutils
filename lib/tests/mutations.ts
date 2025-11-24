@@ -6,9 +6,12 @@ import { getDb } from '@/lib/db/client';
 import {
   domains,
   domainsTranslations,
+  pathologies,
+  pathologyTranslations,
   tags,
   tagsTranslations,
   testDomains,
+  testPathologies,
   testTags,
   tests,
   testsTranslations,
@@ -138,6 +141,69 @@ async function upsertTags(db: DbClient, tagLabels: string[], locale: Locale) {
   return results;
 }
 
+async function upsertPathologies(db: DbClient, pathologyLabels: string[], locale: Locale) {
+  const normalized = normalizeList(pathologyLabels);
+
+  if (normalized.length === 0) {
+    return [] as { id: string; label: string }[];
+  }
+
+  const existingTranslations = await db
+    .select({
+      id: pathologyTranslations.id,
+      pathologyId: pathologyTranslations.pathologyId,
+      label: pathologyTranslations.label,
+      locale: pathologyTranslations.locale,
+    })
+    .from(pathologyTranslations)
+    .where(inArray(pathologyTranslations.label, normalized));
+
+  const reservedSlugs = new Set<string>();
+  const results: { id: string; label: string }[] = [];
+
+  for (const label of normalized) {
+    const translationForLocale = existingTranslations.find(
+      (entry) => entry.label === label && entry.locale === locale,
+    );
+    const translationAnyLocale = existingTranslations.find((entry) => entry.label === label);
+
+    let targetPathologyId = translationForLocale?.pathologyId ?? translationAnyLocale?.pathologyId;
+
+    if (!targetPathologyId) {
+      const slug = await generateUniqueSlug({
+        db,
+        name: label,
+        table: pathologies,
+        slugColumn: pathologies.slug,
+        reserved: reservedSlugs,
+      });
+
+      const [created] = await db
+        .insert(pathologies)
+        .values({ slug })
+        .returning({ id: pathologies.id });
+
+      targetPathologyId = created?.id;
+    }
+
+    if (!targetPathologyId) {
+      throw new Error('Impossible de créer ou retrouver la pathologie.');
+    }
+
+    await db
+      .insert(pathologyTranslations)
+      .values({ pathologyId: targetPathologyId, label, locale })
+      .onConflictDoUpdate({
+        target: [pathologyTranslations.pathologyId, pathologyTranslations.locale],
+        set: { label },
+      });
+
+    results.push({ id: targetPathologyId, label });
+  }
+
+  return results;
+}
+
 async function syncDomains(db: DbClient, testId: string, domainIds: string[]) {
   await db.delete(testDomains).where(eq(testDomains.testId, testId));
 
@@ -161,6 +227,19 @@ async function syncTags(db: DbClient, testId: string, tagIds: string[]) {
   await db
     .insert(testTags)
     .values(tagIds.map((tagId) => ({ testId, tagId })))
+    .onConflictDoNothing();
+}
+
+async function syncPathologies(db: DbClient, testId: string, pathologyIds: string[]) {
+  await db.delete(testPathologies).where(eq(testPathologies.testId, testId));
+
+  if (pathologyIds.length === 0) {
+    return;
+  }
+
+  await db
+    .insert(testPathologies)
+    .values(pathologyIds.map((pathologyId) => ({ testId, pathologyId })))
     .onConflictDoNothing();
 }
 
@@ -231,9 +310,10 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
   const payload = testInputSchema.parse(input);
   const locale = payload.locale ?? defaultLocale;
   const createdId = await getDb().transaction(async (tx) => {
-    const [domainRecords, tagRecords] = await Promise.all([
+    const [domainRecords, tagRecords, pathologyRecords] = await Promise.all([
       upsertDomains(tx as unknown as DbClient, payload.domains ?? [], locale),
       upsertTags(tx as unknown as DbClient, payload.tags ?? [], locale),
+      upsertPathologies(tx as unknown as DbClient, payload.pathologies ?? [], locale),
     ]);
 
     const [created] = await tx
@@ -263,6 +343,11 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
 
     await syncDomains(tx as unknown as DbClient, created.id, domainRecords.map((domain) => domain.id));
     await syncTags(tx as unknown as DbClient, created.id, tagRecords.map((tag) => tag.id));
+    await syncPathologies(
+      tx as unknown as DbClient,
+      created.id,
+      pathologyRecords.map((pathology) => pathology.id),
+    );
 
     return created.id;
   });
@@ -280,9 +365,10 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
   const payload = updateTestInputSchema.parse(input);
   const locale = payload.locale ?? defaultLocale;
   await getDb().transaction(async (tx) => {
-    const [domainRecords, tagRecords] = await Promise.all([
+    const [domainRecords, tagRecords, pathologyRecords] = await Promise.all([
       upsertDomains(tx as unknown as DbClient, payload.domains ?? [], locale),
       upsertTags(tx as unknown as DbClient, payload.tags ?? [], locale),
+      upsertPathologies(tx as unknown as DbClient, payload.pathologies ?? [], locale),
     ]);
 
     await tx
@@ -312,6 +398,11 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
 
     await syncDomains(tx as unknown as DbClient, payload.id, domainRecords.map((domain) => domain.id));
     await syncTags(tx as unknown as DbClient, payload.id, tagRecords.map((tag) => tag.id));
+    await syncPathologies(
+      tx as unknown as DbClient,
+      payload.id,
+      pathologyRecords.map((pathology) => pathology.id),
+    );
   });
 
   const test = await getTestWithMetadata(payload.id, locale);

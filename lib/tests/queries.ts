@@ -5,9 +5,12 @@ import { getDb } from '@/lib/db/client';
 import {
   domains,
   domainsTranslations,
+  pathologies,
+  pathologyTranslations,
   tags,
   tagsTranslations,
   testDomains,
+  testPathologies,
   testTags,
   tests,
   testsTranslations,
@@ -31,6 +34,8 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
   const fallbackTest = alias(testsTranslations, 'fallback_test');
   const localizedDomain = alias(domainsTranslations, 'localized_domain');
   const fallbackDomain = alias(domainsTranslations, 'fallback_domain');
+  const localizedPathology = alias(pathologyTranslations, 'localized_pathology');
+  const fallbackPathology = alias(pathologyTranslations, 'fallback_pathology');
   const localizedTag = alias(tagsTranslations, 'localized_tag');
   const fallbackTag = alias(tagsTranslations, 'fallback_tag');
 
@@ -44,6 +49,7 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
   const priceRangeExpression = sql<string | null>`COALESCE(MAX(${localizedTest.priceRange}), MAX(${fallbackTest.priceRange}))`;
   const notesExpression = sql<string | null>`COALESCE(MAX(${localizedTest.notes}), MAX(${fallbackTest.notes}))`;
   const domainLabelExpression = sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`;
+  const pathologyLabelExpression = sql<string>`COALESCE(${localizedPathology.label}, ${fallbackPathology.label}, '')`;
   const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
 
   const rows = await getDb()
@@ -67,6 +73,7 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domainLabelExpression}) FILTER (WHERE ${domainLabelExpression} IS NOT NULL), '{}')`,
+      pathologies: sql<string[]>`COALESCE(array_agg(DISTINCT ${pathologyLabelExpression}) FILTER (WHERE ${pathologyLabelExpression} IS NOT NULL), '{}')`,
       tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tagLabelExpression}) FILTER (WHERE ${tagLabelExpression} IS NOT NULL), '{}')`,
     })
     .from(tests)
@@ -76,6 +83,16 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
     .leftJoin(domains, eq(testDomains.domainId, domains.id))
     .leftJoin(localizedDomain, and(eq(localizedDomain.domainId, domains.id), eq(localizedDomain.locale, locale)))
     .leftJoin(fallbackDomain, and(eq(fallbackDomain.domainId, domains.id), eq(fallbackDomain.locale, defaultLocale)))
+    .leftJoin(testPathologies, eq(tests.id, testPathologies.testId))
+    .leftJoin(pathologies, eq(testPathologies.pathologyId, pathologies.id))
+    .leftJoin(
+      localizedPathology,
+      and(eq(localizedPathology.pathologyId, pathologies.id), eq(localizedPathology.locale, locale)),
+    )
+    .leftJoin(
+      fallbackPathology,
+      and(eq(fallbackPathology.pathologyId, pathologies.id), eq(fallbackPathology.locale, defaultLocale)),
+    )
     .leftJoin(testTags, eq(tests.id, testTags.testId))
     .leftJoin(tags, eq(testTags.tagId, tags.id))
     .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
@@ -99,6 +116,7 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
       createdAt: toIsoString((row.createdAt as Date | string | null) ?? null),
       updatedAt: toIsoString((row.updatedAt as Date | string | null) ?? null),
       domains: row.domains ?? [],
+      pathologies: row.pathologies ?? [],
       tags: row.tags ?? [],
       bibliography: row.bibliography ?? [],
     })),
@@ -115,6 +133,8 @@ export async function getTestWithMetadata(
   const fallbackTest = alias(testsTranslations, 'fallback_test');
   const localizedDomain = alias(domainsTranslations, 'localized_domain');
   const fallbackDomain = alias(domainsTranslations, 'fallback_domain');
+  const localizedPathology = alias(pathologyTranslations, 'localized_pathology');
+  const fallbackPathology = alias(pathologyTranslations, 'fallback_pathology');
   const localizedTag = alias(tagsTranslations, 'localized_tag');
   const fallbackTag = alias(tagsTranslations, 'fallback_tag');
 
@@ -128,6 +148,7 @@ export async function getTestWithMetadata(
   const priceRangeExpression = sql<string | null>`COALESCE(MAX(${localizedTest.priceRange}), MAX(${fallbackTest.priceRange}))`;
   const notesExpression = sql<string | null>`COALESCE(MAX(${localizedTest.notes}), MAX(${fallbackTest.notes}))`;
   const domainLabelExpression = sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`;
+  const pathologyLabelExpression = sql<string>`COALESCE(${localizedPathology.label}, ${fallbackPathology.label}, '')`;
   const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
 
   const rows = await getDb()
@@ -151,6 +172,7 @@ export async function getTestWithMetadata(
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domainLabelExpression}) FILTER (WHERE ${domainLabelExpression} IS NOT NULL), '{}')`,
+      pathologies: sql<string[]>`COALESCE(array_agg(DISTINCT ${pathologyLabelExpression}) FILTER (WHERE ${pathologyLabelExpression} IS NOT NULL), '{}')`,
       tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tagLabelExpression}) FILTER (WHERE ${tagLabelExpression} IS NOT NULL), '{}')`,
     })
     .from(tests)
@@ -160,6 +182,16 @@ export async function getTestWithMetadata(
     .leftJoin(domains, eq(testDomains.domainId, domains.id))
     .leftJoin(localizedDomain, and(eq(localizedDomain.domainId, domains.id), eq(localizedDomain.locale, locale)))
     .leftJoin(fallbackDomain, and(eq(fallbackDomain.domainId, domains.id), eq(fallbackDomain.locale, defaultLocale)))
+    .leftJoin(testPathologies, eq(tests.id, testPathologies.testId))
+    .leftJoin(pathologies, eq(testPathologies.pathologyId, pathologies.id))
+    .leftJoin(
+      localizedPathology,
+      and(eq(localizedPathology.pathologyId, pathologies.id), eq(localizedPathology.locale, locale)),
+    )
+    .leftJoin(
+      fallbackPathology,
+      and(eq(fallbackPathology.pathologyId, pathologies.id), eq(fallbackPathology.locale, defaultLocale)),
+    )
     .leftJoin(testTags, eq(tests.id, testTags.testId))
     .leftJoin(tags, eq(testTags.tagId, tags.id))
     .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
@@ -184,6 +216,7 @@ export async function getTestWithMetadata(
       createdAt: toIsoString((row.createdAt as Date | string | null) ?? null),
       updatedAt: toIsoString((row.updatedAt as Date | string | null) ?? null),
       domains: row.domains ?? [],
+      pathologies: row.pathologies ?? [],
       tags: row.tags ?? [],
       bibliography: row.bibliography ?? [],
     })),
