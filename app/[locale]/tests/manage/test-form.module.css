@@ -210,7 +210,9 @@
 
 .popupTitle {
   font-weight: 700;
-  color: #e2e8f0;
+  /* La couleur était trop claire, on la passe en foncé */
+  color: #0f172a; 
+  font-size: 1.1rem; /* On l'agrandit un tout petit peu pour la lisibilité */
 }
 
 .optionsList {
