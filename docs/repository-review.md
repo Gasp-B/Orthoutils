@@ -1,7 +1,7 @@
 # Repository Review — Security, Next.js 16, Data Layer, DX
 
 ## Key entry points
-- **next.config.ts / proxy.ts**: Centralized middleware-style proxy adds rate limiting and security headers (CSP, referrer, frame, permissions). CSP currently allows `'unsafe-inline'` scripts/styles and `'unsafe-eval'` in non-production. Connect sources include Supabase URL or wildcard. 【F:proxy.ts†L47-L136】
+- **next.config.ts / proxy.ts**: Centralized middleware-style proxy adds rate limiting and security headers (CSP, referrer, frame, permissions). CSP now issues nonce-based `script-src`/`style-src` without `'unsafe-inline'` or `'unsafe-eval'`; the nonce is exposed via the `x-nonce` header for front-end integration. Connect sources include Supabase URL or wildcard. 【F:proxy.ts†L47-L119】
 - **Vercel config**: `vercel.json` only defines build command/output. No headers or environment enforcement. 【F:vercel.json†L1-L4】
 - **App layout**: Global layout sets static `metadataBase` to `https://othoutils.example.com`. Providers wrap all pages with a client-side React Query provider. 【F:app/layout.tsx†L1-L24】【F:app/providers.tsx†L1-L10】
 - **API routes**: Route handlers under `app/api/**` implement read/write with Drizzle (e.g., `/api/tools`) and Supabase client for referentials. No server actions. 【F:app/api/tools/route.ts†L1-L120】【F:app/api/referentials/route.ts†L1-L70】
@@ -10,7 +10,7 @@
 - **DX/tooling**: TS strict=true but `allowJs` and `skipLibCheck`; ESLint disables `@typescript-eslint/no-unsafe-*` rules, potentially masking runtime issues. 【F:tsconfig.json†L3-L34】【F:eslint.config.mjs†L1-L36】
 
 ## Risks / smells
-1. **Overly permissive CSP & inline allowances**: `script-src` includes `'unsafe-inline'` (and `'unsafe-eval'` in dev) and `style-src` allows `'unsafe-inline'`, which weakens XSS protections and may block hydration when CSP is tightened later. Connect-src defaults to wildcard Supabase host, not pinned to project URL. 【F:proxy.ts†L47-L136】
+1. **CSP origin pinning & nonce propagation**: CSP now relies on nonces (no `'unsafe-inline'`/`'unsafe-eval'`), but `connect-src` still defaults to a wildcard Supabase host rather than a pinned project URL, and consumers must honor the `x-nonce` header to wire bundled scripts/styles. 【F:proxy.ts†L47-L119】
 2. **Admin client optional & fallback secret key**: `supabaseAdmin` silently becomes `null` if service key missing and may rely on `SUPABASE_SECRET_KEY` (non-standard). Route handlers also use the anon key (`createServerClient`) even for server-only data, increasing reliance on RLS for access that likely targets public tables. 【F:lib/supabaseClient.ts†L5-L68】
 3. **Metadata base hardcoded**: `metadataBase` points to `othoutils.example.com`, which can break canonical URLs/previews on other environments (Vercel preview, local) and can conflict with CSP origins. 【F:app/layout.tsx†L1-L18】
 4. **Runtime rate limit store**: Rate limiting in `proxy.ts` stores counters in-memory; in serverless/Vercel this resets per instance and can lead to inconsistent protection. Not necessarily wrong but may give false sense of throttling. 【F:proxy.ts†L5-L115】
@@ -57,4 +57,4 @@
    - Re-enable `@typescript-eslint/no-unsafe-*` rules or add targeted `satisfies`/types where needed.
 
 ## Hydration considerations
-- Moving to a stricter CSP (removing `'unsafe-inline'`/`'unsafe-eval'`) may require verifying that any inline scripts/styles are removed; current React/Next setup should hydrate if all scripts are bundled. The existing permissive CSP does not block hydration but weakens XSS defenses; tightening it later without removing inline usages could break hydration, so audit inline assets when applying the change. 【F:proxy.ts†L47-L136】
+- Moving to a stricter CSP (removing `'unsafe-inline'`/`'unsafe-eval'`) may require verifying that any inline scripts/styles are removed; current React/Next setup should hydrate if all scripts are bundled. The existing permissive CSP does not block hydration but weakens XSS defenses; tightening it later without removing inline usages could break hydration, so audit inline assets when applying the change. 【F:proxy.ts†L47-L134】
