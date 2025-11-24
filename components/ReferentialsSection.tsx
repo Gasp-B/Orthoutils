@@ -1,18 +1,19 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { referentialsResponseSchema, type ReferentialDto } from '@/lib/validation/referentials';
 import styles from './referentials-section.module.css';
 
 function ReferentialsSection() {
   const t = useTranslations('Referentials');
   const shared = useTranslations('Shared');
+  const locale = useLocale();
 
   const { data: referentials = [], isLoading, isError, refetch } = useQuery<ReferentialDto[]>({
-    queryKey: ['referentials'],
+    queryKey: ['referentials', locale],
     queryFn: async () => {
-      const response = await fetch('/api/referentials', { cache: 'no-store' });
+      const response = await fetch(`/api/referentials?locale=${locale}`, { cache: 'no-store' });
 
       if (!response.ok) {
         let errorMessage = t('errors.load');

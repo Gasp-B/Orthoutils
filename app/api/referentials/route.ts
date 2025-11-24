@@ -16,6 +16,15 @@ import {
 import { referentialsResponseSchema } from '@/lib/validation/referentials';
 
 function resolveLocale(request: NextRequest): Locale {
+  // 1. Priorité au paramètre d'URL (ex: ?locale=fr)
+  const { searchParams } = new URL(request.url);
+  const queryLocale = searchParams.get('locale');
+
+  if (queryLocale && locales.includes(queryLocale as Locale)) {
+    return queryLocale as Locale;
+  }
+
+  // 2. Fallback sur les headers (ex: Client Component sans paramètre ou appel direct)
   const requestedLocale = request.headers.get('x-orthoutil-locale') ?? request.headers.get('accept-language');
 
   if (!requestedLocale) {
