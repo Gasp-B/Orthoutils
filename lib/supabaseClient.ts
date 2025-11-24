@@ -1,9 +1,10 @@
-import { createBrowserClient, createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createBrowserClient, createServerClient } from '@supabase/ssr';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+// On privilégie la clé de rôle de service, sinon on tente la clé secrète (legacy/fallback)
 const supabaseServiceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 
@@ -15,11 +16,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// Client navigateur (Singleton si possible pour éviter les fuites, mais ici createBrowserClient gère bien ça)
 const browserClient =
   supabaseUrl && supabaseAnonKey ? createBrowserClient(supabaseUrl, supabaseAnonKey) : null;
 
 export const supabaseClient = browserClient;
 
+// Client Admin (côté serveur uniquement, contourne le RLS)
 export const supabaseAdmin =
   supabaseUrl && supabaseServiceKey
     ? (createClient(supabaseUrl, supabaseServiceKey, {
@@ -38,32 +41,32 @@ function assertValue<T>(value: T | null | undefined, message: string) {
   return value;
 }
 
-export function createRouteHandlerSupabaseClient(): GenericSupabaseClient {
-  const cookieStore = cookies();
-
-  const getCookieValue = (name: string): string | undefined => {
-    const store = cookieStore as unknown as Awaited<ReturnType<typeof cookies>>;
-    const cookie = store.get(name);
-
-    if (cookie && typeof cookie === 'object' && typeof cookie.value === 'string') {
-      return cookie.value;
-    }
-
-    return undefined;
-  };
+// Client serveur pour les Route Handlers et Server Actions
+// Doit être asynchrone car cookies() renvoie une Promise dans Next.js 15+
+export async function createRouteHandlerSupabaseClient(): Promise<GenericSupabaseClient> {
+  const cookieStore = await cookies();
 
   const client = createServerClient<Record<string, unknown>, 'public'>(
     assertValue(supabaseUrl, 'NEXT_PUBLIC_SUPABASE_URL est requis'),
     assertValue(supabaseAnonKey, 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY est requis'),
     {
       cookies: {
-        get: getCookieValue,
-        set(_name: string, _value: string, _options: CookieOptions) {},
-        remove(_name: string, _options: CookieOptions) {},
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {
+            // Ignorer si appelé depuis un Server Component (lecture seule)
+            // Cela peut arriver si ce client est utilisé hors d'un Route Handler/Action
+          }
+        },
       },
     },
   );
 
   return client as GenericSupabaseClient;
 }
-

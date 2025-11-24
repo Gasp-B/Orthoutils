@@ -57,7 +57,8 @@ function selectTranslation<T extends { locale: string }>(
 }
 
 async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[]> {
-  const supabase = createRouteHandlerSupabaseClient();
+  // CORRECTION : Ajout de 'await' pour supporter l'asynchronisme des cookies
+  const supabase = await createRouteHandlerSupabaseClient();
 
   const { data: testRows, error: testsError } = await supabase
     .from('tests')

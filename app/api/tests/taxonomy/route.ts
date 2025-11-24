@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const requestedLocale = (searchParams.get('locale') as Locale | null) ?? defaultLocale;
     const locale = locales.includes(requestedLocale) ? requestedLocale : defaultLocale;
-    const supabase = createRouteHandlerSupabaseClient();
+
+    // CORRECTION 1 : Ajout de 'await' ici
+    const supabase = await createRouteHandlerSupabaseClient();
 
     const [domainTranslationsResult, tagTranslationsResult, domainIdsResult, tagIdsResult] = await Promise.all([
       supabase
@@ -49,8 +51,10 @@ export async function GET(request: NextRequest) {
 
     const domainTranslations = (domainTranslationsResult.data ?? []) as DomainTranslationRow[];
     const tagTranslations = (tagTranslationsResult.data ?? []) as TagTranslationRow[];
-    const domainIds = (domainIdsResult.data ?? []).map((row) => row.id as string);
-    const tagIds = (tagIdsResult.data ?? []).map((row) => row.id as string);
+    
+    // CORRECTION 2 : Suppression de 'as string' inutile
+    const domainIds = (domainIdsResult.data ?? []).map((row) => row.id);
+    const tagIds = (tagIdsResult.data ?? []).map((row) => row.id);
 
     const domainsById = new Map<string, DomainTranslationRow[]>();
     for (const translation of domainTranslations) {
