@@ -72,6 +72,7 @@ const defaultValues: FormValues = {
   priceRange: null,
   buyLink: null,
   notes: null,
+  pathologies: [],
   domains: [],
   tags: [],
   bibliography: [],
@@ -167,6 +168,7 @@ function TestForm({ locale }: TestFormProps) {
 
   const currentDomains = watch('domains');
   const currentTags = watch('tags');
+  const currentPathologies = watch('pathologies');
   const currentBibliography = watch('bibliography');
   const populationValue = watch('population');
   const materialsValue = watch('materials');
@@ -196,6 +198,7 @@ function TestForm({ locale }: TestFormProps) {
         priceRange: test.priceRange,
         buyLink: test.buyLink,
         notes: test.notes,
+        pathologies: test.pathologies,
         domains: test.domains,
         tags: test.tags,
         bibliography: test.bibliography ?? [],
@@ -246,6 +249,9 @@ function TestForm({ locale }: TestFormProps) {
       ageMinMonths: values.ageMinMonths ?? null,
       ageMaxMonths: values.ageMaxMonths ?? null,
       durationMinutes: values.durationMinutes ?? null,
+      pathologies: Array.from(
+        new Set((values.pathologies ?? []).map((pathology) => pathology.trim()).filter(Boolean)),
+      ),
       domains: Array.from(new Set((values.domains ?? []).map((domain) => domain.trim()).filter(Boolean))),
       tags: Array.from(new Set((values.tags ?? []).map((tag) => tag.trim()).filter(Boolean))),
       bibliography: (values.bibliography ?? [])
@@ -369,8 +375,10 @@ function TestForm({ locale }: TestFormProps) {
               />
             </div>
 
-            {/* Aperçu des domaines + tags dans le résumé détaillé */}
-            {(currentDomains?.length ?? 0) > 0 || (currentTags?.length ?? 0) > 0 ? (
+            {/* Aperçu des domaines, pathologies et tags dans le résumé détaillé */}
+            {(currentDomains?.length ?? 0) > 0 ||
+            (currentPathologies?.length ?? 0) > 0 ||
+              (currentTags?.length ?? 0) > 0 ? (
               <>
                 <Separator />
                 <div className={styles.summaryTaxonomy}>
@@ -385,6 +393,23 @@ function TestForm({ locale }: TestFormProps) {
                             className={styles.summaryBadge}
                           >
                             {domain}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(currentPathologies?.length ?? 0) > 0 && (
+                    <div className={styles.summaryTaxonomyGroup}>
+                      <Label>{form('sections.taxonomy.pathologiesLabel')}</Label>
+                      <div className={styles.summaryTaxonomyBadges}>
+                        {(currentPathologies ?? []).map((pathology) => (
+                          <Badge
+                            key={pathology}
+                            variant="secondary"
+                            className={styles.summaryBadge}
+                          >
+                            {pathology}
                           </Badge>
                         ))}
                       </div>

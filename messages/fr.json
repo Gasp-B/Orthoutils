@@ -412,16 +412,19 @@
                 "additionalInfo": {
                     "title": "Informations complémentaires"
                 },
-                "properties": {
-                    "title": "Propriétés",
-                    "helper": "Pensez aux propriétés clés comme dans une fiche Notion.",
-                    "targetingTitle": "Ciblage & durée",
-                    "publishingTitle": "Édition & accès"
-                },
-                "taxonomy": {
-                    "title": "Taxonomie"
-                }
-            },
+      "properties": {
+        "title": "Propriétés",
+        "helper": "Pensez aux propriétés clés comme dans une fiche Notion.",
+        "targetingTitle": "Ciblage & durée",
+        "publishingTitle": "Édition & accès"
+      },
+      "taxonomy": {
+        "title": "Taxonomie",
+        "domainsLabel": "Domaines",
+        "pathologiesLabel": "Pathologies",
+        "tagsLabel": "Tags"
+      }
+    },
             "bibliography": {
                 "entryLabel": "Titre ou source",
                 "entryPlaceholder": "Article, vidéo, ouvrage…",

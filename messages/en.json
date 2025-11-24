@@ -436,16 +436,19 @@
         "additionalInfo": {
           "title": "Additional information"
         },
-        "properties": {
-          "title": "Properties",
-          "helper": "Think about key properties as in a Notion sheet.",
-          "targetingTitle": "Targeting & duration",
-          "publishingTitle": "Edition & access"
-        },
-        "taxonomy": {
-          "title": "Taxonomy"
-        }
+      "properties": {
+        "title": "Properties",
+        "helper": "Think about key properties as in a Notion sheet.",
+        "targetingTitle": "Targeting & duration",
+        "publishingTitle": "Edition & access"
       },
+      "taxonomy": {
+        "title": "Taxonomy",
+        "domainsLabel": "Domains",
+        "pathologiesLabel": "Pathologies",
+        "tagsLabel": "Tags"
+      }
+    },
       "bibliography": {
         "entryLabel": "Title or source",
         "entryPlaceholder": "Article, video, book…",

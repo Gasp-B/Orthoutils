@@ -33,6 +33,7 @@ export const testSchema = z.object({
   updatedAt: z.string(),
   domains: z.array(z.string()),
   tags: z.array(z.string()),
+  pathologies: z.array(z.string()),
   bibliography: bibliographySchema,
 });
 
@@ -58,6 +59,7 @@ export const testInputSchema = z.object({
   notes: z.string().nullable().optional(),
   domains: z.array(z.string().min(1)).default([]),
   tags: z.array(z.string().min(1)).default([]),
+  pathologies: z.array(z.string().min(1)).default([]),
   bibliography: bibliographySchema,
 });
 
