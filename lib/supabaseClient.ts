@@ -70,3 +70,8 @@ export async function createRouteHandlerSupabaseClient(): Promise<GenericSupabas
 
   return client as GenericSupabaseClient;
 }
+
+export async function getSupabaseServer() {
+  // Force l'attente explicite de la création du client
+  return await createRouteHandlerSupabaseClient();
+}
