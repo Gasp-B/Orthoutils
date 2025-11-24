@@ -3,7 +3,6 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import Hero from '../../components/Hero';
-import ReferentialsSection from '../../components/ReferentialsSection';
 import ToolsSection from '../../components/ToolsSection';
 import { locales, type Locale } from '@/i18n/routing';
 
@@ -37,7 +36,6 @@ async function HomePage() {
   return (
     <>
       <Hero />
-      <ReferentialsSection />
       <ToolsSection />
 
       <footer className="container footer">
