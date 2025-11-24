@@ -110,7 +110,8 @@
         "meta": {
             "objective": "Objectif :",
             "materials": "Matériel :",
-            "publisher": "Éditeur :"
+            "publisher": "Éditeur :",
+            "pathologies": "Pathologies :"
         },
         "empty": {
             "buyLink": "Pas de lien d'achat renseigné"
@@ -398,6 +399,11 @@
                     "label": "Tags",
                     "description": "Ajoutez des mots-clés pour faciliter la recherche.",
                     "placeholder": "Rechercher un tag"
+                },
+                "pathologies": {
+                    "label": "Pathologies",
+                    "description": "Associez les pathologies concernées pour améliorer le filtrage.",
+                    "placeholder": "Rechercher une pathologie"
                 }
             },
             "sections": {
@@ -445,10 +451,12 @@
                 "searchPlaceholder": "Rechercher…",
                 "filterAria": "Filtrer {label}",
                 "clear": "Effacer",
+                "close": "Fermer",
                 "emptySelection": "Aucun élément sélectionné pour le moment.",
                 "emptyResults": "Aucun résultat",
                 "add": "Ajouter",
-                "remove": "Supprimer"
+                "remove": "Supprimer",
+                "loading": "Chargement…"
             }
         },
         "feedback": {
