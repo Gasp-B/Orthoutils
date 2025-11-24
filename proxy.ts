@@ -49,15 +49,17 @@ function buildNonce() {
   return crypto.randomBytes(16).toString('base64');
 }
 
-function getSecurityHeaders(_nonce: string) {
+function getSecurityHeaders(nonce: string) {
+  const scriptSrc = `script-src 'self' 'nonce-${nonce}'`;
+  const styleSrc = `style-src 'self' 'nonce-${nonce}'`;
   const contentSecurityPolicy = [
     "default-src 'self'",
     "base-uri 'self'",
     "font-src 'self' data:",
     "img-src 'self' data:",
     "object-src 'none'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-    "style-src 'self' 'unsafe-inline'",
+    scriptSrc,
+    styleSrc,
     `connect-src ${getConnectSources()}`,
     "frame-ancestors 'none'",
     "form-action 'self'",
@@ -74,6 +76,7 @@ function getSecurityHeaders(_nonce: string) {
 }
 
 function applySecurityHeaders(response: NextResponse, nonce: string) {
+  response.headers.set('x-nonce', nonce);
   for (const { key, value } of getSecurityHeaders(nonce)) {
     response.headers.set(key, value);
   }
