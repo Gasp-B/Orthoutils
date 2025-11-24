@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 import { getCatalogueTaxonomy } from '@/lib/navigation/catalogue';
+// AJOUT : Import du client Supabase
+import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +11,11 @@ export async function GET(request: NextRequest) {
     const requestedLocale = (searchParams.get('locale') as Locale | null) ?? defaultLocale;
     const locale = locales.includes(requestedLocale) ? requestedLocale : defaultLocale;
 
-    const domains = await getCatalogueTaxonomy(locale);
+    // CORRECTION : Création explicite du client avec await
+    const supabase = await createRouteHandlerSupabaseClient();
+
+    // Passage du client à la fonction utilitaire
+    const domains = await getCatalogueTaxonomy(locale, supabase);
 
     return NextResponse.json(
       { domains },

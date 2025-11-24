@@ -68,7 +68,8 @@ function resolveStatusKey(value: string | null): ToolStatus {
   const normalized = value?.toLowerCase().trim();
 
   if (normalized === 'draft' || normalized === 'published' || normalized === 'archived') {
-    return normalized as ToolStatus;
+    // CORRECTION ESLint : Suppression de 'as ToolStatus' inutile
+    return normalized;
   }
 
   if (normalized === 'validé' || normalized === 'validated') {
@@ -165,7 +166,8 @@ export async function GET(request: NextRequest) {
     );
   };
 
-  const supabase = createRouteHandlerSupabaseClient();
+  // CORRECTION Next.js 15 : Ajout de 'await'
+  const supabase = await createRouteHandlerSupabaseClient();
 
   try {
     const [catalogResult, communityResult] = await Promise.all([
@@ -243,7 +245,8 @@ export async function GET(request: NextRequest) {
           const createdAt = tool.created_at ?? new Date().toISOString();
 
           if ('name' in tool) {
-            const community = tool as ToolRow;
+            // CORRECTION ESLint : Suppression de 'as ToolRow' inutile
+            const community = tool;
             const translations = toolTranslationsById.get(community.id) ?? [];
             const translation = selectTranslation(translations, locale);
             const status = resolveStatusKey(community.status);
@@ -266,7 +269,8 @@ export async function GET(request: NextRequest) {
             } satisfies CatalogRow & { type: string | null; source: string | null };
           }
 
-          const catalog = tool as ToolCatalogRow;
+          // CORRECTION ESLint : Suppression de 'as ToolCatalogRow' inutile
+          const catalog = tool;
           const translations = catalogTranslationsById.get(catalog.id) ?? [];
           const translation = selectTranslation(translations, locale);
           const hasTargetPopulation = Boolean(

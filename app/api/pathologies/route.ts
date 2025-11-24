@@ -19,7 +19,9 @@ export async function GET(req: Request) {
     const q = searchParams.get('q')?.trim();
     const limitParam = Number(searchParams.get('limit') ?? 20);
     const limit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 20;
-    const supabase = createRouteHandlerSupabaseClient();
+
+    // CORRECTION : Ajout de 'await' ici
+    const supabase = await createRouteHandlerSupabaseClient();
 
     const translationFilters = (searchLocale: Locale) => {
       const query = supabase

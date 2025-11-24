@@ -2,7 +2,8 @@ import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import { slugify } from '@/lib/utils/slug';
 import { defaultLocale, type Locale } from '@/i18n/routing';
 
-type SupabaseClient = ReturnType<typeof createRouteHandlerSupabaseClient>;
+// On récupère le type de retour de la fonction asynchrone pour typer correctement le client
+type SupabaseClient = Awaited<ReturnType<typeof createRouteHandlerSupabaseClient>>;
 
 type DomainTranslationRow = { domain_id: string; locale: string; label: string; slug: string };
 type TagTranslationRow = { tag_id: string; locale: string; label: string };
@@ -16,7 +17,8 @@ export async function getCatalogueTaxonomy(
   locale: Locale = defaultLocale,
   client?: SupabaseClient,
 ): Promise<CatalogueDomain[]> {
-  const supabase = client ?? createRouteHandlerSupabaseClient();
+  // IMPORTANT : on attend la création du client si celui-ci n'est pas fourni
+  const supabase = client ?? (await createRouteHandlerSupabaseClient());
 
   const [testsResult] = await Promise.all([
     supabase.from('tests').select('id').eq('status', 'published').returns<{ id: string }[]>(),
