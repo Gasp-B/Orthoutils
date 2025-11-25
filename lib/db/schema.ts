@@ -238,6 +238,32 @@ export const pathologies = pgTable(
   }),
 );
 
+export const resources = pgTable('resources', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  type: text('type').notNull(),
+  url: text('url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const resourcesTranslations = pgTable(
+  'resources_translations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    resourceId: uuid('resource_id')
+      .notNull()
+      .references(() => resources.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    title: text('title').notNull(),
+    description: text('description'),
+  },
+  (table) => ({
+    localeConstraint: uniqueIndex('resources_translations_resource_id_locale_key').on(
+      table.resourceId,
+      table.locale,
+    ),
+  }),
+);
+
 export const pathologyTranslations = pgTable(
   'pathology_translations',
   {
@@ -273,3 +299,7 @@ export const testPathologies = pgTable(
 export type PathologyRecord = typeof pathologies.$inferSelect;
 export type PathologyTranslationRecord = typeof pathologyTranslations.$inferSelect;
 export type TestPathologyRecord = typeof testPathologies.$inferSelect;
+export type ResourceRecord = typeof resources.$inferSelect;
+export type NewResourceRecord = typeof resources.$inferInsert;
+export type ResourceTranslationRecord = typeof resourcesTranslations.$inferSelect;
+export type NewResourceTranslationRecord = typeof resourcesTranslations.$inferInsert;
