@@ -240,8 +240,9 @@ export const pathologies = pgTable(
 
 export const resources = pgTable('resources', {
   id: uuid('id').defaultRandom().primaryKey(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  type: text('type').notNull(),
+  url: text('url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 export const resourcesTranslations = pgTable(
@@ -252,7 +253,7 @@ export const resourcesTranslations = pgTable(
       .notNull()
       .references(() => resources.id, { onDelete: 'cascade' }),
     locale: text('locale').notNull(),
-    name: text('name').notNull(),
+    title: text('title').notNull(),
     description: text('description'),
   },
   (table) => ({
