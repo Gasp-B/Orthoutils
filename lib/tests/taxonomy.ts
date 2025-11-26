@@ -7,38 +7,27 @@ import {
   domainsTranslations,
   tags,
   tagsTranslations,
+  pathologies,
+  pathologyTranslations,
   testDomains,
   testTags,
+  testPathologies,
 } from '@/lib/db/schema';
 import { generateUniqueSlug } from '@/lib/utils/slug';
 
 function normalizeValue(value: string) {
   const normalized = value.trim();
-
   if (!normalized) {
     throw new Error('La valeur fournie est vide.');
   }
-
   return normalized;
 }
+
+// --- DOMAINS ---
 
 export async function createDomain(label: string, locale: Locale = defaultLocale) {
   const normalized = normalizeValue(label);
   const db = getDb();
-
-  const [existingDomain] = await db
-    .select({
-      id: domainsTranslations.domainId,
-      label: domainsTranslations.label,
-      locale: domainsTranslations.locale,
-    })
-    .from(domainsTranslations)
-    .where(and(eq(domainsTranslations.label, normalized), eq(domainsTranslations.locale, locale)))
-    .limit(1);
-
-  if (existingDomain) {
-    throw new Error('Ce domaine existe déjà.');
-  }
 
   const [existingTranslation] = await db
     .select({ id: domainsTranslations.id, domainId: domainsTranslations.domainId })
@@ -49,9 +38,7 @@ export async function createDomain(label: string, locale: Locale = defaultLocale
   const domainId =
     existingTranslation?.domainId ?? (await db.insert(domains).values({}).returning({ id: domains.id }))[0]?.id;
 
-  if (!domainId) {
-    throw new Error("Impossible de créer ou retrouver le domaine.");
-  }
+  if (!domainId) throw new Error("Impossible de créer ou retrouver le domaine.");
 
   const slug = await generateUniqueSlug({
     db,
@@ -68,30 +55,40 @@ export async function createDomain(label: string, locale: Locale = defaultLocale
     .values({ domainId, label: normalized, slug, locale })
     .onConflictDoUpdate({
       target: [domainsTranslations.domainId, domainsTranslations.locale],
-      set: { label: normalized, slug },
+      set: { label: normalized, slug }, // slug update is optional strictly speaking but keeps sync
     })
     .returning({ id: domainsTranslations.domainId, label: domainsTranslations.label });
 
   return created;
 }
 
-export async function createTag(label: string, locale: Locale = defaultLocale) {
-  const normalized = normalizeValue(label);
+export async function deleteDomain(id: string, locale: Locale = defaultLocale) {
   const db = getDb();
+  const localized = alias(domainsTranslations, 'localized_del');
+  const fallback = alias(domainsTranslations, 'fallback_del');
 
-  const [existingTag] = await db
-    .select({
-      id: tagsTranslations.tagId,
-      label: tagsTranslations.label,
-      locale: tagsTranslations.locale,
-    })
-    .from(tagsTranslations)
-    .where(and(eq(tagsTranslations.label, normalized), eq(tagsTranslations.locale, locale)))
+  const [translation] = await db
+    .select({ label: sql<string>`COALESCE(${localized.label}, ${fallback.label}, '')` })
+    .from(domains)
+    .leftJoin(localized, and(eq(localized.domainId, domains.id), eq(localized.locale, locale)))
+    .leftJoin(fallback, and(eq(fallback.domainId, domains.id), eq(fallback.locale, defaultLocale)))
+    .where(eq(domains.id, id))
     .limit(1);
 
-  if (existingTag) {
-    throw new Error('Ce tag existe déjà.');
-  }
+  const deleted = await db.transaction(async (tx) => {
+    await tx.delete(testDomains).where(eq(testDomains.domainId, id));
+    const [removed] = await tx.delete(domains).where(eq(domains.id, id)).returning({ id: domains.id });
+    return removed ? { id: removed.id, label: translation?.label ?? '' } : null;
+  });
+
+  return deleted;
+}
+
+// --- TAGS ---
+
+export async function createTag(label: string, color: string | null | undefined, locale: Locale = defaultLocale) {
+  const normalized = normalizeValue(label);
+  const db = getDb();
 
   const [existingTranslation] = await db
     .select({ id: tagsTranslations.id, tagId: tagsTranslations.tagId })
@@ -99,11 +96,17 @@ export async function createTag(label: string, locale: Locale = defaultLocale) {
     .where(eq(tagsTranslations.label, normalized))
     .limit(1);
 
-  const tagId = existingTranslation?.tagId ?? (await db.insert(tags).values({}).returning({ id: tags.id }))[0]?.id;
+  let tagId = existingTranslation?.tagId;
 
   if (!tagId) {
-    throw new Error('Impossible de créer ou retrouver le tag.');
+    const [newTag] = await db.insert(tags).values({ colorLabel: color }).returning({ id: tags.id });
+    tagId = newTag?.id;
+  } else if (color) {
+    // Mise à jour de la couleur si le tag existe et qu'une couleur est fournie
+    await db.update(tags).set({ colorLabel: color }).where(eq(tags.id, tagId));
   }
+
+  if (!tagId) throw new Error('Impossible de créer ou retrouver le tag.');
 
   const [created] = await db
     .insert(tagsTranslations)
@@ -117,61 +120,103 @@ export async function createTag(label: string, locale: Locale = defaultLocale) {
   return created;
 }
 
-export async function deleteDomain(id: string, locale: Locale = defaultLocale) {
-  const db = getDb();
-  const localizedDomain = alias(domainsTranslations, 'localized_domain_delete');
-  const fallbackDomain = alias(domainsTranslations, 'fallback_domain_delete');
-
-  const [translation] = await db
-    .select({
-      label: sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`,
-    })
-    .from(domains)
-    .leftJoin(localizedDomain, and(eq(localizedDomain.domainId, domains.id), eq(localizedDomain.locale, locale)))
-    .leftJoin(fallbackDomain, and(eq(fallbackDomain.domainId, domains.id), eq(fallbackDomain.locale, defaultLocale)))
-    .where(eq(domains.id, id))
-    .limit(1);
-
-  const deleted = await db.transaction(async (tx) => {
-    await tx.delete(testDomains).where(eq(testDomains.domainId, id));
-
-    const [removed] = await tx.delete(domains).where(eq(domains.id, id)).returning({ id: domains.id });
-
-    if (!removed) {
-      return null;
-    }
-
-    return { id: removed.id, label: translation?.label ?? '' };
-  });
-
-  return deleted;
-}
-
 export async function deleteTag(id: string, locale: Locale = defaultLocale) {
   const db = getDb();
-  const localizedTag = alias(tagsTranslations, 'localized_tag_delete');
-  const fallbackTag = alias(tagsTranslations, 'fallback_tag_delete');
+  const localized = alias(tagsTranslations, 'localized_tag_del');
+  const fallback = alias(tagsTranslations, 'fallback_tag_del');
 
   const [translation] = await db
-    .select({
-      label: sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`,
-    })
+    .select({ label: sql<string>`COALESCE(${localized.label}, ${fallback.label}, '')` })
     .from(tags)
-    .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
-    .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
+    .leftJoin(localized, and(eq(localized.tagId, tags.id), eq(localized.locale, locale)))
+    .leftJoin(fallback, and(eq(fallback.tagId, tags.id), eq(fallback.locale, defaultLocale)))
     .where(eq(tags.id, id))
     .limit(1);
 
   const deleted = await db.transaction(async (tx) => {
     await tx.delete(testTags).where(eq(testTags.tagId, id));
-
     const [removed] = await tx.delete(tags).where(eq(tags.id, id)).returning({ id: tags.id });
+    return removed ? { id: removed.id, label: translation?.label ?? '' } : null;
+  });
 
-    if (!removed) {
-      return null;
-    }
+  return deleted;
+}
 
-    return { id: removed.id, label: translation?.label ?? '' };
+// --- PATHOLOGIES ---
+
+export async function createPathology(
+  label: string,
+  description: string | null | undefined,
+  synonymsStr: string | undefined,
+  locale: Locale = defaultLocale
+) {
+  const normalized = normalizeValue(label);
+  const db = getDb();
+  const synonymsArray = synonymsStr 
+    ? synonymsStr.split(',').map(s => s.trim()).filter(Boolean) 
+    : [];
+
+  const [existingTranslation] = await db
+    .select({ id: pathologyTranslations.pathologyId, pathologyId: pathologyTranslations.pathologyId })
+    .from(pathologyTranslations)
+    .where(eq(pathologyTranslations.label, normalized))
+    .limit(1);
+
+  let pathologyId = existingTranslation?.pathologyId;
+
+  if (!pathologyId) {
+    // Génération slug sur la table parente `pathologies`
+    const slug = await generateUniqueSlug({
+      db,
+      name: normalized,
+      table: pathologies,
+      slugColumn: pathologies.slug,
+    });
+    const [newPatho] = await db.insert(pathologies).values({ slug }).returning({ id: pathologies.id });
+    pathologyId = newPatho?.id;
+  }
+
+  if (!pathologyId) throw new Error('Impossible de créer ou retrouver la pathologie.');
+
+  const [created] = await db
+    .insert(pathologyTranslations)
+    .values({ 
+      pathologyId, 
+      label: normalized, 
+      description: description ?? null, 
+      synonyms: synonymsArray, 
+      locale 
+    })
+    .onConflictDoUpdate({
+      target: [pathologyTranslations.pathologyId, pathologyTranslations.locale],
+      set: { 
+        label: normalized, 
+        description: description ?? null,
+        synonyms: synonymsArray 
+      },
+    })
+    .returning({ id: pathologyTranslations.pathologyId, label: pathologyTranslations.label });
+
+  return created;
+}
+
+export async function deletePathology(id: string, locale: Locale = defaultLocale) {
+  const db = getDb();
+  const localized = alias(pathologyTranslations, 'localized_patho_del');
+  const fallback = alias(pathologyTranslations, 'fallback_patho_del');
+
+  const [translation] = await db
+    .select({ label: sql<string>`COALESCE(${localized.label}, ${fallback.label}, '')` })
+    .from(pathologies)
+    .leftJoin(localized, and(eq(localized.pathologyId, pathologies.id), eq(localized.locale, locale)))
+    .leftJoin(fallback, and(eq(fallback.pathologyId, pathologies.id), eq(fallback.locale, defaultLocale)))
+    .where(eq(pathologies.id, id))
+    .limit(1);
+
+  const deleted = await db.transaction(async (tx) => {
+    await tx.delete(testPathologies).where(eq(testPathologies.pathologyId, id));
+    const [removed] = await tx.delete(pathologies).where(eq(pathologies.id, id)).returning({ id: pathologies.id });
+    return removed ? { id: removed.id, label: translation?.label ?? '' } : null;
   });
 
   return deleted;

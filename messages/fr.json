@@ -1,602 +1,466 @@
 {
-    "Metadata": {
-        "title": "Othoutils | Référentiels cliniques orthophoniques",
-        "description": "Catalogue d’outils cliniques validés par des orthophonistes avec gouvernance éditoriale et suivi des validations."
+  "Metadata": {
+    "title": "Othoutils | Référentiels cliniques orthophoniques",
+    "description": "Catalogue d’outils cliniques validés par des orthophonistes avec gouvernance éditoriale et suivi des validations."
+  },
+  "Header": {
+    "brandName": "Othoutils",
+    "brandAria": "Othoutils, retour à l'accueil",
+    "tagline": "Ressources cliniques vérifiées par des orthophonistes",
+    "searchPlaceholder": "Rechercher un outil, une thématique...",
+    "searchAria": "Rechercher un outil, une thématique",
+    "navAria": "Navigation principale",
+    "navLoading": "Chargement du catalogue…",
+    "navError": "Impossible de charger le catalogue",
+    "community": "Communauté",
+    "news": "Nouveautés",
+    "admin": "Administration",
+    "adminMenuLabel": "Menu administration",
+    "localeSwitcher": {
+      "label": "Langue",
+      "ariaLabel": "Changer de langue",
+      "english": "Anglais",
+      "french": "Français"
     },
-    "Header": {
-        "brandName": "Othoutils",
-        "brandAria": "Othoutils, retour à l'accueil",
-        "tagline": "Ressources cliniques vérifiées par des orthophonistes",
-        "searchPlaceholder": "Rechercher un outil, une thématique...",
-        "searchAria": "Rechercher un outil, une thématique",
-        "navAria": "Navigation principale",
-        "navLoading": "Chargement du catalogue…",
-        "navError": "Impossible de charger le catalogue",
-        "community": "Communauté",
-        "news": "Nouveautés",
-        "admin": "Administration",
-        "adminMenuLabel": "Menu administration",
-        "localeSwitcher": {
-            "label": "Langue",
-            "ariaLabel": "Changer de langue",
-            "english": "Anglais",
-            "french": "Français"
-        },
-        "dashboard": "Tableau de bord",
-        "addTest": "Ajouter un test",
-        "taxonomy": "Catégories & tags",
-        "catalogue": "Catalogue",
-        "megaMenuLabel": "Navigation catalogue",
-        "domainsLabel": "Domaines du catalogue",
-        "tagsLabel": "Tags"
+    "dashboard": "Tableau de bord",
+    "addTest": "Ajouter un test",
+    "taxonomy": "Catégories & tags",
+    "catalogue": "Catalogue",
+    "megaMenuLabel": "Navigation catalogue",
+    "domainsLabel": "Domaines du catalogue",
+    "tagsLabel": "Tags"
+  },
+  "Hero": {
+    "sectionLabel": "Référentiels conçus et validés par des orthophonistes",
+    "title": "Une bibliothèque clinique pour consulter des outils éprouvés et suivre leur validation",
+    "lead": "Pensé pour les cabinets, centres hospitaliers et services de rééducation : Othoutils met en avant les questionnaires, batteries et fiches de suivi déjà relus par des professionnels de santé. Les équipes peuvent ensuite proposer des ajustements documentés qui sont revus avant publication.",
+    "primaryCta": "Consulter les référentiels validés",
+    "secondaryCta": "Comprendre la validation éditoriale",
+    "cards": {
+      "verifiedTitle": "Référentiels vérifiés",
+      "verifiedDesc": "Chaque fiche est relue par des orthophonistes et publiée avec les précisions nécessaires au terrain.",
+      "peerTitle": "Validation par pairs",
+      "peerDesc": "Un circuit de relecture clair : brouillon, relecture interdisciplinaire puis diffusion sécurisée.",
+      "readyTitle": "Prêt pour le terrain",
+      "readyDesc": "Interface lumineuse, lisible et accessible pour travailler au cabinet, à l’hôpital ou en mobilité."
+    }
+  },
+  "Referentials": {
+    "sectionLabel": "Référentiels structurés",
+    "loading": "Chargement des domaines du catalogue…",
+    "errorTitle": "Impossible de récupérer les référentiels",
+    "errorSubtitle": "Vérifiez votre connexion ou rechargez la page. Les données proviennent du catalogue des tests.",
+    "errors": {
+      "load": "Erreur lors du chargement des référentiels"
     },
-    "Hero": {
-        "sectionLabel": "Référentiels conçus et validés par des orthophonistes",
-        "title": "Une bibliothèque clinique pour consulter des outils éprouvés et suivre leur validation",
-        "lead": "Pensé pour les cabinets, centres hospitaliers et services de rééducation : Othoutils met en avant les questionnaires, batteries et fiches de suivi déjà relus par des professionnels de santé.",
-        "primaryCta": "Consulter les référentiels validés",
-        "secondaryCta": "Comprendre la validation éditoriale",
-        "cards": {
-            "verifiedTitle": "Référentiels vérifiés",
-            "verifiedDesc": "Chaque fiche est relue par des orthophonistes et publiée avec les précisions nécessaires au terrain.",
-            "peerTitle": "Validation par pairs",
-            "peerDesc": "Un circuit de relecture clair : brouillon, relecture interdisciplinaire puis diffusion sécurisée.",
-            "readyTitle": "Prêt pour le terrain",
-            "readyDesc": "Interface lumineuse, lisible et accessible pour travailler au cabinet, à l’hôpital ou en mobilité."
-        }
+    "emptySubsections": "Aucun test n'est encore associé à ce domaine.",
+    "emptyState": "Aucun test n'est disponible pour le moment. Ajoutez des entrées dans Supabase pour alimenter le catalogue.",
+    "fallbackDomain": "Autres tests"
+  },
+  "Tools": {
+    "sectionLabel": "Référentiel des tests",
+    "headingTitle": "Catalogue clinique",
+    "headingText": "Une vue rapide des tests présents en base, directement issus de Supabase via Drizzle pour une cohérence totale avec le schéma.",
+    "ctas": {
+      "openCatalogue": "Ouvrir le catalogue",
+      "viewSheet": "Consulter {testName}",
+      "viewSheetLabel": "Voir la fiche"
     },
-    "Referentials": {
-        "sectionLabel": "Référentiels structurés",
-        "loading": "Chargement des domaines du catalogue…",
-        "errorTitle": "Impossible de récupérer les référentiels",
-        "errorSubtitle": "Vérifiez votre connexion ou rechargez la page. Les données proviennent du catalogue des tests.",
-        "errors": {
-            "load": "Erreur lors du chargement des référentiels"
-        },
-        "emptySubsections": "Aucun test n'est encore associé à ce domaine.",
-        "emptyState": "Aucun test n'est disponible pour le moment. Ajoutez des entrées dans Supabase pour alimenter le catalogue.",
-        "fallbackDomain": "Autres tests"
+    "errors": {
+      "load": "Impossible de récupérer les tests pour le moment. Vérifiez la connexion à la base Supabase ou réessayez plus tard."
     },
-    "Tools": {
-        "sectionLabel": "Référentiel des tests",
-        "headingTitle": "Catalogue clinique",
-        "headingText": "Une vue rapide des tests présents en base, directement issus de Supabase via Drizzle pour une cohérence totale avec le schéma.",
-        "ctas": {
-            "openCatalogue": "Ouvrir le catalogue",
-            "viewSheet": "Consulter {testName}",
-            "viewSheetLabel": "Voir la fiche"
-        },
-        "errors": {
-            "load": "Impossible de récupérer les tests pour le moment. Vérifiez la connexion à la base Supabase ou réessayez plus tard."
-        },
-        "emptyState": "Aucun test n'est disponible pour l'instant. Ajoutez des entrées dans Supabase pour alimenter le catalogue.",
-        "collaboration": {
-            "sectionLabel": "Gouvernance éditoriale",
-            "items": {
-                "workflow": "Assurez un espace clair entre brouillons, fiches validées et contenus communautaires.",
-                "committee": "Constituez un comité de relecture pluridisciplinaire avec attribution automatique des validations.",
-                "archives": "Archivez les versions pour suivre les modifications, commentaires et décisions thérapeutiques."
-            }
-        },
-        "stats": {
-            "tests": {
-                "label": "Tests référencés",
-                "detail": "Synchronisés depuis Supabase"
-            },
-            "domains": {
-                "label": "Domaines couverts",
-                "detail": "Phonologie, pragmatique, langage écrit…"
-            },
-            "standardized": {
-                "label": "Standardisés",
-                "detail": "Marqués comme normés"
-            }
-        }
+    "emptyState": "Aucun test n'est disponible pour l'instant. Ajoutez des entrées dans Supabase pour alimenter le catalogue.",
+    "collaboration": {
+      "sectionLabel": "Gouvernance éditoriale",
+      "items": {
+        "workflow": "Assurez un espace clair entre brouillons, fiches validées et contenus communautaires.",
+        "committee": "Constituez un comité de relecture pluridisciplinaire avec attribution automatique des validations.",
+        "archives": "Archivez les versions pour suivre les modifications, commentaires et décisions thérapeutiques."
+      }
     },
-    "Catalogue": {
-        "metadata": {
-            "title": "Othoutils | Catalogue clinique",
-            "description": "Tests, outils et évaluations orthophoniques réunis dans un catalogue éditorialisé."
-        },
-        "sectionLabel": "Catalogue des tests",
-        "headingTitle": "Tests d'orthophonie référencés",
-        "headingText": "Retrouvez les évaluations publiées, leur objectif clinique, le public ciblé et les données pratiques pour planifier vos séances.",
-        "ctas": {
-            "addTest": "Ajouter un test",
-            "viewSheet": "Consulter {testName}"
-        },
-        "errors": {
-            "load": "Le catalogue ne peut pas être affiché pour le moment. Vérifiez la connexion à Supabase ou réessayez dans un instant."
-        },
-        "meta": {
-            "objective": "Objectif :",
-            "materials": "Matériel :",
-            "publisher": "Éditeur :",
-            "pathologies": "Pathologies :"
-        },
-        "empty": {
-            "buyLink": "Pas de lien d'achat renseigné"
-        },
-        "emptyState": "Aucun test n'est référencé pour l'instant. Ajoutez vos premiers tests pour alimenter le catalogue."
+    "stats": {
+      "tests": {
+        "label": "Tests référencés",
+        "detail": "Synchronisés depuis Supabase"
+      },
+      "domains": {
+        "label": "Domaines couverts",
+        "detail": "Phonologie, pragmatique, langage écrit…"
+      },
+      "standardized": {
+        "label": "Standardisés",
+        "detail": "Marqués comme normés"
+      }
+    }
+  },
+  "ToolCard": {
+    "status": {
+      "draft": "Brouillon",
+      "published": "Publié",
+      "archived": "Archivé"
     },
-    "TestsManage": {
-        "metadata": {
-            "title": "Gérer les tests | Othoutils",
-            "description": "Ajoutez ou mettez à jour un test avec ses domaines et tags."
-        },
-        "sectionLabel": "Créer ou mettre à jour un test",
-        "pageTitle": "Ajouter / Éditer un test",
-        "pageLead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags et domaines associés."
+    "labels": {
+      "type": "Type : {type}",
+      "source": "Source",
+      "sourceAria": "Voir la source pour {toolName}"
     },
-    "TestsForm": {
-        "toolbar": {
-            "sheetLabel": "Fiche",
-            "selectorAria": "Sélectionner un test à modifier",
-            "selectorPlaceholder": "Nouveau test",
-            "editBadge": "Mode édition",
-            "newBadge": "Nouvelle fiche",
-            "reset": "Réinitialiser",
-            "submit": {
-                "saving": "Enregistrement…",
-                "update": "Mettre à jour",
-                "create": "Créer le test"
-            }
-        },
-        "fields": {
-            "name": {
-                "placeholder": "Nom du test (ex : Évaluation du langage)",
-                "aria": "Nom du test"
-            },
-            "shortDescription": {
-                "placeholder": "Présentez l'outil et ce qui le rend unique."
-            },
-            "objective": {
-                "placeholder": "Que mesure ce test ? Dans quel contexte l'utiliser ?"
-            },
-            "notes": {
-                "placeholder": "Observations internes ou liens vers des ressources connexes."
-            },
-            "ageMin": {
-                "placeholder": "36",
-                "aria": "Âge minimum en mois"
-            },
-            "ageMax": {
-                "placeholder": "120",
-                "aria": "Âge maximum en mois"
-            },
-            "duration": {
-                "placeholder": "45",
-                "aria": "Durée estimée en minutes"
-            },
-            "population": {
-                "placeholder": "Enfants, adolescents, adultes…",
-                "aria": "Population"
-            },
-            "publisher": {
-                "placeholder": "Maison d'édition",
-                "aria": "Éditeur"
-            },
-            "priceRange": {
-                "placeholder": "Fourchette de prix",
-                "aria": "Fourchette de prix"
-            },
-            "buyLink": {
-                "placeholder": "Lien d'achat (URL)",
-                "aria": "Lien d'achat"
-            },
-            "materials": {
-                "placeholder": "Matériel requis",
-                "aria": "Matériel requis"
-            },
-            "isStandardized": {
-                "aria": "Basculer l'état de standardisation",
-                "standardized": "Standardisé",
-                "nonStandardized": "Non standardisé"
-            }
-        },
-        "sections": {
-            "summary": {
-                "title": "Résumé détaillé",
-                "descriptionLabel": "Description longue",
-                "objectiveLabel": "Objectif",
-                "notesLabel": "Notes internes"
-            },
-            "bibliography": {
-                "title": "Bibliographie",
-                "helper": "Ajoutez des liens vers des articles, vidéos ou références utiles.",
-                "empty": "Aucun lien pour le moment. Ajoutez votre première référence ci-dessous.",
-                "entryTitleLabel": "Titre ou source",
-                "entryTitlePlaceholder": "Article, vidéo, ouvrage…",
-                "entryUrlLabel": "Lien",
-                "entryUrlPlaceholder": "https://exemple.com/ressource",
-                "removeEntry": "Supprimer",
-                "addReferenceLabel": "Ajouter une référence",
-                "newEntryTitlePlaceholder": "Titre de la ressource",
-                "newEntryUrlPlaceholder": "https://exemple.com/ressource",
-                "addButton": "Ajouter",
-                "addHelper": "Indiquez un titre court et une URL valide. Les liens seront enregistrés avec le test."
-            },
-            "additionalInfo": {
-                "title": "Informations complémentaires",
-                "populationLabel": "Public cible",
-                "populationPlaceholder": "Compléter le public si besoin",
-                "materialsLabel": "Matériel détaillé",
-                "materialsPlaceholder": "Listez le matériel précis, les grilles ou supports nécessaires."
-            },
-            "properties": {
-                "title": "Propriétés",
-                "helper": "Pensez aux propriétés clés comme dans une fiche Notion.",
-                "targetingTitle": "Ciblage & durée",
-                "ageLabel": "Âge (mois)",
-                "durationLabel": "Durée",
-                "durationHelper": "Temps moyen estimé en minutes.",
-                "populationLabel": "Population"
-            },
-            "edition": {
-                "title": "Édition & accès",
-                "publisherLabel": "Éditeur",
-                "purchaseLabel": "Achat",
-                "standardizationLabel": "Standardisation",
-                "standardizationHelper": "Basculer selon la nature du protocole."
-            },
-            "taxonomy": {
-                "title": "Taxonomie",
-                "domainsLabel": "Domaines",
-                "domainsPlaceholder": "Rechercher un domaine",
-                "domainsHelper": "Affinez la fiche en ajoutant un ou plusieurs domaines.",
-                "tagsLabel": "Tags",
-                "tagsPlaceholder": "Rechercher un tag",
-                "tagsHelper": "Ajoutez des mots-clés pour faciliter la recherche."
-            }
-        },
-        "multiSelect": {
-            "placeholder": "Sélectionner",
-            "dialogLabel": "Sélectionner {label}",
-            "dialogTitle": "Sélectionner {label}",
-            "dialogHelper": "Tapez pour filtrer, cliquez pour ajouter ou retirer.",
-            "searchPlaceholder": "Rechercher…",
-            "searchAria": "Filtrer {label}",
-            "clear": "Effacer",
-            "emptySelection": "Aucun élément sélectionné pour le moment.",
-            "emptyResults": "Aucun résultat",
-            "remove": "Supprimer",
-            "add": "Ajouter"
-        },
-        "states": {
-            "loadTestsError": "Impossible de récupérer les tests.",
-            "loadTaxonomyError": "Impossible de charger les domaines et tags.",
-            "createError": "Impossible de créer le test.",
-            "updateError": "Impossible de mettre à jour le test.",
-            "genericError": "Une erreur est survenue.",
-            "success": "Le test et ses relations ont été enregistrés."
-        },
-        "validation": {
-            "nameRequired": "Un nom est requis.",
-            "bibliographyLabel": "Un titre est requis pour cette référence.",
-            "url": "Saisissez une URL valide.",
-            "number": "Saisissez un nombre entier valide."
-        }
+    "fallback": {
+      "description": "Cet outil n'a pas encore de description détaillée.",
+      "population": "Tous publics"
     },
-    "Footer": {
-        "note": "Made with soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour vos collaborations."
+    "cta": {
+      "viewDetails": "Voir la fiche détaillée"
+    }
+  },
+  "ApiTools": {
+    "errors": {
+      "fetch": "Impossible de récupérer les outils pour le moment. Veuillez réessayer plus tard."
+    }
+  },
+  "Catalogue": {
+    "metadata": {
+      "title": "Othoutils | Catalogue clinique",
+      "description": "Tests, outils et évaluations orthophoniques réunis dans un catalogue éditorialisé."
     },
-    "Shared": {
-        "ageRange": {
-            "range": "{min} à {max} mois",
-            "from": "Dès {min} mois",
-            "until": "Jusqu'à {max} mois",
-            "free": "Âge libre"
-        },
-        "duration": {
-            "variable": "Durée variable",
-            "minutes": "{minutes} min"
-        },
-        "statuses": {
-            "standardized": "Standardisé",
-            "nonStandardized": "Non standardisé",
-            "referential": "Référentiel"
-        },
-        "populationDefault": "Population générale",
-        "ctas": {
-            "retry": "Réessayer",
-            "buyOrConsult": "Acheter / Consulter",
-            "viewSheet": "Consulter {testName}",
-            "viewSheetLabel": "Voir la fiche"
-        },
-        "placeholders": {
-            "description": "Description à venir.",
-            "objective": "Objectif clinique à documenter."
-        }
+    "sectionLabel": "Catalogue des tests",
+    "headingTitle": "Tests d'orthophonie référencés",
+    "headingText": "Retrouvez les évaluations publiées, leur objectif clinique, le public ciblé et les données pratiques pour planifier vos séances.",
+    "ctas": {
+      "addTest": "Ajouter un test",
+      "viewSheet": "Consulter {testName}"
     },
-    "ManageTests": {
-        "metadata": {
-            "title": "Gérer les tests | Othoutils",
-            "description": "Ajoutez ou mettez à jour un test avec ses domaines et tags."
-        },
-        "page": {
-            "sectionLabel": "Créer ou mettre à jour un test",
-            "title": "Ajouter / Éditer un test",
-            "lead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags et domaines associés."
-        },
-        "form": {
-            "toolbar": {
-                "sheetLabel": "Fiche",
-                "newTest": "Nouveau test",
-                "editBadge": "Mode édition",
-                "newBadge": "Nouvelle fiche",
-                "reset": "Réinitialiser"
-            },
-            "actions": {
-                "create": "Créer le test",
-                "update": "Mettre à jour",
-                "pending": "Enregistrement…"
-            },
-            "fields": {
-                "name": {
-                    "placeholder": "Nom du test (ex : Évaluation du langage)"
-                },
-                "shortDescription": {
-                    "label": "Description longue",
-                    "placeholder": "Présentez l'outil et ce qui le rend unique."
-                },
-                "objective": {
-                    "label": "Objectif",
-                    "placeholder": "Que mesure ce test ? Dans quel contexte l'utiliser ?"
-                },
-                "notes": {
-                    "label": "Notes internes",
-                    "placeholder": "Observations internes ou liens vers des ressources connexes."
-                },
-                "populationDetailed": {
-                    "label": "Public cible",
-                    "placeholder": "Compléter le public si besoin"
-                },
-                "materialsDetailed": {
-                    "label": "Matériel détaillé",
-                    "placeholder": "Listez le matériel précis, les grilles ou supports nécessaires."
-                },
-                "age": {
-                    "label": "Âge (mois)",
-                    "minPlaceholder": "36",
-                    "maxPlaceholder": "120"
-                },
-                "duration": {
-                    "label": "Durée",
-                    "placeholder": "45",
-                    "helper": "Temps moyen estimé en minutes."
-                },
-                "population": {
-                    "label": "Population",
-                    "placeholder": "Enfants, adolescents, adultes…"
-                },
-                "publisher": {
-                    "label": "Éditeur",
-                    "placeholder": "Maison d'édition"
-                },
-                "priceRange": {
-                    "placeholder": "Fourchette de prix"
-                },
-                "purchase": {
-                    "label": "Achat"
-                },
-                "buyLink": {
-                    "placeholder": "Lien d'achat (URL)"
-                },
-                "materials": {
-                    "placeholder": "Matériel requis"
-                },
-                "standardization": {
-                    "label": "Standardisation",
-                    "standardized": "Standardisé",
-                    "nonStandardized": "Non standardisé",
-                    "helper": "Basculer selon la nature du protocole."
-                },
-                "domains": {
-                    "label": "Domaines",
-                    "description": "Affinez la fiche en ajoutant un ou plusieurs domaines.",
-                    "placeholder": "Rechercher un domaine"
-                },
-                "tags": {
-                    "label": "Tags",
-                    "description": "Ajoutez des mots-clés pour faciliter la recherche.",
-                    "placeholder": "Rechercher un tag"
-                },
-                "pathologies": {
-                    "label": "Pathologies",
-                    "description": "Associez les pathologies concernées pour améliorer le filtrage.",
-                    "placeholder": "Rechercher une pathologie"
-                }
-            },
-            "sections": {
-                "detailedSummary": {
-                    "title": "Résumé détaillé"
-                },
-                "bibliography": {
-                    "title": "Bibliographie",
-                    "helper": "Ajoutez des liens vers des articles, vidéos ou références utiles.",
-                    "empty": "Aucun lien pour le moment. Ajoutez votre première référence ci-dessous."
-                },
-                "additionalInfo": {
-                    "title": "Informations complémentaires"
-                },
+    "errors": {
+      "load": "Le catalogue ne peut pas être affiché pour le moment. Vérifiez la connexion à Supabase ou réessayez dans un instant."
+    },
+    "meta": {
+      "objective": "Objectif :",
+      "materials": "Matériel :",
+      "publisher": "Éditeur :",
+      "pathologies": "Pathologies :"
+    },
+    "empty": {
+      "buyLink": "Pas de lien d'achat renseigné"
+    },
+    "emptyState": "Aucun test n'est référencé pour l'instant. Ajoutez vos premiers tests pour alimenter le catalogue."
+  },
+  "TestsManage": {
+    "metadata": {
+      "title": "Gérer les tests | Othoutils",
+      "description": "Ajoutez ou mettez à jour un test avec ses domaines et tags."
+    },
+    "sectionLabel": "Créer ou mettre à jour un test",
+    "pageTitle": "Ajouter / Éditer un test",
+    "pageLead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags et domaines associés."
+  },
+  "TestsForm": {
+    "toolbar": {
+      "sheetLabel": "Fiche",
+      "selectorAria": "Sélectionner un test à modifier",
+      "selectorPlaceholder": "Nouveau test",
+      "editBadge": "Mode édition",
+      "newBadge": "Nouvelle fiche",
+      "reset": "Réinitialiser",
+      "submit": {
+        "saving": "Enregistrement…",
+        "update": "Mettre à jour",
+        "create": "Créer le test"
+      }
+    },
+    "fields": {
+      "name": {
+        "placeholder": "Nom du test (ex : Évaluation du langage)",
+        "aria": "Nom du test"
+      },
+      "shortDescription": {
+        "placeholder": "Présentez l'outil et ce qui le rend unique."
+      },
+      "objective": {
+        "placeholder": "Que mesure ce test ? Dans quel contexte l'utiliser ?"
+      },
+      "notes": {
+        "placeholder": "Observations internes ou liens vers des ressources connexes."
+      },
+      "ageMin": {
+        "placeholder": "36",
+        "aria": "Âge minimum en mois"
+      },
+      "ageMax": {
+        "placeholder": "120",
+        "aria": "Âge maximum en mois"
+      },
+      "duration": {
+        "placeholder": "45",
+        "aria": "Durée estimée en minutes"
+      },
+      "population": {
+        "placeholder": "Enfants, adolescents, adultes…",
+        "aria": "Population"
+      },
+      "publisher": {
+        "placeholder": "Maison d'édition",
+        "aria": "Éditeur"
+      },
+      "priceRange": {
+        "placeholder": "Fourchette de prix",
+        "aria": "Fourchette de prix"
+      },
+      "buyLink": {
+        "placeholder": "Lien d'achat (URL)",
+        "aria": "Lien d'achat"
+      },
+      "materials": {
+        "placeholder": "Matériel requis",
+        "aria": "Matériel requis"
+      },
+      "isStandardized": {
+        "aria": "Basculer l'état de standardisation",
+        "standardized": "Standardisé",
+        "nonStandardized": "Non standardisé"
+      }
+    },
+    "sections": {
+      "summary": {
+        "title": "Résumé détaillé",
+        "descriptionLabel": "Description longue",
+        "objectiveLabel": "Objectif",
+        "notesLabel": "Notes internes"
+      },
+      "bibliography": {
+        "title": "Bibliographie",
+        "helper": "Ajoutez des liens vers des articles, vidéos ou références utiles.",
+        "empty": "Aucun lien pour le moment. Ajoutez votre première référence ci-dessous.",
+        "entryTitleLabel": "Titre ou source",
+        "entryTitlePlaceholder": "Article, vidéo, ouvrage…",
+        "entryUrlLabel": "Lien",
+        "entryUrlPlaceholder": "https://exemple.com/ressource",
+        "removeEntry": "Supprimer",
+        "addReferenceLabel": "Ajouter une référence",
+        "newEntryTitlePlaceholder": "Titre de la ressource",
+        "newEntryUrlPlaceholder": "https://exemple.com/ressource",
+        "addButton": "Ajouter",
+        "addHelper": "Indiquez un titre court et une URL valide. Les liens seront enregistrés avec le test."
+      },
+      "additionalInfo": {
+        "title": "Informations complémentaires",
+        "populationLabel": "Public cible",
+        "populationPlaceholder": "Compléter le public si besoin",
+        "materialsLabel": "Matériel détaillé",
+        "materialsPlaceholder": "Listez le matériel précis, les grilles ou supports nécessaires."
+      },
       "properties": {
         "title": "Propriétés",
         "helper": "Pensez aux propriétés clés comme dans une fiche Notion.",
         "targetingTitle": "Ciblage & durée",
-        "publishingTitle": "Édition & accès"
+        "ageLabel": "Âge (mois)",
+        "durationLabel": "Durée",
+        "durationHelper": "Temps moyen estimé en minutes.",
+        "populationLabel": "Population"
+      },
+      "edition": {
+        "title": "Édition & accès",
+        "publisherLabel": "Éditeur",
+        "purchaseLabel": "Achat",
+        "standardizationLabel": "Standardisation",
+        "standardizationHelper": "Basculer selon la nature du protocole."
       },
       "taxonomy": {
         "title": "Taxonomie",
         "domainsLabel": "Domaines",
-        "pathologiesLabel": "Pathologies",
-        "tagsLabel": "Tags"
+        "domainsPlaceholder": "Rechercher un domaine",
+        "domainsHelper": "Affinez la fiche en ajoutant un ou plusieurs domaines.",
+        "tagsLabel": "Tags",
+        "tagsPlaceholder": "Rechercher un tag",
+        "tagsHelper": "Ajoutez des mots-clés pour faciliter la recherche."
       }
     },
-            "bibliography": {
-                "entryLabel": "Titre ou source",
-                "entryPlaceholder": "Article, vidéo, ouvrage…",
-                "linkLabel": "Lien",
-                "linkPlaceholder": "https://example.com/ressource",
-                "remove": "Supprimer",
-                "addTitle": "Ajouter une référence",
-                "addPlaceholder": "Titre de la ressource",
-                "addUrlPlaceholder": "https://exemple.com/ressource",
-                "addButton": "Ajouter",
-                "addHelper": "Indiquez un titre court et une URL valide. Les liens seront enregistrés avec le test."
-            },
-            "multiSelect": {
-                "placeholder": "Sélectionner",
-                "dialogLabel": "Sélectionner {label}",
-                "dialogTitle": "Sélectionner {label}",
-                "filterHelper": "Tapez pour filtrer, cliquez pour ajouter ou retirer.",
-                "searchPlaceholder": "Rechercher…",
-                "filterAria": "Filtrer {label}",
-                "clear": "Effacer",
-                "close": "Fermer",
-                "emptySelection": "Aucun élément sélectionné pour le moment.",
-                "emptyResults": "Aucun résultat",
-                "add": "Ajouter",
-                "remove": "Supprimer",
-                "loading": "Chargement…"
-            }
-        },
-        "feedback": {
-            "errors": {
-                "generic": "Une erreur est survenue. Merci de réessayer.",
-                "genericWithReason": "Une erreur est survenue : {reason}",
-                "fetchTests": "Impossible de récupérer les tests.",
-                "fetchTaxonomy": "Impossible de charger les domaines et tags.",
-                "create": "Impossible de créer le test.",
-                "update": "Impossible de mettre à jour le test."
-            },
-            "success": {
-                "saved": "Le test et ses relations ont été enregistrés."
-            }
-        }
+    "multiSelect": {
+      "placeholder": "Sélectionner",
+      "dialogLabel": "Sélectionner {label}",
+      "dialogTitle": "Sélectionner {label}",
+      "dialogHelper": "Tapez pour filtrer, cliquez pour ajouter ou retirer.",
+      "searchPlaceholder": "Rechercher…",
+      "searchAria": "Filtrer {label}",
+      "clear": "Effacer",
+      "emptySelection": "Aucun élément sélectionné pour le moment.",
+      "emptyResults": "Aucun résultat",
+      "remove": "Supprimer",
+      "add": "Ajouter"
     },
-    "taxonomy": {
-        "meta": {
-            "title": "Gérer les catégories et tags | Othoutils",
-            "description": "Ajoutez, supprimez ou renommez les domaines et tags des tests."
-        },
-        "sectionLabel": "Administration",
-        "pageTitle": "Catégories & tags",
-        "pageLead": "Centralisez la liste des domaines et tags utilisables dans la fiche test. Les éléments créés ici seront immédiatement disponibles dans le formulaire « Ajouter / Éditer un test ».",
-        "errors": {
-            "timeout": "Le chargement a expiré, veuillez réessayer.",
-            "fetchTaxonomy": "Impossible de récupérer les domaines et tags.",
-            "createGeneric": "Impossible de créer cet élément.",
-            "deleteGeneric": "Impossible de supprimer cet élément.",
-            "finalizeCreation": "Une erreur est survenue. Merci de réessayer.",
-            "unknown": "Erreur inconnue"
-        },
-        "toast": {
-            "domainCreated": "Le domaine a été enregistré et sera disponible dans le formulaire de test.",
-            "tagCreated": "Le tag a été enregistré et sera disponible dans le formulaire de test.",
-            "itemDeleted": "Élément supprimé. Les listes seront actualisées."
-        },
-        "domains": {
-            "cardTitle": "Créer un domaine",
-            "cardHelper": "Les domaines alimentent la liste « Domaines » du formulaire Ajouter / Éditer un test.",
-            "toolbarTitle": "Domaines",
-            "count": "{count, plural, one {# domaine} other {# domaines}}",
-            "loading": "Chargement des domaines…",
-            "empty": "Aucun domaine enregistré pour le moment.",
-            "label": "Nom du domaine",
-            "placeholder": "Ex. Phonologie",
-            "exists": "Ce domaine existe déjà.",
-            "actions": {
-                "deleteAria": "Supprimer {label}"
-            }
-        },
-        "tags": {
-            "cardTitle": "Créer un tag",
-            "cardHelper": "Les tags enrichissent la recherche et les filtres dans les fiches tests.",
-            "toolbarTitle": "Tags",
-            "count": "{count, plural, one {# tag} other {# tags}}",
-            "loading": "Chargement des tags…",
-            "empty": "Aucun tag enregistré pour le moment.",
-            "label": "Nom du tag",
-            "placeholder": "Ex. Bilan rapide",
-            "exists": "Ce tag existe déjà.",
-            "actions": {
-                "deleteAria": "Supprimer {label}"
-            }
-        },
-        "buttons": {
-            "savePending": "Enregistrement…",
-            "addDomain": "Ajouter le domaine",
-            "addTag": "Ajouter le tag",
-            "reset": "Réinitialiser",
-            "delete": "Supprimer",
-            "deletePending": "Suppression…"
-        }
+    "states": {
+      "loadTestsError": "Impossible de récupérer les tests.",
+      "loadTaxonomyError": "Impossible de charger les domaines et tags.",
+      "createError": "Impossible de créer le test.",
+      "updateError": "Impossible de mettre à jour le test.",
+      "genericError": "Une erreur est survenue.",
+      "success": "Le test et ses relations ont été enregistrés."
     },
-    "TaxonomyAdmin": {
-        "metadata": {
-            "title": "Gérer les catégories et tags | Othoutils",
-            "description": "Ajoutez, supprimez ou renommez les domaines et tags des tests."
-        },
-        "page": {
-            "sectionLabel": "Administration",
-            "title": "Catégories & tags",
-            "lead": "Centralisez la liste des domaines et tags utilisables dans la fiche test. Les éléments créés ici seront immédiatement disponibles dans le formulaire « Ajouter / Éditer un test »."
-        },
-        "manager": {
-            "actions": {
-                "reset": "Réinitialiser"
-            },
-            "domains": {
-                "title": "Créer un domaine",
-                "helper": "Les domaines alimentent la liste « Domaines » du formulaire Ajouter / Éditer un test.",
-                "toolbarTitle": "Domaines",
-                "count": "{count, plural, one {{count} domaine} other {{count} domaines}}",
-                "loading": "Chargement des domaines…",
-                "empty": "Aucun domaine enregistré pour le moment.",
-                "inputLabel": "Nom du domaine",
-                "inputPlaceholder": "Ex. Phonologie",
-                "exists": "Ce domaine existe déjà.",
-                "actions": {
-                    "add": "Ajouter le domaine",
-                    "pending": "Enregistrement…",
-                    "delete": "Supprimer",
-                    "deleting": "Suppression…",
-                    "deleteAria": "Supprimer {label}"
-                }
-            },
-            "tags": {
-                "title": "Créer un tag",
-                "helper": "Les tags enrichissent la recherche et les filtres dans les fiches tests.",
-                "toolbarTitle": "Tags",
-                "count": "{count, plural, one {{count} tag} other {{count} tags}}",
-                "loading": "Chargement des tags…",
-                "empty": "Aucun tag enregistré pour le moment.",
-                "inputLabel": "Nom du tag",
-                "inputPlaceholder": "Ex. Bilan rapide",
-                "exists": "Ce tag existe déjà.",
-                "actions": {
-                    "add": "Ajouter le tag",
-                    "pending": "Enregistrement…",
-                    "delete": "Supprimer",
-                    "deleting": "Suppression…",
-                    "deleteAria": "Supprimer {label}"
-                }
-            }
-        },
-        "feedback": {
-            "errors": {
-                "generic": "Une erreur est survenue. Merci de réessayer.",
-                "genericWithReason": "Une erreur est survenue : {reason}",
-                "timeout": "Le chargement a expiré, veuillez réessayer.",
-                "fetch": "Impossible de récupérer les domaines et tags.",
-                "create": "Impossible de créer cet élément.",
-                "delete": "Impossible de supprimer cet élément."
-            },
-            "toasts": {
-                "domainCreated": "Le domaine a été enregistré et sera disponible dans le formulaire de test.",
-                "tagCreated": "Le tag a été enregistré et sera disponible dans le formulaire de test.",
-                "deleted": "Élément supprimé. Les listes seront actualisées."
-            }
-        }
+    "validation": {
+      "nameRequired": "Un nom est requis.",
+      "bibliographyLabel": "Un titre est requis pour cette référence.",
+      "url": "Saisissez une URL valide.",
+      "number": "Saisissez un nombre entier valide."
     }
+  },
+  "Footer": {
+    "note": "Fait avec soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour la collaboration."
+  },
+  "Shared": {
+    "ageRange": {
+      "range": "{min} à {max} mois",
+      "from": "Dès {min} mois",
+      "until": "Jusqu'à {max} mois",
+      "free": "Âge libre"
+    },
+    "duration": {
+      "variable": "Durée variable",
+      "minutes": "{minutes} min"
+    },
+    "statuses": {
+      "standardized": "Standardisé",
+      "nonStandardized": "Non standardisé",
+      "referential": "Référentiel"
+    },
+    "populationDefault": "Population générale",
+    "ctas": {
+      "retry": "Réessayer",
+      "buyOrConsult": "Acheter / Consulter",
+      "viewSheet": "Consulter {testName}",
+      "viewSheetLabel": "Voir la fiche"
+    },
+    "placeholders": {
+      "description": "Description à venir.",
+      "objective": "Objectif clinique à documenter."
+    }
+  },
+  "taxonomy": {
+    "meta": {
+      "title": "Gérer la taxonomie",
+      "description": "Gérer les domaines, tags et pathologies."
+    },
+    "sectionLabel": "Administration",
+    "pageTitle": "Taxonomie",
+    "pageLead": "Configurez ici les listes déroulantes utilisées dans les fiches tests.",
+    "common": {
+      "listTitle": "Éléments existants",
+      "loading": "Chargement...",
+      "empty": "Aucun élément dans cette liste."
+    },
+    "pathologies": {
+      "toolbarTitle": "Pathologies",
+      "cardTitle": "Nouvelle Pathologie",
+      "cardHelper": "Entrées cliniques pour le filtrage par trouble.",
+      "label": "Nom de la pathologie",
+      "placeholder": "Ex. Aphasie",
+      "exists": "Cette pathologie existe déjà.",
+      "descLabel": "Description courte",
+      "descPlaceholder": "Définition succincte pour l'infobulle...",
+      "synonymsLabel": "Synonymes / Mots-clés",
+      "synonymsHelper": "Séparez les termes par des virgules."
+    },
+    "domains": {
+      "toolbarTitle": "Domaines",
+      "cardTitle": "Nouveau Domaine",
+      "cardHelper": "Les grandes catégories de classement (ex: Langage oral, Déglutition).",
+      "label": "Intitulé",
+      "placeholder": "Ex. Phonologie",
+      "exists": "Ce domaine existe déjà."
+    },
+    "tags": {
+      "toolbarTitle": "Tags",
+      "cardTitle": "Nouveau Tag",
+      "cardHelper": "Mots-clés pour affiner la recherche (ex: Bilan rapide, Adulte).",
+      "label": "Intitulé",
+      "colorLabel": "Code couleur (optionnel)",
+      "placeholder": "Ex. Bilan rapide",
+      "exists": "Ce tag existe déjà."
+    },
+    "buttons": {
+      "savePending": "Enregistrement...",
+      "add": "Ajouter l'élément",
+      "delete": "Supprimer",
+      "deletePending": "Suppr...",
+      "reset": "Réinitialiser"
+    },
+    "toast": {
+      "domainCreated": "Domaine créé avec succès.",
+      "tagCreated": "Tag créé avec succès.",
+      "pathologyCreated": "Pathologie créée avec succès.",
+      "itemDeleted": "Élément supprimé."
+    },
+    "errors": {
+      "fetchTaxonomy": "Impossible de charger la taxonomie.",
+      "createGeneric": "Erreur lors de la création.",
+      "deleteGeneric": "Erreur lors de la suppression.",
+      "unknown": "Erreur inconnue.",
+      "timeout": "Le délai d'attente est dépassé."
+    }
+  },
+  "ToolsNew": {
+    "metadata": {
+      "title": "Ajouter un outil | Othoutils",
+      "description": "Créer une fiche outil pour enrichir le catalogue."
+    },
+    "sectionLabel": "Créer une fiche outil",
+    "intro": {
+      "title": "Renseignez les informations clés pour faire apparaître une nouvelle fiche dans le catalogue.",
+      "required": "Les champs Nom, Catégorie, Type, Tags et Source sont obligatoires. Les fiches créées ici sont marquées comme contributions communautaires.",
+      "preview": "Besoin de vérifier le rendu ? Consultez le <catalogLink>catalogue</catalogLink> après publication."
+    },
+    "links": {
+      "catalogLabel": "catalogue"
+    }
+  },
+  "ToolForm": {
+    "fields": {
+      "name": {
+        "label": "Nom de l'outil",
+        "placeholder": "Ex. Grille de dépistage OMF"
+      },
+      "category": {
+        "label": "Catégorie",
+        "placeholder": "Bilan, diagnostic, OMF…"
+      },
+      "type": {
+        "label": "Type",
+        "placeholder": "Questionnaire, batterie, suivi…"
+      },
+      "tags": {
+        "label": "Tags",
+        "placeholder": "dysarthrie, accompagnement, cognition"
+      },
+      "source": {
+        "label": "Source",
+        "placeholder": "https://…"
+      }
+    },
+    "helpers": {
+      "tags": "Séparez les tags par des virgules. Ils serviront à filtrer le catalogue."
+    },
+    "validation": {
+      "name": {
+        "required": "Le nom est requis"
+      },
+      "category": {
+        "required": "La catégorie est requise"
+      },
+      "type": {
+        "required": "Le type est requis"
+      },
+      "tags": {
+        "required": "Ajoutez au moins un tag, séparé par des virgules"
+      },
+      "source": {
+        "url": "La source doit être une URL valide"
+      },
+      "fallback": "Impossible d'enregistrer l'outil"
+    },
+    "submit": {
+      "idle": "Créer la fiche",
+      "pending": "Enregistrement…"
+    },
+    "feedback": {
+      "success": "La fiche a été créée. Elle apparaîtra dans le catalogue sous le label « Communauté ».",
+      "error": "Une erreur est survenue."
+    }
+  }
 }
