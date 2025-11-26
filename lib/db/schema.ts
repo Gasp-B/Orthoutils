@@ -212,6 +212,59 @@ export const testPathologies = pgTable(
   }),
 );
 
+// ... existant imports
+
+// Ajoutez ces définitions à la suite de vos tables resources / resourcesTranslations
+
+export const resourceDomains = pgTable(
+  'resource_domains',
+  {
+    resourceId: uuid('resource_id')
+      .notNull()
+      .references(() => resources.id, { onDelete: 'cascade' }),
+    domainId: uuid('domain_id')
+      .notNull()
+      .references(() => domains.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.resourceId, table.domainId] }),
+  }),
+);
+
+export const resourceTags = pgTable(
+  'resource_tags',
+  {
+    resourceId: uuid('resource_id')
+      .notNull()
+      .references(() => resources.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.resourceId, table.tagId] }),
+  }),
+);
+
+export const resourcePathologies = pgTable(
+  'resource_pathologies',
+  {
+    resourceId: uuid('resource_id')
+      .notNull()
+      .references(() => resources.id, { onDelete: 'cascade' }),
+    pathologyId: uuid('pathology_id')
+      .notNull()
+      .references(() => pathologies.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.resourceId, table.pathologyId] }),
+  }),
+);
+
+// ... vous pouvez aussi exporter les types si besoin en bas du fichier
+export type ResourceDomainRecord = typeof resourceDomains.$inferSelect;
+export type ResourceTagRecord = typeof resourceTags.$inferSelect;
+export type ResourcePathologyRecord = typeof resourcePathologies.$inferSelect;
 export type PathologyRecord = typeof pathologies.$inferSelect;
 export type PathologyTranslationRecord = typeof pathologyTranslations.$inferSelect;
 export type TestPathologyRecord = typeof testPathologies.$inferSelect;
