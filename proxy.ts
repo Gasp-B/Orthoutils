@@ -62,9 +62,33 @@ function buildNonce() {
 }
 
 function getSecurityHeaders(nonce: string) {
+  const isProduction = process.env.VERCEL_ENV === 'production';
+
   // Ajout de vercel.live aux sources de scripts et de styles
-  const scriptSrc = `script-src 'self' 'nonce-${nonce}' https://vercel.live https://*.vercel.live`;
-  const styleSrc = `style-src 'self' 'nonce-${nonce}' https://vercel.live https://*.vercel.live`;
+  const scriptSources = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    'https://vercel.live',
+    'https://*.vercel.live',
+  ];
+
+  if (!isProduction) {
+    scriptSources.push("'unsafe-eval'");
+  }
+
+  const styleSources = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    'https://vercel.live',
+    'https://*.vercel.live',
+  ];
+
+  if (!isProduction) {
+    styleSources.push("'unsafe-inline'");
+  }
+
+  const scriptSrc = `script-src ${scriptSources.join(' ')}`;
+  const styleSrc = `style-src ${styleSources.join(' ')}`;
   
   const contentSecurityPolicy = [
     "default-src 'self'",
