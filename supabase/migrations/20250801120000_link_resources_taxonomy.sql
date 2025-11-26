@@ -21,12 +21,13 @@ CREATE TABLE IF NOT EXISTS public.resource_pathologies (
   PRIMARY KEY (resource_id, pathology_id)
 );
 
--- Activation RLS
+-- Activation RLS (Row Level Security)
 ALTER TABLE public.resource_domains ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resource_tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resource_pathologies ENABLE ROW LEVEL SECURITY;
 
--- Politiques RLS (Alignées sur la table resources : lecture publique, écriture service_role)
+-- Politiques RLS
+-- (Alignées sur la table resources : lecture publique pour tous, écriture réservée au rôle de service)
 
 -- Domains
 CREATE POLICY resource_domains_public_select ON public.resource_domains
