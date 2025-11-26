@@ -161,32 +161,48 @@
   inset: 0;
   z-index: 50;
   pointer-events: none;
+  /* Ajout pour le centrage */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem; /* Marge de sécurité sur petit écran */
 }
 
 .popupBackdrop {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: none;
+  backdrop-filter: blur(2px); /* Ajout d'un léger flou pour l'esthétique */
   pointer-events: auto;
 }
 
 .popup {
-  position: absolute;
+  /* Changement de absolute à relative pour fonctionner avec le Flexbox du parent */
+  position: relative;
   background: var(--card);
   color: var(--card-foreground);
   border-radius: 0.9rem;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
-  border: 1px solid var(--border);
-  display: grid;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25); /* Ombre un peu plus prononcée */
+  border: 1px solid rgba(14, 165, 233, 0.2); /* Couleur de bordure utilisant votre variable --border */
+  
+  /* Gestion de la structure interne */
+  display: flex;
+  flex-direction: column; /* Important pour que la liste scrollable ne casse pas la hauteur */
   gap: 0.75rem;
-  padding: 0.85rem;
+  padding: 1rem;
+  
   pointer-events: auto;
+  width: 100%;
   min-width: 320px;
-  max-width: min(520px, 90vw);
+  max-width: 520px;
+  
+  /* Sécurité pour ne pas dépasser la hauteur de l'écran */
+  max-height: 85vh; 
 }
 
 .popupHeader {
+  /* Assure que le header ne rétrécit pas */
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -194,7 +210,21 @@
 
 .popupTitle {
   font-weight: 700;
-  color: #e2e8f0;
+  /* La couleur était trop claire, on la passe en foncé */
+  color: #0f172a; 
+  font-size: 1.1rem; /* On l'agrandit un tout petit peu pour la lisibilité */
+}
+
+.optionsList {
+  /* Le scroll se fait ici */
+  overflow-y: auto;
+  /* On laisse la liste prendre l'espace restant */
+  flex: 1; 
+  min-height: 0; /* Important pour le scroll flexbox */
+  
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.25rem; /* Léger padding interne */
 }
 
 .searchBar {
@@ -222,4 +252,17 @@
   background: rgba(14, 165, 233, 0.12);
   border-color: rgba(14, 165, 233, 0.35);
   color: #0f172a;
+}
+
+.columnStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* C'est cet espace qui empêchera les boîtes de se toucher */
+}
+
+/* Petit bonus pour aligner les champs min/max (âge) sur une même ligne */
+.flexRow {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
 }

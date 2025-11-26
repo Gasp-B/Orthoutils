@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { Badge } from '@/components/ui/badge';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,15 +14,17 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils/cn';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { type Locale } from '@/i18n/routing';
-import { testsResponseSchema, testSchema, type TestDto } from '@/lib/validation/tests';
+import { testsResponseSchema, testSchema, type TestDto, type TaxonomyResponse } from '@/lib/validation/tests';
+// Import du fichier CSS module
 import styles from './test-form.module.css';
 
 type TestFormProps = {
   locale: Locale;
 };
 
+// --- Schéma Zod ---
 const formSchemaBase = testSchema
   .omit({ id: true, slug: true, createdAt: true, updatedAt: true })
   .extend({
@@ -38,32 +40,12 @@ const formSchemaBase = testSchema
     ageMinMonths: z.number().int().nullable().optional(),
     ageMaxMonths: z.number().int().nullable().optional(),
     durationMinutes: z.number().int().nullable().optional(),
-    bibliography: z
-      .array(
-        z.object({
-          label: z.string().min(1),
-          url: z.string().url(),
-        }),
-      )
-      .default([])
-      .optional(),
+    bibliography: z.array(z.object({ label: z.string().min(1), url: z.string().url() })).default([]).optional(),
   });
 
 type FormValues = z.infer<typeof formSchemaBase>;
-
-type ApiResponse = {
-  test?: TestDto;
-  tests?: TestDto[];
-  error?: string;
-};
-
-type PathologyOption = {
-  id: string;
-  label: string;
-  slug: string;
-  description: string | null;
-  synonyms: string[];
-};
+type ApiResponse = { test?: TestDto; tests?: TestDto[]; error?: string };
+type PathologyItem = { id: string; label: string };
 
 const defaultValues: FormValues = {
   id: undefined,
@@ -86,100 +68,87 @@ const defaultValues: FormValues = {
   bibliography: [],
 };
 
+// --- Fonctions API (Fetchers) ---
 async function fetchTests(locale: Locale) {
   const response = await fetch(`/api/tests?locale=${locale}`);
-
-  if (!response.ok) {
-    throw new Error('fetchTests');
-  }
-
+  if (!response.ok) throw new Error('Impossible de récupérer les tests');
   const json = (await response.json()) as ApiResponse;
-  const parsed = testsResponseSchema.parse({ tests: json.tests ?? [] });
-  return parsed.tests;
+  return testsResponseSchema.parse({ tests: json.tests ?? [] }).tests;
+}
+
+async function fetchTaxonomy(locale: Locale) {
+  const response = await fetch(`/api/tests/taxonomy?locale=${locale}`);
+  if (!response.ok) throw new Error('Impossible de récupérer la taxonomie');
+  return (await response.json()) as TaxonomyResponse;
 }
 
 async function fetchPathologies(locale: Locale, query?: string) {
-  const searchParams = new URLSearchParams({ locale });
-
-  if (query?.trim()) {
-    searchParams.set('q', query.trim());
-  }
-
+  const searchParams = new URLSearchParams({ locale, limit: '50' });
+  if (query?.trim()) searchParams.set('q', query.trim());
   const response = await fetch(`/api/pathologies?${searchParams.toString()}`);
-
-  if (!response.ok) {
-    throw new Error('fetchPathologies');
-  }
-
-  const json = (await response.json()) as { items?: PathologyOption[] };
+  if (!response.ok) throw new Error('Impossible de récupérer les pathologies');
+  const json = (await response.json()) as { items: PathologyItem[] };
   return json.items ?? [];
 }
 
-async function createTest(payload: FormValues, locale: Locale, fallbackMessage: string) {
+async function saveTest(payload: FormValues, locale: Locale, method: 'POST' | 'PATCH') {
   const response = await fetch('/api/tests', {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...payload, locale }),
   });
-
   if (!response.ok) {
-    const json = (await response.json().catch(() => ({}))) as ApiResponse;
-    throw new Error(json.error ?? fallbackMessage);
+    const json = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(json.error || 'Erreur de sauvegarde');
   }
-
   return (await response.json()) as ApiResponse;
 }
 
-async function updateTest(payload: FormValues, locale: Locale, fallbackMessage: string) {
-  const response = await fetch('/api/tests', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, locale }),
-  });
+// --- Composant Toast Local ---
+function Toast({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
-  if (!response.ok) {
-    const json = (await response.json().catch(() => ({}))) as ApiResponse;
-    throw new Error(json.error ?? fallbackMessage);
-  }
-
-  return (await response.json()) as ApiResponse;
+  return (
+    <div className="fixed top-4 right-4 z-50 bg-white border border-green-200 text-green-800 px-4 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 fade-in duration-300">
+      <div className="flex items-center gap-2">
+        <span className="text-xl">✓</span>
+        <p className="font-semibold text-sm">{message}</p>
+      </div>
+    </div>
+  );
 }
 
+// --- Composant Principal ---
 function TestForm({ locale }: TestFormProps) {
-  const t = useTranslations('TestsForm');
+  const formT = useTranslations('ManageTests.form');
+  const feedbackT = useTranslations('ManageTests.feedback');
+  const multiSelectT = useTranslations('ManageTests.form.multiSelect');
+  
   const queryClient = useQueryClient();
-  const form = useTranslations('ManageTests.form');
-  const feedback = useTranslations('ManageTests.feedback');
-  const multiSelect = useTranslations('ManageTests.form.multiSelect');
-  const { data: tests } = useQuery({ queryKey: ['tests', locale], queryFn: () => fetchTests(locale) });
+  
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [newBibliography, setNewBibliography] = useState({ label: '', url: '' });
-  const [isPathologyDialogOpen, setIsPathologyDialogOpen] = useState(false);
   const [pathologyQuery, setPathologyQuery] = useState('');
-  const errorTranslationKeyByMessage: Record<string, string> = {
-    fetchTests: 'errors.fetchTests',
-    'Impossible de récupérer les tests': 'errors.fetchTests',
-    'Unable to retrieve tests': 'errors.fetchTests',
-    createTest: 'errors.create',
-    'Impossible de créer le test': 'errors.create',
-    'Unable to create the test': 'errors.create',
-    updateTest: 'errors.update',
-    'Impossible de mettre à jour le test': 'errors.update',
-    'Unable to update the test': 'errors.update',
-  };
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  const translateHandlerError = (message?: string | null) => {
-    if (!message) return feedback('errors.generic');
+  const { data: tests } = useQuery({ 
+    queryKey: ['tests', locale], 
+    queryFn: () => fetchTests(locale) 
+  });
+  
+  const { data: taxonomy } = useQuery({ 
+    queryKey: ['test-taxonomy', locale], 
+    queryFn: () => fetchTaxonomy(locale) 
+  });
 
-    const normalizedMessage = message.trim();
-    const translationKey = errorTranslationKeyByMessage[normalizedMessage];
-
-    if (translationKey) {
-      return feedback(translationKey);
-    }
-
-    return feedback('errors.genericWithReason', { reason: normalizedMessage });
-  };
+  const { data: pathologyOptions = [], isLoading: isLoadingPathologies } = useQuery({
+    queryKey: ['pathologies', locale, pathologyQuery],
+    queryFn: () => fetchPathologies(locale, pathologyQuery),
+    placeholderData: (prev) => prev 
+  });
 
   const {
     register,
@@ -191,806 +160,276 @@ function TestForm({ locale }: TestFormProps) {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchemaBase),
     defaultValues,
-    mode: 'onBlur',
   });
 
-  const {
-    data: pathologyOptions = [],
-    isPending: isLoadingPathologies,
-    isError: isPathologyError,
-  } = useQuery({
-    queryKey: ['pathologies', locale, pathologyQuery],
-    queryFn: () => fetchPathologies(locale, pathologyQuery),
-  });
-
-  const currentDomains = watch('domains');
-  const currentTags = watch('tags');
+  const currentDomains = watch('domains') ?? [];
+  const currentTags = watch('tags') ?? [];
   const currentPathologies = watch('pathologies') ?? [];
   const currentBibliography = watch('bibliography');
-  const populationValue = watch('population');
-  const materialsValue = watch('materials');
 
-  const normalizedPathologies = useMemo(
-    () => new Set(currentPathologies.map((pathology) => pathology.trim()).filter(Boolean)),
-    [currentPathologies],
-  );
-
-  const filteredPathologyOptions = useMemo(() => {
-    const filter = pathologyQuery.trim().toLowerCase();
-    const options = pathologyOptions ?? [];
-
-    if (!filter) {
-      return options;
-    }
-
-    return options.filter((option) => option.label.toLowerCase().includes(filter));
-  }, [pathologyOptions, pathologyQuery]);
-
-  const canCreatePathology = useMemo(() => {
-    const value = pathologyQuery.trim();
-
-    if (!value) {
-      return false;
-    }
-
-    const normalized = value.toLowerCase();
-    return (
-      !normalizedPathologies.has(value) &&
-      !(pathologyOptions ?? []).some((option) => option.label.toLowerCase() === normalized)
-    );
-  }, [pathologyOptions, pathologyQuery, normalizedPathologies]);
-
-  const togglePathology = (label: string) => {
-    const normalized = label.trim();
-
-    if (!normalized) {
-      return;
-    }
-
-    const next = new Set(normalizedPathologies);
-
-    if (next.has(normalized)) {
-      next.delete(normalized);
-    } else {
-      next.add(normalized);
-    }
-
-    setValue('pathologies', Array.from(next), { shouldDirty: true, shouldValidate: true });
-  };
-
-  const clearPathologies = () => {
-    setValue('pathologies', [], { shouldDirty: true, shouldValidate: true });
-  };
-
-  const addPathologyFromQuery = () => {
-    const value = pathologyQuery.trim();
-
-    if (!value) {
-      return;
-    }
-
-    togglePathology(value);
-    setPathologyQuery('');
-  };
-
+  // Chargement des données lors de la sélection d'un test
   useEffect(() => {
     if (!selectedTestId) {
       reset(defaultValues);
-      setNewBibliography({ label: '', url: '' });
       return;
     }
-
-    const test = (tests ?? []).find((item) => item.id === selectedTestId);
-
+    const test = tests?.find((t) => t.id === selectedTestId);
     if (test) {
       reset({
-        id: test.id,
-        name: test.name,
-        shortDescription: test.shortDescription,
-        objective: test.objective,
-        ageMinMonths: test.ageMinMonths,
-        ageMaxMonths: test.ageMaxMonths,
-        population: test.population,
-        durationMinutes: test.durationMinutes,
-        materials: test.materials,
-        isStandardized: test.isStandardized,
-        publisher: test.publisher,
-        priceRange: test.priceRange,
-        buyLink: test.buyLink,
-        notes: test.notes,
-        pathologies: test.pathologies,
-        domains: test.domains,
-        tags: test.tags,
+        ...test,
         bibliography: test.bibliography ?? [],
+        pathologies: test.pathologies ?? [],
+        domains: test.domains ?? [],
+        tags: test.tags ?? [],
       });
-      setNewBibliography({ label: '', url: '' });
     }
-  }, [reset, selectedTestId, tests]);
+  }, [selectedTestId, tests, reset]);
 
-  const createMutation = useMutation({
-    mutationFn: (payload: FormValues) => createTest(payload, locale, t('states.createError')),
+  const mutation = useMutation({
+    mutationFn: (payload: FormValues) => 
+      saveTest(payload, locale, payload.id ? 'PATCH' : 'POST'),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tests', locale] });
-      reset(defaultValues);
-      setSelectedTestId(null);
-      setNewBibliography({ label: '', url: '' });
+      void queryClient.invalidateQueries({ queryKey: ['test-taxonomy', locale] });
+      setToastMsg(feedbackT('success.saved'));
+      if (!selectedTestId) reset(defaultValues);
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (payload: FormValues) => updateTest(payload, locale, t('states.updateError')),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['tests', locale] });
-    },
-  });
-
-  const [submitLabel, submitDisabled] = useMemo(() => {
-    const pending = createMutation.isPending || updateMutation.isPending;
-    const label = pending
-      ? form('actions.pending')
-      : selectedTestId
-        ? form('actions.update')
-        : form('actions.create');
-    return [label, pending];
-  }, [createMutation.isPending, form, selectedTestId, updateMutation.isPending]);
-
-  const onSubmit = handleSubmit((values) => {
-    const payload: FormValues = {
+  const onSubmit = (values: FormValues) => {
+    const payload = {
       ...values,
       name: values.name.trim(),
-      shortDescription: values.shortDescription?.trim() || null,
-      objective: values.objective?.trim() || null,
-      population: values.population?.trim() || null,
-      materials: values.materials?.trim() || null,
-      publisher: values.publisher?.trim() || null,
-      priceRange: values.priceRange?.trim() || null,
-      buyLink: values.buyLink?.trim() || null,
-      notes: values.notes?.trim() || null,
-      ageMinMonths: values.ageMinMonths ?? null,
-      ageMaxMonths: values.ageMaxMonths ?? null,
-      durationMinutes: values.durationMinutes ?? null,
-      pathologies: Array.from(
-        new Set((values.pathologies ?? []).map((pathology) => pathology.trim()).filter(Boolean)),
-      ),
-      domains: Array.from(new Set((values.domains ?? []).map((domain) => domain.trim()).filter(Boolean))),
-      tags: Array.from(new Set((values.tags ?? []).map((tag) => tag.trim()).filter(Boolean))),
-      bibliography: (values.bibliography ?? [])
-        .map((entry) => ({
-          label: entry.label.trim(),
-          url: entry.url.trim(),
-        }))
-        .filter((entry) => entry.label && entry.url),
+      bibliography: values.bibliography?.filter(b => b.label && b.url) ?? [],
+      domains: values.domains ?? [],
+      tags: values.tags ?? [],
+      pathologies: values.pathologies ?? [],
     };
+    mutation.mutate(payload);
+  };
 
-    if (payload.id) {
-      updateMutation.mutate(payload);
-    } else {
-      createMutation.mutate(payload);
-    }
-  });
-
-  function updateBibliographyItem(
-    index: number,
-    field: 'label' | 'url',
-    value: string,
-  ) {
-    const entries = [...(currentBibliography ?? [])];
-    const next = entries.map((entry, entryIndex) =>
-      entryIndex === index ? { ...entry, [field]: value } : entry,
-    );
-    setValue('bibliography', next, { shouldDirty: true });
-  }
-
-  function removeBibliographyItem(index: number) {
-    const entries = [...(currentBibliography ?? [])];
-    entries.splice(index, 1);
-    setValue('bibliography', entries, { shouldDirty: true });
-  }
-
-  function addBibliographyItem() {
-    const label = newBibliography.label.trim();
-    const url = newBibliography.url.trim();
-
-    if (!label || !url) {
-      return;
-    }
-
-    const entries = [...(currentBibliography ?? []), { label, url }];
-    setValue('bibliography', entries, { shouldDirty: true });
+  const addBibliographyItem = () => {
+    if (!newBibliography.label || !newBibliography.url) return;
+    setValue('bibliography', [...(currentBibliography || []), newBibliography], { shouldDirty: true });
     setNewBibliography({ label: '', url: '' });
-  }
+  };
+
+  const removeBibliographyItem = (index: number) => {
+    const next = [...(currentBibliography || [])];
+    next.splice(index, 1);
+    setValue('bibliography', next, { shouldDirty: true });
+  };
+
+  const commonMultiSelectTrans = {
+    add: multiSelectT('add'),
+    remove: multiSelectT('remove'),
+    clear: multiSelectT('clear'),
+    close: multiSelectT('close'),
+    emptySelection: multiSelectT('emptySelection'),
+    emptyResults: multiSelectT('emptyResults'),
+    loading: multiSelectT('loading'),
+    searchPlaceholder: multiSelectT('searchPlaceholder'),
+    dialogTitle: multiSelectT('dialogTitle', { label: '' }),
+    dialogHelper: multiSelectT('filterHelper'),
+  };
 
   return (
-  <form className="notion-form" onSubmit={(event) => void onSubmit(event)}>
-    <div className="notion-toolbar">
-      <div className="notion-toolbar__group">
-        <Label htmlFor="test-selector">{form('toolbar.sheetLabel')}</Label>
-        <Select
-          id="test-selector"
-          value={selectedTestId ?? ''}
-          onChange={(event: ChangeEvent<HTMLSelectElement>) => setSelectedTestId(event.target.value || null)}
-          aria-label={t('toolbar.selectorAria')}
-        >
-          <option value="">{form('toolbar.newTest')}</option>
-          {(tests ?? []).map((test) => (
-            <option key={test.id} value={test.id}>
-              {test.name}
-            </option>
-          ))}
-        </Select>
-        {selectedTestId ? <Badge variant="outline">{form('toolbar.editBadge')}</Badge> : <Badge>{form('toolbar.newBadge')}</Badge>}
-      </div>
+    <form className="notion-form" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
+      {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
 
-      <div className="notion-toolbar__group">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => {
-            reset(defaultValues);
-            setSelectedTestId(null);
-            setNewBibliography({ label: '', url: '' });
-          }}
-        >
-          {form('toolbar.reset')}
-        </Button>
-        <Button type="submit" disabled={submitDisabled} aria-busy={submitDisabled}>
-          {submitLabel}
-        </Button>
-      </div>
-    </div>
-
-    <Input
-      id="name"
-      className="notion-title-input"
-      placeholder={form('fields.name.placeholder')}
-      {...register('name')}
-    />
-    {errors.name && <p className="error-text">{errors.name.message}</p>}
-
-    {/* 1. Résumé détaillé + 2. Bibliographie + Infos complémentaires */}
-    <div className="content-grid">
-        {/* Résumé détaillé */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{form('sections.detailedSummary.title')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="property-value">
-              <Label htmlFor="shortDescription">{form('fields.shortDescription.label')}</Label>
-              <Textarea
-                id="shortDescription"
-                placeholder={form('fields.shortDescription.placeholder')}
-                {...register('shortDescription', { setValueAs: (value) => (value === '' ? null : value) })}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="property-value">
-              <Label htmlFor="objective">{form('fields.objective.label')}</Label>
-              <Textarea
-                id="objective"
-                placeholder={form('fields.objective.placeholder')}
-                {...register('objective', { setValueAs: (value) => (value === '' ? null : value) })}
-              />
-            </div>
-
-            {/* Aperçu des domaines, pathologies et tags dans le résumé détaillé */}
-            {(currentDomains?.length ?? 0) > 0 ||
-            (currentPathologies?.length ?? 0) > 0 ||
-              (currentTags?.length ?? 0) > 0 ? (
-              <>
-                <Separator />
-                <div className={styles.summaryTaxonomy}>
-                  {(currentDomains?.length ?? 0) > 0 && (
-                    <div className={styles.summaryTaxonomyGroup}>
-                      <Label>{form('sections.taxonomy.domainsLabel')}</Label>
-                      <div className={styles.summaryTaxonomyBadges}>
-                        {(currentDomains ?? []).map((domain) => (
-                          <Badge
-                            key={domain}
-                            variant="outline"
-                            className={styles.summaryBadge}
-                          >
-                            {domain}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {(currentPathologies?.length ?? 0) > 0 && (
-                    <div className={styles.summaryTaxonomyGroup}>
-                      <Label>{form('sections.taxonomy.pathologiesLabel')}</Label>
-                      <div className={styles.summaryTaxonomyBadges}>
-                        {(currentPathologies ?? []).map((pathology) => (
-                          <Badge
-                            key={pathology}
-                            variant="secondary"
-                            className={styles.summaryBadge}
-                          >
-                            {pathology}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {(currentTags?.length ?? 0) > 0 && (
-                    <div className={styles.summaryTaxonomyGroup}>
-                      <Label>{form('sections.taxonomy.tagsLabel')}</Label>
-                      <div className={styles.summaryTaxonomyBadges}>
-                        {(currentTags ?? []).map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className={styles.summaryBadge}
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : null}
-
-            <Separator />
-
-            <div className="property-value">
-              <Label htmlFor="notes">{form('fields.notes.label')}</Label>
-              <Textarea
-                id="notes"
-                placeholder={form('fields.notes.placeholder')}
-                {...register('notes', { setValueAs: (value) => (value === '' ? null : value) })}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-      {/* Bibliographie (2ème bloc) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{form('sections.bibliography.title')}</CardTitle>
-          <p className="helper-text">{form('sections.bibliography.helper')}</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            {(currentBibliography ?? []).length === 0 && (
-              <p className={`helper-text ${styles.helperTight}`}>
-                {form('sections.bibliography.empty')}
-              </p>
-            )}
-
-            {(currentBibliography ?? []).map((entry, index) => (
-              <div key={`${entry.label}-${index}`} className={`property-value ${styles.bibliographyEntry}`}>
-                <Label htmlFor={`bibliography-label-${index}`}>{form('bibliography.entryLabel')}</Label>
-                <Input
-                  id={`bibliography-label-${index}`}
-                  value={entry.label}
-                  onChange={(event) => updateBibliographyItem(index, 'label', event.target.value)}
-                  placeholder={form('bibliography.entryPlaceholder')}
-                />
-                {errors.bibliography?.[index]?.label && (
-                  <p className="error-text">{errors.bibliography?.[index]?.label?.message}</p>
-                )}
-
-                <Label htmlFor={`bibliography-url-${index}`}>{form('bibliography.linkLabel')}</Label>
-                <div className="notion-toolbar__group">
-                  <Input
-                    id={`bibliography-url-${index}`}
-                    type="url"
-                    value={entry.url}
-                    onChange={(event) => updateBibliographyItem(index, 'url', event.target.value)}
-                    placeholder={form('bibliography.linkPlaceholder')}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeBibliographyItem(index)}
-                  >
-                    {form('bibliography.remove')}
-                  </Button>
-                </div>
-                {errors.bibliography?.[index]?.url && (
-                  <p className="error-text">{errors.bibliography?.[index]?.url?.message}</p>
-                )}
-                <Separator />
-              </div>
-            ))}
-          </div>
-
-          <div className={`property-value ${styles.bibliographyCreate}`}>
-            <Label htmlFor="bibliography-new-label">{form('bibliography.addTitle')}</Label>
-            <Input
-              id="bibliography-new-label"
-              placeholder={form('bibliography.addPlaceholder')}
-              value={newBibliography.label}
-              onChange={(event) => setNewBibliography((prev) => ({ ...prev, label: event.target.value }))}
-            />
-            <div className="notion-toolbar__group">
-              <Input
-                id="bibliography-new-url"
-                type="url"
-                placeholder={form('bibliography.addUrlPlaceholder')}
-                value={newBibliography.url}
-                onChange={(event) => setNewBibliography((prev) => ({ ...prev, url: event.target.value }))}
-              />
-              <Button type="button" variant="outline" size="sm" onClick={addBibliographyItem}>
-                {form('bibliography.addButton')}
-              </Button>
-            </div>
-            <p className={`helper-text ${styles.helperTight}`}>
-              {form('bibliography.addHelper')}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Informations complémentaires (3e carte dans la grid, mais avant Propriétés) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{form('sections.additionalInfo.title')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="property-value">
-            <Label htmlFor="population-secondary">{form('fields.populationDetailed.label')}</Label>
-            <Input
-              id="population-secondary"
-              placeholder={form('fields.populationDetailed.placeholder')}
-              value={populationValue ?? ''}
-              onChange={(event) =>
-                setValue('population', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
-              }
-            />
-          </div>
-          <Separator />
-          <div className="property-value">
-            <Label htmlFor="materials-secondary">{form('fields.materialsDetailed.label')}</Label>
-            <Textarea
-              id="materials-secondary"
-              placeholder={form('fields.materialsDetailed.placeholder')}
-              value={materialsValue ?? ''}
-              onChange={(event) =>
-                setValue('materials', event.target.value === '' ? null : event.target.value, { shouldDirty: true })
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Taxonomie */}
-      <Card className="property-panel">
-        <CardHeader>
-          <CardTitle>{form('sections.taxonomy.title')}</CardTitle>
-          <p className="helper-text">{form('fields.pathologies.description')}</p>
-        </CardHeader>
-        <CardContent className={styles.propertySections}>
-          <div className={styles.sectionBlock}>
-            <p className={styles.sectionTitle}>{form('sections.taxonomy.pathologiesLabel')}</p>
-            <div className={styles.multiSelectWrapper}>
-              <div className={styles.multiSelectHeader}>
-                <Label htmlFor="pathologies-selector">{form('sections.taxonomy.pathologiesLabel')}</Label>
-                <p className="helper-text">{form('fields.pathologies.description')}</p>
-              </div>
-
-              <button
-                id="pathologies-selector"
-                type="button"
-                className={cn(
-                  styles.multiSelectControl,
-                  isPathologyDialogOpen && styles.multiSelectOpen,
-                )}
-                onClick={() => setIsPathologyDialogOpen(true)}
-                aria-label={multiSelect('dialogLabel', {
-                  label: form('sections.taxonomy.pathologiesLabel'),
-                })}
-                aria-expanded={isPathologyDialogOpen}
-                aria-haspopup="dialog"
-              >
-                <div className={styles.multiSelectTokens}>
-                  {normalizedPathologies.size > 0 ? (
-                    Array.from(normalizedPathologies).map((pathology) => (
-                      <Badge
-                        key={pathology}
-                        variant="secondary"
-                        className={styles.token}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          togglePathology(pathology);
-                        }}
-                      >
-                        {pathology}
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-subtle">{multiSelect('placeholder')}</span>
-                  )}
-                </div>
-                <span className={styles.chevron}>⌄</span>
-              </button>
-
-              {errors.pathologies && <p className="error-text">{errors.pathologies.message}</p>}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-
-    {/* 3. Propriétés (déplacé après le contenu détaillé + biblio) */}
-    <Card className="property-panel">
-  <CardHeader>
-    <CardTitle>{form('sections.properties.title')}</CardTitle>
-    <p className="helper-text">{form('sections.properties.helper')}</p>
-  </CardHeader>
-
-  <CardContent className={styles.propertySections}>
-
-    {/* --- Ciblage & durée --- */}
-    <div className={styles.sectionBlock}>
-      <p className={styles.sectionTitle}>{form('sections.properties.targetingTitle')}</p>
-      <div className="property-grid">
-
-        {/* Âge (mois) */}
-        <div className="property-row">
-          <div className="property-label">{form('fields.age.label')}</div>
-          <div className="property-value">
-            <div className={styles.ageGrid}>
-              <Input
-                id="ageMinMonths"
-                type="number"
-                placeholder={form('fields.age.minPlaceholder')}
-                {...register('ageMinMonths', {
-                  setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-                })}
-              />
-              <Input
-                id="ageMaxMonths"
-                type="number"
-                placeholder={form('fields.age.maxPlaceholder')}
-                {...register('ageMaxMonths', {
-                  setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-                })}
-              />
-            </div>
-
-            {(errors.ageMinMonths || errors.ageMaxMonths) && (
-              <p className="error-text">
-                {errors.ageMinMonths?.message || errors.ageMaxMonths?.message}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Durée */}
-        <div className="property-row">
-          <div className="property-label">{form('fields.duration.label')}</div>
-          <div className="property-value">
-            <Input
-              id="durationMinutes"
-              type="number"
-              placeholder={form('fields.duration.placeholder')}
-              {...register('durationMinutes', {
-                setValueAs: (value) => (value === '' || value === null ? null : Number(value)),
-              })}
-            />
-            {errors.durationMinutes && (
-              <p className="error-text">{errors.durationMinutes.message}</p>
-            )}
-            <p className="helper-text">{form('fields.duration.helper')}</p>
-          </div>
-        </div>
-
-        {/* Population */}
-        <div className="property-row">
-          <div className="property-label">{form('fields.population.label')}</div>
-          <div className="property-value">
-            <Input
-              id="population"
-              placeholder={form('fields.population.placeholder')}
-              {...register('population', {
-                setValueAs: (value) => (value === '' ? null : value),
-              })}
-            />
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    {/* --- Édition & accès --- */}
-    <div className={styles.sectionBlock}>
-      <p className={styles.sectionTitle}>{form('sections.properties.publishingTitle')}</p>
-      <div className="property-grid">
-
-        {/* Éditeur */}
-        <div className="property-row">
-          <div className="property-label">{form('fields.publisher.label')}</div>
-          <div className="property-value">
-            <Input
-              id="publisher"
-              placeholder={form('fields.publisher.placeholder')}
-              {...register('publisher', {
-                setValueAs: (value) => (value === '' ? null : value),
-              })}
-            />
-            <Input
-              id="priceRange"
-              placeholder={form('fields.priceRange.placeholder')}
-              {...register('priceRange', {
-                setValueAs: (value) => (value === '' ? null : value),
-              })}
-            />
-          </div>
-        </div>
-
-        {/* Achat */}
-        <div className="property-row">
-          <div className="property-label">{form('fields.purchase.label')}</div>
-          <div className="property-value">
-            <Input
-              id="buyLink"
-              placeholder={form('fields.buyLink.placeholder')}
-              {...register('buyLink', {
-                setValueAs: (value) => (value === '' ? null : value),
-              })}
-            />
-            {errors.buyLink && (
-              <p className="error-text">{errors.buyLink.message}</p>
-            )}
-            <Input
-              id="materials"
-              placeholder={form('fields.materials.placeholder')}
-              {...register('materials', {
-                setValueAs: (value) => (value === '' ? null : value),
-              })}
-            />
-          </div>
-        </div>
-
-        {/* Standardisation */}
-        <div className="property-row">
-          <div className="property-label">{form('fields.standardization.label')}</div>
-          <div className="property-value">
-            <label
-              className={cn(
-                'pill-toggle',
-                watch('isStandardized') && 'is-active'
-              )}
+      <div className="notion-toolbar sticky top-4 z-40 shadow-sm">
+        <div className="notion-toolbar__group flex-1 max-w-md">
+          <div className="flex flex-col gap-1 w-full">
+            <Label htmlFor="test-selector" className="text-xs uppercase tracking-wider text-slate-500">
+              {formT('toolbar.sheetLabel')}
+            </Label>
+            <Select
+              id="test-selector"
+              value={selectedTestId ?? ''}
+              onChange={(e) => setSelectedTestId(e.target.value || null)}
+              className="font-semibold bg-white/50"
             >
-              <input
-                type="checkbox"
-                {...register('isStandardized')}
-                className={styles.hiddenInput}
-                aria-label={t('fields.isStandardized.aria')}
+              <option value="">✨ {formT('toolbar.newTest')}</option>
+              {tests?.map((test) => (
+                <option key={test.id} value={test.id}>
+                  📝 {test.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+
+        <div className="notion-toolbar__group">
+          <Button type="button" variant="ghost" onClick={() => { setSelectedTestId(null); reset(defaultValues); }}>
+            {formT('toolbar.reset')}
+          </Button>
+          <Button type="submit" disabled={mutation.isPending} className="min-w-[140px]">
+            {mutation.isPending ? formT('actions.pending') : (selectedTestId ? formT('actions.update') : formT('actions.create'))}
+          </Button>
+        </div>
+      </div>
+
+      {mutation.isError && (
+        <div className="p-4 rounded-lg bg-red-50 text-red-700 border border-red-200">
+          <strong>Erreur :</strong> {mutation.error?.message}
+        </div>
+      )}
+
+      <Input
+        id="name"
+        className="notion-title-input mt-4"
+        placeholder={formT('fields.name.placeholder')}
+        {...register('name')}
+      />
+      {errors.name && <p className="text-red-500 text-sm ml-2">{errors.name.message}</p>}
+
+      <div className="content-grid">
+        {/* COLONNE GAUCHE */}
+        <div className={styles.columnStack}>
+          <Card>
+            <CardHeader><CardTitle>{formT('sections.detailedSummary.title')}</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="property-value">
+                <Label>{formT('fields.shortDescription.label')}</Label>
+                <Textarea {...register('shortDescription')} placeholder={formT('fields.shortDescription.placeholder')} />
+              </div>
+              <Separator />
+              <div className="property-value">
+                <Label>{formT('fields.objective.label')}</Label>
+                <Textarea {...register('objective')} placeholder={formT('fields.objective.placeholder')} />
+              </div>
+              <Separator />
+              <div className="property-value">
+                <Label>{formT('fields.notes.label')}</Label>
+                <Textarea {...register('notes')} placeholder={formT('fields.notes.placeholder')} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{formT('sections.bibliography.title')}</CardTitle>
+              <p className="helper-text">{formT('sections.bibliography.helper')}</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {currentBibliography?.map((entry, idx) => (
+                <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-md border border-slate-100">
+                  <div className="flex-1 grid gap-1">
+                    <span className="font-semibold text-sm">{entry.label}</span>
+                    <a href={entry.url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 truncate">{entry.url}</a>
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeBibliographyItem(idx)}>×</Button>
+                </div>
+              ))}
+              
+              <div className="grid gap-3 p-3 border rounded-lg bg-slate-50/50">
+                <Input 
+                  placeholder={formT('bibliography.addPlaceholder')} 
+                  value={newBibliography.label}
+                  onChange={(e) => setNewBibliography(prev => ({ ...prev, label: e.target.value }))}
+                />
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder={formT('bibliography.addUrlPlaceholder')} 
+                    value={newBibliography.url}
+                    onChange={(e) => setNewBibliography(prev => ({ ...prev, url: e.target.value }))}
+                  />
+                  <Button type="button" variant="outline" onClick={addBibliographyItem}>{formT('bibliography.addButton')}</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* COLONNE DROITE */}
+        <div className={styles.columnStack}>
+          <Card className="property-panel">
+            <CardHeader>
+              <CardTitle>{formT('sections.taxonomy.title')}</CardTitle>
+            </CardHeader>
+            <CardContent className={styles.columnStack}> {/* Espacement interne */}
+              
+              <MultiSelect
+                label={formT('sections.taxonomy.domainsLabel')}
+                options={taxonomy?.domains.map(d => ({ id: d.id, label: d.label })) ?? []}
+                selectedValues={currentDomains}
+                onChange={(vals: string[]) => setValue('domains', vals, { shouldDirty: true })}
+                allowCreate={true}
+                translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.domainsLabel') }}
               />
-              {watch('isStandardized')
-                ? form('fields.standardization.standardized')
-                : form('fields.standardization.nonStandardized')}
-            </label>
-            <p className="helper-text">{form('fields.standardization.helper')}</p>
-          </div>
-        </div>
 
-      </div>
-    </div>
-  </CardContent>
-</Card>
+              <MultiSelect
+                label={formT('sections.taxonomy.pathologiesLabel')}
+                options={pathologyOptions.map((p) => ({ id: p.id, label: p.label }))}
+                selectedValues={currentPathologies}
+                onChange={(vals: string[]) => setValue('pathologies', vals, { shouldDirty: true })}
+                onSearch={setPathologyQuery}
+                isLoading={isLoadingPathologies}
+                allowCreate={false}
+                translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.pathologiesLabel') }}
+              />
 
-    {(createMutation.isError || updateMutation.isError) && (
-      <p className={`error-text ${styles.flushError}`}>
-        {translateHandlerError(createMutation.error?.message ?? updateMutation.error?.message ?? null)}
-      </p>
-    )}
+              <MultiSelect
+                label={formT('sections.taxonomy.tagsLabel')}
+                options={taxonomy?.tags.map(t => ({ id: t.id, label: t.label })) ?? []}
+                selectedValues={currentTags}
+                onChange={(vals: string[]) => setValue('tags', vals, { shouldDirty: true })}
+                allowCreate={true}
+                translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.tagsLabel') }}
+              />
 
-    {(createMutation.isSuccess || updateMutation.isSuccess) && !createMutation.isError && !updateMutation.isError && (
-      <p className={styles.successMessage}>
-        {feedback('success.saved')}
-      </p>
-    )}
+            </CardContent>
+          </Card>
 
-    {isPathologyDialogOpen && (
-      <div className={styles.popupLayer}>
-        <div className={styles.popupBackdrop} onClick={() => setIsPathologyDialogOpen(false)} />
-        <div
-          className={styles.popup}
-          role="dialog"
-          aria-modal="true"
-          aria-label={multiSelect('dialogLabel', {
-            label: form('sections.taxonomy.pathologiesLabel'),
-          })}
-        >
-          <div className={styles.popupHeader}>
-            <p className={styles.popupTitle}>
-              {multiSelect('dialogTitle', { label: form('sections.taxonomy.pathologiesLabel') })}
-            </p>
-            <p className="helper-text">
-              {multiSelect('filterHelper', { label: form('sections.taxonomy.pathologiesLabel') })}
-            </p>
-          </div>
+          <Card>
+            <CardHeader><CardTitle>{formT('sections.properties.title')}</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              
+              <div className="property-row">
+                <Label>{formT('fields.age.label')}</Label>
+                {/* Utilisation de flexRow pour mettre min/max sur la même ligne */}
+                <div className={styles.flexRow}>
+                  <Input type="number" {...register('ageMinMonths', { valueAsNumber: true })} placeholder="Min" />
+                  <Input type="number" {...register('ageMaxMonths', { valueAsNumber: true })} placeholder="Max" />
+                </div>
+              </div>
 
-          <div className={styles.searchBar}>
-            <Input
-              id="pathologies-search"
-              value={pathologyQuery}
-              onChange={(event) => setPathologyQuery(event.target.value)}
-              placeholder={multiSelect('searchPlaceholder')}
-              aria-label={multiSelect('filterAria', { label: form('sections.taxonomy.pathologiesLabel') })}
-            />
-            <Button type="button" variant="ghost" size="sm" onClick={clearPathologies}>
-              {multiSelect('clear')}
-            </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setIsPathologyDialogOpen(false)}>
-              {multiSelect('close')}
-            </Button>
-          </div>
+              <div className="property-row">
+                <Label>{formT('fields.duration.label')}</Label>
+                <Input type="number" {...register('durationMinutes', { valueAsNumber: true })} placeholder="Min" />
+              </div>
 
-          <div className={styles.selectedBadges}>
-            {normalizedPathologies.size === 0 ? (
-              <span className="text-subtle">{multiSelect('emptySelection')}</span>
-            ) : (
-              Array.from(normalizedPathologies).map((pathology) => (
-                <Badge
-                  key={pathology}
-                  variant="secondary"
-                  className={styles.selectedToken}
-                  onClick={() => togglePathology(pathology)}
-                >
-                  {pathology}
-                </Badge>
-              ))
-            )}
-          </div>
+              <div className="property-row">
+                <Label>{formT('fields.standardization.label')}</Label>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="isStandardized" {...register('isStandardized')} className="w-4 h-4" />
+                  <Label htmlFor="isStandardized" className="font-normal cursor-pointer">
+                    {watch('isStandardized') ? formT('fields.standardization.standardized') : formT('fields.standardization.nonStandardized')}
+                  </Label>
+                </div>
+              </div>
 
-          <Separator />
+              <div className="property-value pt-2">
+                <Label>{formT('fields.materials.placeholder')}</Label>
+                <Input {...register('materials')} />
+              </div>
+              
+              <div className="property-value">
+                <Label>{formT('fields.publisher.label')}</Label>
+                <Input {...register('publisher')} />
+              </div>
 
-          <div className={styles.optionsList} role="listbox" aria-label={form('sections.taxonomy.pathologiesLabel')}>
-            {isPathologyError && (
-              <p className={styles.emptyState}>{feedback('errors.generic')}</p>
-            )}
+              <div className="property-value">
+                <Label>{formT('fields.buyLink.placeholder')}</Label>
+                <Input {...register('buyLink')} placeholder="https://..." />
+              </div>
 
-            {isLoadingPathologies && (
-              <p className={styles.emptyState}>{multiSelect('loading')}</p>
-            )}
-
-            {!isLoadingPathologies && filteredPathologyOptions.length === 0 && !canCreatePathology && (
-              <p className={styles.emptyState}>{multiSelect('emptyResults')}</p>
-            )}
-
-            {!isLoadingPathologies &&
-              filteredPathologyOptions.map((option) => {
-                const isSelected = normalizedPathologies.has(option.label);
-
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className={cn(styles.optionItem, isSelected && styles.optionItemActive)}
-                    onClick={() => togglePathology(option.label)}
-                    aria-pressed={isSelected}
-                  >
-                    <span className={styles.optionLabel}>{option.label}</span>
-                    <Badge className={styles.optionBadge} variant={isSelected ? 'default' : 'outline'}>
-                      {isSelected ? multiSelect('remove') : multiSelect('add')}
-                    </Badge>
-                  </button>
-                );
-              })}
-
-            {canCreatePathology && (
-              <Button type="button" variant="outline" onClick={addPathologyFromQuery}>
-                {multiSelect('add')}
-                {` “${pathologyQuery.trim()}”`}
-              </Button>
-            )}
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    )}
-  </form>
-);
+    </form>
+  );
 }
 
 export default TestForm;
