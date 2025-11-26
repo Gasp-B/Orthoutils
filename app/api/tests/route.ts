@@ -66,8 +66,7 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
     .from('tests')
     .select(
       'id, age_min_months, age_max_months, duration_minutes, is_standardized, buy_link, bibliography, created_at, updated_at',
-    )
-    .eq('status', 'published');
+    );
 
   if (testsError) {
     throw testsError;
