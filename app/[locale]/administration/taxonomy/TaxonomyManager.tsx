@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils/cn';
 import type {
   TaxonomyDeletionInput,
   TaxonomyMutationInput,
@@ -19,6 +20,8 @@ import type {
 } from '@/lib/validation/tests';
 
 const taxonomyQueryKey = (locale: Locale) => ['test-taxonomy', locale] as const;
+
+const colorSwatches = ['#0EA5E9', '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#EF4444'];
 
 type Tab = 'pathologies' | 'domains' | 'tags';
 
@@ -110,6 +113,7 @@ export default function TaxonomyManager() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [saveAttempted, setSaveAttempted] = useState(false);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -131,6 +135,7 @@ export default function TaxonomyManager() {
     setSynonymsInput('');
     setColorInput('');
     setErrorMessage(null);
+    setSaveAttempted(false);
   }, []);
 
   // Reset form when tab changes
@@ -205,6 +210,7 @@ export default function TaxonomyManager() {
   });
 
   const handleSave = () => {
+    setSaveAttempted(true);
     if (!labelInput.trim()) return;
 
     const payload: TaxonomyMutationInput = {
@@ -231,6 +237,7 @@ export default function TaxonomyManager() {
     setSynonymsInput(item.synonyms?.join(', ') || '');
     setColorInput(item.color || '');
     setErrorMessage(null);
+    setSaveAttempted(false);
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -296,6 +303,47 @@ export default function TaxonomyManager() {
 
   const alreadyExists = !editingItem && activeList.some(
     (item) => item.label.toLowerCase() === labelInput.trim().toLowerCase(),
+  );
+
+  const labelHasError = alreadyExists || (saveAttempted && !labelInput.trim());
+  const colorHasError = Boolean(colorInput && !/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(colorInput.trim()));
+  const actionLabel = saveMutation.isPending
+    ? t('buttons.savePending')
+    : editingItem
+      ? t('buttons.update')
+      : t('buttons.add');
+
+  const renderStatusHelper = (status: 'error' | 'info', message: string) => (
+    <p
+      className={cn(
+        'text-xs mt-1 flex items-center gap-2 rounded-md border px-2 py-1',
+        status === 'error'
+          ? 'border-red-200 bg-red-50 text-red-700'
+          : 'border-sky-200 bg-sky-50 text-sky-800',
+      )}
+      role={status === 'error' ? 'alert' : undefined}
+    >
+      <span
+        className={cn(
+          'inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold',
+          status === 'error' ? 'bg-red-100 text-red-700' : 'bg-sky-100 text-sky-800',
+        )}
+        aria-hidden
+      >
+        {status === 'error' ? '!' : 'i'}
+      </span>
+      <span className="leading-tight">{message}</span>
+    </p>
+  );
+
+  const Spinner = ({ className }: { className?: string }) => (
+    <span
+      className={cn(
+        'inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent',
+        className,
+      )}
+      aria-hidden
+    />
   );
 
   return (
@@ -382,100 +430,151 @@ export default function TaxonomyManager() {
               </CardHeader>
             </div>
             
-            <CardContent className="p-6 space-y-5">
-              <div className="space-y-1.5">
-                <Label htmlFor="label" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                  {t(`${activeTab}.label`)}
-                </Label>
-                <Input
-                  id="label"
-                  value={labelInput}
-                  onChange={(e) => setLabelInput(e.target.value)}
-                  placeholder={t(`${activeTab}.placeholder`)}
-                  className="bg-white"
-                />
-                {alreadyExists && (
-                  <p className="text-red-500 text-xs font-medium mt-1 flex items-center gap-1">
-                    ⚠️ {t(`${activeTab}.exists`)}
-                  </p>
+            <CardContent className="p-6 space-y-6">
+              <div className="grid gap-6 lg:grid-cols-2">
+                <section className="space-y-3">
+                  <p className="text-sm font-semibold text-slate-700">{t('sections.mainInfo')}</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="label" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      {t(`${activeTab}.label`)}
+                    </Label>
+                    <Input
+                      id="label"
+                      value={labelInput}
+                      onChange={(e) => setLabelInput(e.target.value)}
+                      placeholder={t(`${activeTab}.placeholder`)}
+                      className={cn(
+                        'bg-white',
+                        labelHasError &&
+                          'border-red-300 text-red-900 focus-visible:ring-red-200 focus-visible:border-red-400',
+                      )}
+                      aria-invalid={labelHasError}
+                      aria-describedby="taxonomy-label-help"
+                    />
+                    <div id="taxonomy-label-help">
+                      {labelHasError
+                        ? renderStatusHelper('error', alreadyExists ? t(`${activeTab}.exists`) : t('validation.labelRequired'))
+                        : renderStatusHelper('info', t('helpers.label'))}
+                    </div>
+                  </div>
+                </section>
+
+                {activeTab === 'tags' && (
+                  <section className="space-y-3">
+                    <p className="text-sm font-semibold text-slate-700">{t('sections.color')}</p>
+                    <div className="space-y-2">
+                      <Label htmlFor="color" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        {t('tags.colorLabel')}
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="color"
+                          id="color"
+                          value={colorInput || colorSwatches[0]}
+                          onChange={(e) => setColorInput(e.target.value)}
+                          className="h-11 w-16 bg-white p-1"
+                          aria-describedby="taxonomy-color-help"
+                        />
+                        <Input
+                          type="text"
+                          inputMode="text"
+                          id="color-hex"
+                          value={colorInput}
+                          onChange={(e) => setColorInput(e.target.value)}
+                          placeholder={t('tags.colorPlaceholder')}
+                          className={cn(
+                            'flex-1 bg-white',
+                            colorHasError &&
+                              'border-red-300 text-red-900 focus-visible:ring-red-200 focus-visible:border-red-400',
+                          )}
+                          aria-invalid={colorHasError}
+                          aria-describedby="taxonomy-color-help"
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2" role="list" aria-label={t('tags.swatchesLabel')}>
+                        {colorSwatches.map((swatch) => (
+                          <button
+                            key={swatch}
+                            type="button"
+                            className={cn(
+                              'h-8 w-8 rounded-full border ring-offset-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400',
+                              colorInput === swatch
+                                ? 'ring-2 ring-slate-500 border-slate-300'
+                                : 'border-slate-200 hover:scale-[1.02]',
+                            )}
+                            style={{ backgroundColor: swatch }}
+                            onClick={() => setColorInput(swatch)}
+                            aria-label={t('tags.swatchAria', { color: swatch })}
+                            role="listitem"
+                          />
+                        ))}
+                      </div>
+                      <div id="taxonomy-color-help">
+                        {colorHasError
+                          ? renderStatusHelper('error', t('validation.colorFormat'))
+                          : renderStatusHelper('info', t('helpers.color'))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {activeTab === 'pathologies' && (
+                  <section className="space-y-3 lg:col-span-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-700">{t('sections.pathologyDetails')}</p>
+                      <Badge variant="secondary">{t('helpers.pathologyBadge')}</Badge>
+                    </div>
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="desc" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          {t('pathologies.descLabel')}
+                        </Label>
+                        <Textarea
+                          id="desc"
+                          value={descInput}
+                          onChange={(e) => setDescInput(e.target.value)}
+                          placeholder={t('pathologies.descPlaceholder')}
+                          className="min-h-[120px] bg-white resize-none"
+                        />
+                        {renderStatusHelper('info', t('helpers.description'))}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="synonyms" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          {t('pathologies.synonymsLabel')}
+                        </Label>
+                        <Input
+                          id="synonyms"
+                          value={synonymsInput}
+                          onChange={(e) => setSynonymsInput(e.target.value)}
+                          placeholder={t('pathologies.synonymsPlaceholder')}
+                          className="bg-white"
+                        />
+                        {renderStatusHelper('info', t('pathologies.synonymsHelper'))}
+                      </div>
+                    </div>
+                  </section>
                 )}
               </div>
-
-              {activeTab === 'tags' && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="color" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                    {t('tags.colorLabel')}
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="color"
-                      value={colorInput}
-                      onChange={(e) => setColorInput(e.target.value)}
-                      placeholder="Ex. #EF4444"
-                      className="flex-1 bg-white"
-                    />
-                    <div 
-                      className="w-10 h-10 rounded-md border border-slate-200 shrink-0" 
-                      style={{ backgroundColor: colorInput || '#ffffff' }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'pathologies' && (
-                <>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="desc" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                      {t('pathologies.descLabel')}
-                    </Label>
-                    <Textarea
-                      id="desc"
-                      value={descInput}
-                      onChange={(e) => setDescInput(e.target.value)}
-                      placeholder={t('pathologies.descPlaceholder')}
-                      className="min-h-[100px] bg-white resize-none"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="synonyms" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                      {t('pathologies.synonymsLabel')}
-                    </Label>
-                    <Input
-                      id="synonyms"
-                      value={synonymsInput}
-                      onChange={(e) => setSynonymsInput(e.target.value)}
-                      placeholder="Ex. TDAH, Trouble attentionnel"
-                      className="bg-white"
-                    />
-                    <p className="text-[11px] text-slate-400">{t('pathologies.synonymsHelper')}</p>
-                  </div>
-                </>
-              )}
-
-              <div className="pt-2 flex gap-2">
+            </CardContent>
+            <div className="border-t border-slate-100 bg-white px-6 py-4 lg:sticky lg:bottom-4 lg:shadow-md">
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                 {editingItem && (
-                  <Button 
-                    variant="outline" 
-                    onClick={resetForm}
-                    className="flex-1"
-                  >
+                  <Button variant="ghost" onClick={resetForm} className="sm:w-auto">
                     {t('buttons.cancel')}
                   </Button>
                 )}
                 <Button
                   onClick={handleSave}
                   disabled={!labelInput.trim() || alreadyExists || saveMutation.isPending}
-                  className={`flex-1 ${editingItem ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
+                  className="sm:w-auto"
                 >
-                  {saveMutation.isPending 
-                    ? t('buttons.savePending') 
-                    : editingItem 
-                      ? t('buttons.update') 
-                      : t('buttons.add')
-                  }
+                  <span className="flex items-center gap-2">
+                    {saveMutation.isPending && <Spinner />}
+                    {actionLabel}
+                  </span>
                 </Button>
               </div>
-            </CardContent>
+            </div>
           </Card>
         </div>
 
@@ -584,7 +683,7 @@ export default function TaxonomyManager() {
                           aria-label={t('buttons.delete')}
                         >
                           {deleteMutation.isPending && deletingId === item.id ? (
-                            <span className="animate-spin">⟳</span>
+                            <Spinner className="h-3.5 w-3.5" />
                           ) : (
                             <TrashIcon />
                           )}

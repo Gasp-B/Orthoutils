@@ -343,7 +343,19 @@
     "common": {
       "listTitle": "Éléments existants",
       "loading": "Chargement...",
-      "empty": "Aucun élément dans cette liste."
+      "empty": "Aucun élément dans cette liste.",
+      "editTitle": "Modifier l'élément"
+    },
+    "sections": {
+      "mainInfo": "Informations principales",
+      "color": "Couleur",
+      "pathologyDetails": "Description / Synonymes"
+    },
+    "helpers": {
+      "label": "Saisissez un intitulé clair pour faciliter l'identification.",
+      "color": "Optionnel. Utilisez un code hexadécimal ou une couleur prédéfinie pour harmoniser les listes.",
+      "description": "Restez concis afin que le texte passe dans les infobulles et aperçus.",
+      "pathologyBadge": "Améliore la recherche et les filtres en clinique."
     },
     "pathologies": {
       "toolbarTitle": "Pathologies",
@@ -355,6 +367,7 @@
       "descLabel": "Description courte",
       "descPlaceholder": "Définition succincte pour l'infobulle...",
       "synonymsLabel": "Synonymes / Mots-clés",
+      "synonymsPlaceholder": "Ex. TDAH, Trouble attentionnel",
       "synonymsHelper": "Séparez les termes par des virgules."
     },
     "domains": {
@@ -371,6 +384,9 @@
       "cardHelper": "Mots-clés pour affiner la recherche (ex: Bilan rapide, Adulte).",
       "label": "Intitulé",
       "colorLabel": "Code couleur (optionnel)",
+      "colorPlaceholder": "Ex. #EF4444",
+      "swatchesLabel": "Couleurs prédéfinies",
+      "swatchAria": "Choisir la couleur {color}",
       "placeholder": "Ex. Bilan rapide",
       "exists": "Ce tag existe déjà."
     },
@@ -379,7 +395,9 @@
       "add": "Ajouter l'élément",
       "delete": "Supprimer",
       "deletePending": "Suppr...",
-      "reset": "Réinitialiser"
+      "reset": "Réinitialiser",
+      "update": "Mettre à jour",
+      "cancel": "Annuler"
     },
     "toast": {
       "domainCreated": "Domaine créé avec succès.",
@@ -393,6 +411,10 @@
       "deleteGeneric": "Erreur lors de la suppression.",
       "unknown": "Erreur inconnue.",
       "timeout": "Le délai d'attente est dépassé."
+    },
+    "validation": {
+      "labelRequired": "Un intitulé est requis.",
+      "colorFormat": "Utilisez un code hexadécimal comme #EF4444."
     }
   },
   "ToolsNew": {

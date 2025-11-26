@@ -332,6 +332,91 @@
       "objective": "Clinical objective to be documented."
     }
   },
+  "taxonomy": {
+    "meta": {
+      "title": "Manage taxonomy",
+      "description": "Manage domains, tags, and pathologies."
+    },
+    "sectionLabel": "Administration",
+    "pageTitle": "Taxonomy",
+    "pageLead": "Configure the dropdown lists used in the test forms.",
+    "common": {
+      "listTitle": "Existing items",
+      "loading": "Loading...",
+      "empty": "No item in this list.",
+      "editTitle": "Edit item"
+    },
+    "sections": {
+      "mainInfo": "Main information",
+      "color": "Color",
+      "pathologyDetails": "Description & synonyms"
+    },
+    "helpers": {
+      "label": "Provide a clear label to help admins identify the entry.",
+      "color": "Optional. Use a hex code or pick a predefined color to keep lists consistent.",
+      "description": "Keep it concise so it fits in tooltips and list previews.",
+      "pathologyBadge": "Improves search and filters for clinical use."
+    },
+    "pathologies": {
+      "toolbarTitle": "Pathologies",
+      "cardTitle": "New pathology",
+      "cardHelper": "Clinical entries for filtering by disorder.",
+      "label": "Pathology name",
+      "placeholder": "e.g., Aphasia",
+      "exists": "This pathology already exists.",
+      "descLabel": "Short description",
+      "descPlaceholder": "Concise definition for tooltips...",
+      "synonymsLabel": "Synonyms / Keywords",
+      "synonymsPlaceholder": "e.g., ADHD, Attention disorder",
+      "synonymsHelper": "Separate terms with commas."
+    },
+    "domains": {
+      "toolbarTitle": "Domains",
+      "cardTitle": "New domain",
+      "cardHelper": "Top-level categories (e.g., Oral language, Swallowing).",
+      "label": "Label",
+      "placeholder": "e.g., Phonology",
+      "exists": "This domain already exists."
+    },
+    "tags": {
+      "toolbarTitle": "Tags",
+      "cardTitle": "New tag",
+      "cardHelper": "Keywords to refine search (e.g., Quick assessment, Adult).",
+      "label": "Label",
+      "colorLabel": "Color code (optional)",
+      "colorPlaceholder": "e.g., #EF4444",
+      "swatchesLabel": "Predefined colors",
+      "swatchAria": "Select color {color}",
+      "placeholder": "e.g., Quick assessment",
+      "exists": "This tag already exists."
+    },
+    "buttons": {
+      "savePending": "Saving...",
+      "add": "Add item",
+      "delete": "Delete",
+      "deletePending": "Deleting...",
+      "reset": "Reset",
+      "update": "Update item",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "domainCreated": "Domain created successfully.",
+      "tagCreated": "Tag created successfully.",
+      "pathologyCreated": "Pathology created successfully.",
+      "itemDeleted": "Item deleted."
+    },
+    "errors": {
+      "fetchTaxonomy": "Unable to load taxonomy.",
+      "createGeneric": "Error while creating.",
+      "deleteGeneric": "Error while deleting.",
+      "unknown": "Unknown error.",
+      "timeout": "Request timed out."
+    },
+    "validation": {
+      "labelRequired": "A label is required.",
+      "colorFormat": "Use a hex color like #EF4444."
+    }
+  },
   "ManageTests": {
     "metadata": {
       "title": "Manage tests | Othoutils",
