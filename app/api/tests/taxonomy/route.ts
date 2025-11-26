@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { inArray } from 'drizzle-orm';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
-import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
+import { getDb } from '@/lib/db/client';
+import { 
+  domains, 
+  domainsTranslations, 
+  tags, 
+  tagsTranslations 
+} from '@/lib/db/schema';
 import {
   taxonomyDeletionSchema,
   taxonomyMutationSchema,
@@ -8,73 +15,56 @@ import {
 } from '@/lib/validation/tests';
 import { createDomain, createTag, deleteDomain, deleteTag } from '@/lib/tests/taxonomy';
 
-type DomainTranslationRow = { domain_id: string; locale: string; label: string; slug: string };
-type TagTranslationRow = { tag_id: string; locale: string; label: string };
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const requestedLocale = (searchParams.get('locale') as Locale | null) ?? defaultLocale;
     const locale = locales.includes(requestedLocale) ? requestedLocale : defaultLocale;
 
-    // CORRECTION 1 : Ajout de 'await' ici
-    const supabase = await createRouteHandlerSupabaseClient();
+    // UTILISATION DE DRIZZLE AU LIEU DE SUPABASE CLIENT (Bypass RLS)
+    const db = getDb();
 
-    const [domainTranslationsResult, tagTranslationsResult, domainIdsResult, tagIdsResult] = await Promise.all([
-      supabase
-        .from('domains_translations')
-        .select('domain_id, locale, label, slug')
-        .in('locale', [locale, defaultLocale]),
-      supabase
-        .from('tags_translations')
-        .select('tag_id, locale, label')
-        .in('locale', [locale, defaultLocale]),
-      supabase.from('domains').select('id').returns<{ id: string }[]>(),
-      supabase.from('tags').select('id').returns<{ id: string }[]>(),
+    const [domainTranslationsRows, tagTranslationsRows, domainIdsRows, tagIdsRows] = await Promise.all([
+      db
+        .select({
+          domain_id: domainsTranslations.domainId,
+          locale: domainsTranslations.locale,
+          label: domainsTranslations.label,
+          slug: domainsTranslations.slug,
+        })
+        .from(domainsTranslations)
+        .where(inArray(domainsTranslations.locale, [locale, defaultLocale])),
+      db
+        .select({
+          tag_id: tagsTranslations.tagId,
+          locale: tagsTranslations.locale,
+          label: tagsTranslations.label,
+        })
+        .from(tagsTranslations)
+        .where(inArray(tagsTranslations.locale, [locale, defaultLocale])),
+      db.select({ id: domains.id }).from(domains),
+      db.select({ id: tags.id }).from(tags),
     ]);
 
-    if (domainTranslationsResult.error) {
-      throw domainTranslationsResult.error;
-    }
-
-    if (tagTranslationsResult.error) {
-      throw tagTranslationsResult.error;
-    }
-
-    if (domainIdsResult.error) {
-      throw domainIdsResult.error;
-    }
-
-    if (tagIdsResult.error) {
-      throw tagIdsResult.error;
-    }
-
-    const domainTranslations = (domainTranslationsResult.data ?? []) as DomainTranslationRow[];
-    const tagTranslations = (tagTranslationsResult.data ?? []) as TagTranslationRow[];
-    
-    // CORRECTION 2 : Suppression de 'as string' inutile
-    const domainIds = (domainIdsResult.data ?? []).map((row) => row.id);
-    const tagIds = (tagIdsResult.data ?? []).map((row) => row.id);
-
-    const domainsById = new Map<string, DomainTranslationRow[]>();
-    for (const translation of domainTranslations) {
+    const domainsById = new Map<string, typeof domainTranslationsRows>();
+    for (const translation of domainTranslationsRows) {
       const existing = domainsById.get(translation.domain_id) ?? [];
       existing.push(translation);
       domainsById.set(translation.domain_id, existing);
     }
 
-    const tagsById = new Map<string, TagTranslationRow[]>();
-    for (const translation of tagTranslations) {
+    const tagsById = new Map<string, typeof tagTranslationsRows>();
+    for (const translation of tagTranslationsRows) {
       const existing = tagsById.get(translation.tag_id) ?? [];
       existing.push(translation);
       tagsById.set(translation.tag_id, existing);
     }
 
-    const localizedDomains = domainIds
-      .map((id) => {
-        const translations = domainsById.get(id) ?? [];
-        const localized = translations.find((row) => row.locale === locale);
-        const fallback = translations.find((row) => row.locale === defaultLocale);
+    const localizedDomains = domainIdsRows
+      .map((row) => {
+        const translations = domainsById.get(row.id) ?? [];
+        const localized = translations.find((t) => t.locale === locale);
+        const fallback = translations.find((t) => t.locale === defaultLocale);
         const label = localized?.label ?? fallback?.label;
         const slug = localized?.slug ?? fallback?.slug;
 
@@ -82,25 +72,25 @@ export async function GET(request: NextRequest) {
           return null;
         }
 
-        return { id, label, slug };
+        return { id: row.id, label, slug };
       })
-      .filter((domain): domain is { id: string; label: string; slug: string } => Boolean(domain))
+      .filter((d): d is { id: string; label: string; slug: string } => Boolean(d))
       .sort((a, b) => a.label.localeCompare(b.label));
 
-    const localizedTags = tagIds
-      .map((id) => {
-        const translations = tagsById.get(id) ?? [];
-        const localized = translations.find((row) => row.locale === locale);
-        const fallback = translations.find((row) => row.locale === defaultLocale);
+    const localizedTags = tagIdsRows
+      .map((row) => {
+        const translations = tagsById.get(row.id) ?? [];
+        const localized = translations.find((t) => t.locale === locale);
+        const fallback = translations.find((t) => t.locale === defaultLocale);
         const label = localized?.label ?? fallback?.label;
 
         if (!label) {
           return null;
         }
 
-        return { id, label };
+        return { id: row.id, label };
       })
-      .filter((tag): tag is { id: string; label: string } => Boolean(tag))
+      .filter((t): t is { id: string; label: string } => Boolean(t))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     const payload = taxonomyResponseSchema.parse({
