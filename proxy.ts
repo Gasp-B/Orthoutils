@@ -1,6 +1,4 @@
 import crypto from 'crypto';
-import type { Redirect, Rewrite } from 'next/dist/lib/load-custom-routes';
-import type { NextConfig } from 'next';
 import createMiddleware from 'next-intl/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -45,7 +43,6 @@ function getUpdatedEntry(key: string) {
 
 function getConnectSources() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-  // On ajoute wss:// pour le Realtime de Supabase et vercel.live pour les outils Vercel
   const supabaseWss = supabaseUrl.replace('https://', 'wss://');
   
   return [
@@ -64,7 +61,6 @@ function buildNonce() {
 function getSecurityHeaders(nonce: string) {
   const isProduction = process.env.VERCEL_ENV === 'production';
 
-  // Ajout de vercel.live aux sources de scripts et de styles
   const scriptSources = [
     "'self'",
     `'nonce-${nonce}'`,
@@ -94,13 +90,11 @@ function getSecurityHeaders(nonce: string) {
     "default-src 'self'",
     "base-uri 'self'",
     "font-src 'self' data:",
-    // Ajout de vercel.live et blob: (souvent nécessaire pour les prévisualisations d'images)
     "img-src 'self' data: blob: https://vercel.live https://*.vercel.live",
     "object-src 'none'",
     scriptSrc,
     styleSrc,
     `connect-src ${getConnectSources()}`,
-    // Ajout de vercel.live pour les iframes (la toolbar Vercel utilise des iframes)
     "frame-src 'self' https://vercel.live https://*.vercel.live",
     "frame-ancestors 'none'",
     "form-action 'self'",
@@ -160,6 +154,12 @@ export function proxy(request: NextRequest) {
 
   applySecurityHeaders(response, nonce);
 
+  // IMPORTANT: On retourne la réponse sécurisée directement pour les API
+  // pour éviter que next-intl ne tente de rediriger l'API.
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    return response;
+  }
+
   const i18nResponse = intlMiddleware(request);
 
   response.headers.forEach((value, key) => {
@@ -170,14 +170,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
-};
-
-export const rewrites = (): Rewrite[] => [];
-
-export const redirects = (): Redirect[] => [];
-
-export const proxyConfig: NextConfig = {
-  rewrites,
-  redirects,
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 };
