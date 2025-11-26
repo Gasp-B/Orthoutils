@@ -12,13 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils/cn';
 import type {
   TaxonomyDeletionInput,
@@ -773,24 +767,38 @@ export default function TaxonomyManager() {
                     </span>
                   </div>
 
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder={t('filters.status.all')} />
-                    </SelectTrigger>
-                    <SelectContent align="end">
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                      <FilterIcon />
+                    </span>
+                    <Select
+                      value={statusFilter}
+                      onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+                      className="w-48 appearance-none pl-9 pr-10 text-sm"
+                      aria-label={t('filters.status.all')}
+                    >
                       {statusOptions[activeTab].map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          <div className="flex items-center gap-2 text-sm">
-                            <FilterIcon />
-                            <span>{option.label}</span>
-                          </div>
-                        </SelectItem>
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </Select>
+                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                        aria-hidden
+                      >
+                        <path d="m7 10 5 5 5-5" />
+                      </svg>
+                    </span>
+                  </div>
 
                   <div className="inline-flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 shadow-sm">
                     <Button
