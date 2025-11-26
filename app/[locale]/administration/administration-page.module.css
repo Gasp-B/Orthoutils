@@ -1,0 +1,85 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2.5rem 0;
+}
+
+.sectionLabel {
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+.introPanel {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f6fbff 100%);
+}
+
+.pageTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.6rem, 2vw + 1rem, 2rem);
+  font-weight: 800;
+}
+
+.pageLead {
+  margin: 0;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem;
+  text-decoration: none;
+  color: inherit;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.card:hover,
+.card:focus-visible {
+  border-color: rgba(14, 165, 233, 0.36);
+  box-shadow: 0 14px 40px rgba(14, 165, 233, 0.16);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.cardBody {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.cardEyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #0ea5e9;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.cardTitle {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.cardArrow {
+  color: #0ea5e9;
+  font-weight: 900;
+  font-size: 1.2rem;
+}

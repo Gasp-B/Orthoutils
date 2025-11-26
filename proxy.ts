@@ -1,7 +1,10 @@
 import crypto from 'crypto';
 import type { Redirect, Rewrite } from 'next/dist/lib/load-custom-routes';
 import type { NextConfig } from 'next';
+import createMiddleware from 'next-intl/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
+
+import { routing } from './i18n/routing';
 
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 100;
@@ -96,6 +99,8 @@ function applySecurityHeaders(response: NextResponse, nonce: string) {
   }
 }
 
+const intlMiddleware = createMiddleware(routing);
+
 export function proxy(request: NextRequest) {
   const key = getClientKey(request);
   const entry = getUpdatedEntry(key);
@@ -131,11 +136,17 @@ export function proxy(request: NextRequest) {
 
   applySecurityHeaders(response, nonce);
 
-  return response;
+  const i18nResponse = intlMiddleware(request);
+
+  response.headers.forEach((value, key) => {
+    i18nResponse.headers.set(key, value);
+  });
+
+  return i18nResponse;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 };
 
 export const rewrites = (): Rewrite[] => [];
