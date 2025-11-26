@@ -344,7 +344,8 @@
       "listTitle": "Existing items",
       "loading": "Loading...",
       "empty": "No item in this list.",
-      "editTitle": "Edit item"
+      "editTitle": "Edit item",
+      "editingBadge": "Editing"
     },
     "sections": {
       "mainInfo": "Main information",
@@ -388,7 +389,21 @@
       "swatchesLabel": "Predefined colors",
       "swatchAria": "Select color {color}",
       "placeholder": "e.g., Quick assessment",
-      "exists": "This tag already exists."
+      "exists": "This tag already exists.",
+      "colorFallback": "Default color"
+    },
+    "filters": {
+      "searchPlaceholder": "Live search",
+      "statusLabel": "active filters",
+      "status": {
+        "all": "All items",
+        "withDescription": "With description",
+        "withSynonyms": "With synonyms",
+        "withColor": "With color",
+        "withoutColor": "Without color"
+      },
+      "noResults": "No items match these criteria.",
+      "noResultsHelper": "No result for {query}. Adjust the search or reset filters."
     },
     "buttons": {
       "savePending": "Saving...",
@@ -405,12 +420,28 @@
       "pathologyCreated": "Pathology created successfully.",
       "itemDeleted": "Item deleted."
     },
+    "view": {
+      "table": "Table",
+      "compact": "Cards"
+    },
+    "table": {
+      "columns": {
+        "label": "Label",
+        "details": "Details",
+        "helper": "Description",
+        "color": "Color",
+        "actions": "Actions"
+      }
+    },
     "errors": {
       "fetchTaxonomy": "Unable to load taxonomy.",
       "createGeneric": "Error while creating.",
       "deleteGeneric": "Error while deleting.",
       "unknown": "Unknown error.",
       "timeout": "Request timed out."
+    },
+    "states": {
+      "emptyLead": "Add your first entry to build the selection lists."
     },
     "validation": {
       "labelRequired": "A label is required.",

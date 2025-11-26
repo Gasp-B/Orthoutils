@@ -12,6 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils/cn';
 import type {
   TaxonomyDeletionInput,
@@ -24,6 +31,8 @@ const taxonomyQueryKey = (locale: Locale) => ['test-taxonomy', locale] as const;
 const colorSwatches = ['#0EA5E9', '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#EF4444'];
 
 type Tab = 'pathologies' | 'domains' | 'tags';
+type StatusFilter = 'all' | 'withDescription' | 'withSynonyms' | 'withColor' | 'withoutColor';
+type ViewMode = 'table' | 'compact';
 
 type TaxonomyListItem = {
   id: string;
@@ -90,6 +99,102 @@ const StethoscopeIcon = () => (
     <circle cx="20" cy="10" r="2" />
   </svg>
 );
+const SearchIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4"
+    aria-hidden
+  >
+    <circle cx="11" cy="11" r="7" />
+    <path d="m21 21-4.35-4.35" />
+  </svg>
+);
+const TableIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4"
+    aria-hidden
+  >
+    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+    <path d="M9 3v18" />
+    <path d="M15 3v18" />
+    <path d="M3 9h18" />
+    <path d="M3 15h18" />
+  </svg>
+);
+const CardsIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4"
+    aria-hidden
+  >
+    <rect width="9" height="13" x="3" y="4" rx="2" />
+    <rect width="9" height="13" x="12" y="7" rx="2" />
+  </svg>
+);
+const FilterIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-4 w-4"
+    aria-hidden
+  >
+    <path d="M4 5h16" />
+    <path d="M7 12h10" />
+    <path d="M10 19h4" />
+  </svg>
+);
+const EmptyIllustration = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 200 160"
+    fill="none"
+    role="img"
+    aria-hidden
+    className="h-24 w-32 text-slate-300"
+  >
+    <rect x="28" y="32" width="144" height="96" rx="12" fill="currentColor" opacity="0.1" />
+    <rect x="44" y="48" width="112" height="64" rx="8" stroke="currentColor" strokeWidth="6" opacity="0.35" />
+    <path
+      d="M64 88h32"
+      stroke="currentColor"
+      strokeWidth="8"
+      strokeLinecap="round"
+      opacity="0.55"
+    />
+    <path
+      d="M64 68h72"
+      stroke="currentColor"
+      strokeWidth="8"
+      strokeLinecap="round"
+      opacity="0.35"
+    />
+    <circle cx="148" cy="104" r="10" fill="currentColor" opacity="0.65" />
+  </svg>
+);
 
 export default function TaxonomyManager() {
   const t = useTranslations('taxonomy');
@@ -98,6 +203,9 @@ export default function TaxonomyManager() {
 
   const [activeTab, setActiveTab] = useState<Tab>('pathologies');
   const [editingItem, setEditingItem] = useState<TaxonomyListItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({
     pathologies: null,
     domains: null,
@@ -141,6 +249,8 @@ export default function TaxonomyManager() {
   // Reset form when tab changes
   useEffect(() => {
     resetForm();
+    setStatusFilter('all');
+    setSearchTerm('');
   }, [activeTab, resetForm]);
 
   // --- Data Fetching ---
@@ -301,6 +411,24 @@ export default function TaxonomyManager() {
     { value: 'tags' as const, icon: HashIcon },
   ];
 
+  const statusOptions = useMemo(
+    () =>
+      ({
+        pathologies: [
+          { value: 'all', label: t('filters.status.all') },
+          { value: 'withDescription', label: t('filters.status.withDescription') },
+          { value: 'withSynonyms', label: t('filters.status.withSynonyms') },
+        ],
+        domains: [{ value: 'all', label: t('filters.status.all') }],
+        tags: [
+          { value: 'all', label: t('filters.status.all') },
+          { value: 'withColor', label: t('filters.status.withColor') },
+          { value: 'withoutColor', label: t('filters.status.withoutColor') },
+        ],
+      }) satisfies Record<Tab, { value: StatusFilter; label: string }[]>,
+    [t],
+  );
+
   const alreadyExists = !editingItem && activeList.some(
     (item) => item.label.toLowerCase() === labelInput.trim().toLowerCase(),
   );
@@ -312,6 +440,38 @@ export default function TaxonomyManager() {
     : editingItem
       ? t('buttons.update')
       : t('buttons.add');
+
+  const filteredList = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    return activeList.filter((item) => {
+      const matchesSearch = term
+        ? [item.label, item.description, item.synonyms?.join(', ')].some((value) =>
+            value?.toLowerCase().includes(term),
+          )
+        : true;
+
+      if (!matchesSearch) return false;
+
+      if (statusFilter === 'withDescription') {
+        return Boolean(item.description);
+      }
+
+      if (statusFilter === 'withSynonyms') {
+        return Boolean(item.synonyms && item.synonyms.length > 0);
+      }
+
+      if (statusFilter === 'withColor') {
+        return Boolean(item.color);
+      }
+
+      if (statusFilter === 'withoutColor') {
+        return !item.color;
+      }
+
+      return true;
+    });
+  }, [activeList, searchTerm, statusFilter]);
 
   const renderStatusHelper = (status: 'error' | 'info', message: string) => (
     <p
@@ -585,113 +745,334 @@ export default function TaxonomyManager() {
             aria-labelledby={`taxonomy-tab-${activeTab}`}
             id={tabPanelId}
           >
-            <div className="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 rounded-t-xl">
-              <div className="flex items-baseline gap-2">
-                <CardTitle className="text-lg text-slate-800">{t('common.listTitle')}</CardTitle>
-                <Badge variant="secondary" className="px-2.5 py-0.5 text-sm">
-                  {activeList.length}
-                </Badge>
+            <div className="bg-white px-6 py-4 border-b border-slate-100 sticky top-0 z-10 rounded-t-xl">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg text-slate-800">{t('common.listTitle')}</CardTitle>
+                  <Badge variant="secondary" className="px-2.5 py-0.5 text-sm">
+                    {activeList.length}
+                  </Badge>
+                  {editingItem && (
+                    <Badge variant="outline" className="px-2 py-0.5 text-[11px] bg-amber-50 text-amber-700 border-amber-200">
+                      {t('common.editingBadge')}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative w-64 max-w-full">
+                    <Input
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder={t('filters.searchPlaceholder')}
+                      className="pl-9"
+                      aria-label={t('filters.searchPlaceholder')}
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                      <SearchIcon />
+                    </span>
+                  </div>
+
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder={t('filters.status.all')} />
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      {statusOptions[activeTab].map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex items-center gap-2 text-sm">
+                            <FilterIcon />
+                            <span>{option.label}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <div className="inline-flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 shadow-sm">
+                    <Button
+                      type="button"
+                      variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                      className="h-9 gap-2 rounded-none border-0 px-3 text-slate-700"
+                      onClick={() => setViewMode('table')}
+                      aria-pressed={viewMode === 'table'}
+                      aria-label={t('view.table')}
+                    >
+                      <TableIcon />
+                      <span className="hidden sm:inline text-xs font-medium">{t('view.table')}</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={viewMode === 'compact' ? 'secondary' : 'ghost'}
+                      className="h-9 gap-2 rounded-none border-0 px-3 text-slate-700"
+                      onClick={() => setViewMode('compact')}
+                      aria-pressed={viewMode === 'compact'}
+                      aria-label={t('view.compact')}
+                    >
+                      <CardsIcon />
+                      <span className="hidden sm:inline text-xs font-medium">{t('view.compact')}</span>
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
-            
+
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="p-8 text-center text-slate-400">{t('common.loading')}</div>
+                <div className="space-y-3 p-6">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="animate-pulse rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 w-1/3 rounded-full bg-slate-200" />
+                          <div className="h-3 w-2/3 rounded-full bg-slate-100" />
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="h-8 w-8 rounded-lg bg-slate-200" />
+                          <span className="h-8 w-8 rounded-lg bg-slate-200" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : isError ? (
                 <div className="p-8 text-center text-red-500">{t('errors.unknown')}</div>
-              ) : activeList.length === 0 ? (
-                <div className="p-12 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
-                  <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-2">
-                    <span className="text-xl">∅</span>
-                  </div>
-                  <p>{t('common.empty')}</p>
+              ) : filteredList.length === 0 ? (
+                <div className="p-12 text-center flex flex-col items-center justify-center gap-3 text-slate-500">
+                  <EmptyIllustration />
+                  <p className="text-base font-semibold text-slate-700">
+                    {activeList.length === 0 ? t('common.empty') : t('filters.noResults')}
+                  </p>
+                  <p className="text-sm text-slate-500 max-w-md">
+                    {activeList.length === 0
+                      ? t('states.emptyLead')
+                      : t('filters.noResultsHelper', { query: searchTerm || t('filters.statusLabel') })}
+                  </p>
                 </div>
               ) : (
-                <ul className="divide-y divide-slate-100">
-                  {activeList.map((item) => (
-                    <li 
-                      key={item.id} 
-                      className={`group flex items-start gap-4 p-4 transition-colors hover:bg-slate-50/80 ${
-                        editingItem?.id === item.id ? 'bg-amber-50/50 ring-1 ring-inset ring-amber-200' : ''
-                      }`}
-                    >
-                      {activeTab === 'tags' && (
-                        <div className="mt-1.5">
-                          <span
-                            className="block w-3 h-3 rounded-full ring-1 ring-slate-200 shadow-sm"
-                            style={{ backgroundColor: item.color || '#e2e8f0' }}
-                            title={item.color || 'Aucune couleur'}
-                          />
-                        </div>
-                      )}
-
-                      <div className="flex-1 min-w-0 py-0.5">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className={`font-semibold text-sm ${editingItem?.id === item.id ? 'text-amber-900' : 'text-slate-800'}`}>
-                            {item.label}
-                          </p>
-                          {editingItem?.id === item.id && (
-                            <Badge variant="outline" className="text-[10px] py-0 h-4 bg-amber-100 text-amber-700 border-amber-200">
-                              Édition
-                            </Badge>
-                          )}
+                <div className="divide-y divide-slate-100">
+                  {viewMode === 'table' ? (
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[680px] divide-y divide-slate-100">
+                        <div className="grid grid-cols-12 bg-slate-50/70 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          <span className="col-span-4">{t('table.columns.label')}</span>
+                          <span className={activeTab === 'tags' ? 'col-span-4' : 'col-span-5'}>
+                            {activeTab === 'pathologies' ? t('table.columns.details') : t('table.columns.helper')}
+                          </span>
+                          {activeTab === 'tags' && <span className="col-span-2">{t('table.columns.color')}</span>}
+                          <span className={cn(activeTab === 'tags' ? 'col-span-2' : 'col-span-3', 'text-right')}>
+                            {t('table.columns.actions')}
+                          </span>
                         </div>
 
-                        {activeTab === 'pathologies' && (
-                          <div className="space-y-1.5">
-                            {item.description && (
-                              <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
-                                {item.description}
-                              </p>
+                        {filteredList.map((item) => (
+                          <div
+                            key={item.id}
+                            className={cn(
+                              'grid grid-cols-12 items-start gap-4 px-6 py-4 transition-colors',
+                              'hover:bg-slate-50',
+                              editingItem?.id === item.id && 'bg-amber-50/60 ring-1 ring-inset ring-amber-200',
                             )}
-                            {item.synonyms && item.synonyms.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {item.synonyms.map((syn, idx) => (
-                                  <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                                    {syn}
-                                  </span>
-                                ))}
+                          >
+                            <div className="col-span-4 min-w-0 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <p
+                                  className={cn(
+                                    'truncate text-sm font-semibold text-slate-800',
+                                    editingItem?.id === item.id && 'text-amber-900',
+                                  )}
+                                >
+                                  {item.label}
+                                </p>
+                                {editingItem?.id === item.id && (
+                                  <Badge
+                                    variant="outline"
+                                    className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-700 border-amber-200"
+                                  >
+                                    {t('common.editingBadge')}
+                                  </Badge>
+                                )}
+                              </div>
+                              {activeTab === 'domains' && (
+                                <p className="text-xs text-slate-500">{t('helpers.label')}</p>
+                              )}
+                            </div>
+
+                            <div className={cn('min-w-0 space-y-2', activeTab === 'tags' ? 'col-span-4' : 'col-span-5')}>
+                              {activeTab === 'pathologies' ? (
+                                <>
+                                  {item.description && (
+                                    <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{item.description}</p>
+                                  )}
+                                  {item.synonyms && item.synonyms.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {item.synonyms.map((syn, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+                                        >
+                                          {syn}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <p className="text-xs text-slate-600">
+                                  {activeTab === 'tags' ? t('helpers.color') : t('helpers.label')}
+                                </p>
+                              )}
+                            </div>
+
+                            {activeTab === 'tags' && (
+                              <div className="col-span-2 flex items-center gap-2">
+                                <span
+                                  className="block h-4 w-4 rounded-full ring-1 ring-slate-200"
+                                  style={{ backgroundColor: item.color || '#e2e8f0' }}
+                                  title={item.color || t('tags.colorFallback')}
+                                />
+                                <span className="text-xs text-slate-500">{item.color || t('tags.colorFallback')}</span>
                               </div>
                             )}
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-slate-400 hover:text-amber-600 hover:bg-amber-50"
-                          onClick={() => handleEdit(item)}
-                          disabled={deleteMutation.isPending}
-                          aria-label={t('buttons.edit')}
-                        >
-                          <EditIcon />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                          onClick={() =>
-                            deleteMutation.mutate({
-                              type: activeTab === 'domains' ? 'domain' : activeTab === 'tags' ? 'tag' : 'pathology',
-                              id: item.id,
-                              locale,
-                            })
-                          }
-                          disabled={deleteMutation.isPending && deletingId === item.id}
-                          aria-label={t('buttons.delete')}
-                        >
-                          {deleteMutation.isPending && deletingId === item.id ? (
-                            <Spinner className="h-3.5 w-3.5" />
-                          ) : (
-                            <TrashIcon />
-                          )}
-                        </Button>
+                            <div className={cn('flex items-center justify-end gap-1', activeTab === 'tags' ? 'col-span-2' : 'col-span-3')}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-slate-600 hover:bg-amber-50 hover:text-amber-700"
+                                onClick={() => handleEdit(item)}
+                                disabled={deleteMutation.isPending}
+                                aria-label={t('buttons.edit')}
+                              >
+                                <EditIcon />
+                                <span className="sr-only">{t('buttons.edit')}</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-slate-600 hover:bg-red-50 hover:text-red-700"
+                                onClick={() =>
+                                  deleteMutation.mutate({
+                                    type:
+                                      activeTab === 'domains'
+                                        ? 'domain'
+                                        : activeTab === 'tags'
+                                          ? 'tag'
+                                          : 'pathology',
+                                    id: item.id,
+                                    locale,
+                                  })
+                                }
+                                disabled={deleteMutation.isPending && deletingId === item.id}
+                                aria-label={t('buttons.delete')}
+                              >
+                                {deleteMutation.isPending && deletingId === item.id ? (
+                                  <Spinner className="h-3.5 w-3.5" />
+                                ) : (
+                                  <TrashIcon />
+                                )}
+                                <span className="sr-only">{t('buttons.delete')}</span>
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </li>
-                  ))}
-                </ul>
+                    </div>
+                  ) : (
+                    <ul className="grid gap-3 p-4 sm:grid-cols-2">
+                      {filteredList.map((item) => (
+                        <li
+                          key={item.id}
+                          className={cn(
+                            'rounded-xl border border-slate-100 bg-white shadow-sm transition hover:border-slate-200',
+                            editingItem?.id === item.id && 'border-amber-200 bg-amber-50/70',
+                          )}
+                        >
+                          <div className="flex items-start gap-3 p-4">
+                            {activeTab === 'tags' && (
+                              <span
+                                className="mt-0.5 block h-4 w-4 rounded-full ring-1 ring-slate-200"
+                                style={{ backgroundColor: item.color || '#e2e8f0' }}
+                                title={item.color || t('tags.colorFallback')}
+                              />
+                            )}
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-slate-800">{item.label}</p>
+                                {editingItem?.id === item.id && (
+                                  <Badge
+                                    variant="outline"
+                                    className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-700 border-amber-200"
+                                  >
+                                    {t('common.editingBadge')}
+                                  </Badge>
+                                )}
+                              </div>
+                              {activeTab === 'pathologies' && item.description && (
+                                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{item.description}</p>
+                              )}
+                              {activeTab === 'pathologies' && item.synonyms && item.synonyms.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {item.synonyms.map((syn, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+                                    >
+                                      {syn}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                className="h-8 px-2 text-slate-700"
+                                onClick={() => handleEdit(item)}
+                                disabled={deleteMutation.isPending}
+                                aria-label={t('buttons.edit')}
+                              >
+                                <EditIcon />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-slate-600 hover:bg-red-50 hover:text-red-700"
+                                onClick={() =>
+                                  deleteMutation.mutate({
+                                    type:
+                                      activeTab === 'domains'
+                                        ? 'domain'
+                                        : activeTab === 'tags'
+                                          ? 'tag'
+                                          : 'pathology',
+                                    id: item.id,
+                                    locale,
+                                  })
+                                }
+                                disabled={deleteMutation.isPending && deletingId === item.id}
+                                aria-label={t('buttons.delete')}
+                              >
+                                {deleteMutation.isPending && deletingId === item.id ? (
+                                  <Spinner className="h-3.5 w-3.5" />
+                                ) : (
+                                  <TrashIcon />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>

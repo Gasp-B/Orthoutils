@@ -344,7 +344,8 @@
       "listTitle": "Éléments existants",
       "loading": "Chargement...",
       "empty": "Aucun élément dans cette liste.",
-      "editTitle": "Modifier l'élément"
+      "editTitle": "Modifier l'élément",
+      "editingBadge": "Édition active"
     },
     "sections": {
       "mainInfo": "Informations principales",
@@ -388,7 +389,21 @@
       "swatchesLabel": "Couleurs prédéfinies",
       "swatchAria": "Choisir la couleur {color}",
       "placeholder": "Ex. Bilan rapide",
-      "exists": "Ce tag existe déjà."
+      "exists": "Ce tag existe déjà.",
+      "colorFallback": "Couleur par défaut"
+    },
+    "filters": {
+      "searchPlaceholder": "Recherche instantanée",
+      "statusLabel": "les filtres actifs",
+      "status": {
+        "all": "Tous les éléments",
+        "withDescription": "Avec description",
+        "withSynonyms": "Avec synonymes",
+        "withColor": "Avec couleur",
+        "withoutColor": "Sans couleur"
+      },
+      "noResults": "Aucun élément ne correspond à ces critères.",
+      "noResultsHelper": "Aucun résultat pour {query}. Ajustez la recherche ou réinitialisez les filtres."
     },
     "buttons": {
       "savePending": "Enregistrement...",
@@ -405,12 +420,28 @@
       "pathologyCreated": "Pathologie créée avec succès.",
       "itemDeleted": "Élément supprimé."
     },
+    "view": {
+      "table": "Table",
+      "compact": "Cartes"
+    },
+    "table": {
+      "columns": {
+        "label": "Intitulé",
+        "details": "Détails",
+        "helper": "Description",
+        "color": "Couleur",
+        "actions": "Actions"
+      }
+    },
     "errors": {
       "fetchTaxonomy": "Impossible de charger la taxonomie.",
       "createGeneric": "Erreur lors de la création.",
       "deleteGeneric": "Erreur lors de la suppression.",
       "unknown": "Erreur inconnue.",
       "timeout": "Le délai d'attente est dépassé."
+    },
+    "states": {
+      "emptyLead": "Ajoutez une première entrée pour construire vos listes de sélection."
     },
     "validation": {
       "labelRequired": "Un intitulé est requis.",
