@@ -773,11 +773,15 @@ export default function TaxonomyManager() {
 
                   <Select
                     value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-                    options={statusOptions[activeTab]}
-                    size="sm"
+                    onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
                     className="min-w-[200px]"
-                  />
+                  >
+                    {statusOptions[activeTab].map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
               </div>
             </CardHeader>
@@ -906,7 +910,7 @@ export default function TaxonomyManager() {
                                 </>
                               ) : (
                                 <p className="text-xs text-slate-600">
-                                  {activeTab === 'tags' ? t('helpers.color') : t('helpers.label')}
+                                  {t('helpers.label')}
                                 </p>
                               )}
                             </div>
