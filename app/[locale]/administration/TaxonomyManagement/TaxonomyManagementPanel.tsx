@@ -14,6 +14,10 @@ import {
 import { type Locale } from '@/i18n/routing';
 
 type TaxonomyType = 'pathologies' | 'domains' | 'tags';
+type TaxonomyEntry =
+  | TaxonomyResponse['pathologies'][number]
+  | TaxonomyResponse['domains'][number]
+  | TaxonomyResponse['tags'][number];
 
 type FormState = {
   label: string;
@@ -92,7 +96,7 @@ export default function TaxonomyManagementPanel() {
     [t],
   );
 
-  const items = useMemo(() => {
+  const items: TaxonomyEntry[] = useMemo(() => {
     if (!taxonomyQuery.data) return [];
     if (activeType === 'pathologies') return taxonomyQuery.data.pathologies;
     if (activeType === 'domains') return taxonomyQuery.data.domains;
@@ -169,11 +173,37 @@ export default function TaxonomyManagementPanel() {
     if (!entry) return;
 
     setSelectedId(id);
+    if (activeType === 'pathologies') {
+      const pathology = entry as TaxonomyResponse['pathologies'][number];
+
+      setFormState({
+        label: pathology.label ?? '',
+        description: pathology.description ?? '',
+        synonyms: Array.isArray(pathology.synonyms) ? pathology.synonyms.join(', ') : '',
+        color: '',
+      });
+      return;
+    }
+
+    if (activeType === 'tags') {
+      const tag = entry as TaxonomyResponse['tags'][number];
+
+      setFormState({
+        label: tag.label ?? '',
+        description: '',
+        synonyms: '',
+        color: tag.color ?? '',
+      });
+      return;
+    }
+
+    const domain = entry as TaxonomyResponse['domains'][number];
+
     setFormState({
-      label: entry.label ?? '',
-      description: 'description' in entry ? entry.description ?? '' : '',
-      synonyms: 'synonyms' in entry && Array.isArray(entry.synonyms) ? entry.synonyms.join(', ') : '',
-      color: 'color' in entry && entry.color ? entry.color : '',
+      label: domain.label ?? '',
+      description: '',
+      synonyms: '',
+      color: '',
     });
   };
 
@@ -273,27 +303,42 @@ export default function TaxonomyManagementPanel() {
                 >
                   <div className={styles.itemMeta}>
                     <p className={styles.itemLabel}>{item.label}</p>
-                    {'description' in item && item.description && (
-                      <p className={styles.itemDescription}>{item.description}</p>
-                    )}
-                    {'color' in item && item.color && (
-                      <span
-                        aria-label={t('labels.colorValue', { value: item.color })}
-                        className={styles.synonym}
-                        style={{ background: item.color, color: '#fff' }}
-                      >
-                        {item.color}
-                      </span>
-                    )}
-                    {'synonyms' in item && item.synonyms && item.synonyms.length > 0 && (
-                      <div className={styles.synonyms}>
-                        {item.synonyms.map((synonym) => (
-                          <span key={synonym} className={styles.synonym}>
-                            {synonym}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {(() => {
+                      const hasDescription =
+                        'description' in item && typeof item.description === 'string' && item.description.trim().length > 0;
+                      return hasDescription ? (
+                        <p className={styles.itemDescription}>{item.description}</p>
+                      ) : null;
+                    })()}
+                    {(() => {
+                      const colorValue = 'color' in item && typeof item.color === 'string' ? item.color : '';
+                      if (!colorValue) return null;
+
+                      return (
+                        <span
+                          aria-label={t('labels.colorValue', { value: colorValue })}
+                          className={styles.synonym}
+                          style={{ background: colorValue, color: '#fff' }}
+                        >
+                          {colorValue}
+                        </span>
+                      );
+                    })()}
+                    {(() => {
+                      const hasSynonyms =
+                        'synonyms' in item && Array.isArray(item.synonyms) && item.synonyms.length > 0;
+                      if (!hasSynonyms) return null;
+
+                      return (
+                        <div className={styles.synonyms}>
+                          {item.synonyms.map((synonym) => (
+                            <span key={synonym} className={styles.synonym}>
+                              {synonym}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className={styles.actions}>
                     <button
