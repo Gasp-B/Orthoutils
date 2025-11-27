@@ -129,7 +129,7 @@ function Header() {
               <Link className="ph-header__submenu-link" href="/tests/manage">
                 {t('addTest')}
               </Link>
-              <Link className="ph-header__submenu-link" href="/administration/taxonomy">
+              <Link className="ph-header__submenu-link" href="/administration/TaxonomyManagement">
                 {t('taxonomy')}
               </Link>
             </div>

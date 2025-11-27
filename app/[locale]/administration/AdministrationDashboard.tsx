@@ -34,20 +34,6 @@ function AdministrationDashboard() {
         </Link>
 
         <Link
-          href="/administration/taxonomy"
-          className={styles.card}
-          aria-label={t('taxonomy')}
-        >
-          <div className={styles.cardBody}>
-            <p className={styles.cardEyebrow}>{t('tagsLabel')}</p>
-            <span className={styles.cardTitle}>{t('taxonomy')}</span>
-          </div>
-          <span aria-hidden className={styles.cardArrow}>
-            →
-          </span>
-        </Link>
-
-        <Link
           href="/administration/TaxonomyManagement"
           className={styles.card}
           aria-label={tm('nav.cardTitle')}
