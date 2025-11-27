@@ -735,7 +735,7 @@ export default function TaxonomyManager() {
                 </div>
                 <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
                   <Button
-                    variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                    variant={viewMode === 'table' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('table')}
                     className="gap-2 px-3 text-slate-700"
@@ -746,7 +746,7 @@ export default function TaxonomyManager() {
                     <span className="hidden text-xs font-medium sm:inline">{t('view.table')}</span>
                   </Button>
                   <Button
-                    variant={viewMode === 'compact' ? 'secondary' : 'ghost'}
+                    variant={viewMode === 'compact' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('compact')}
                     className="gap-2 px-3 text-slate-700"
