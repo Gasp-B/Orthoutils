@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback, type KeyboardEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { type Locale } from '@/i18n/routing';
-import { useLocale } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +25,6 @@ const colorSwatches = ['#0EA5E9', '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#
 
 type Tab = 'pathologies' | 'domains' | 'tags';
 type StatusFilter = 'all' | 'withDescription' | 'withSynonyms' | 'withColor' | 'withoutColor';
-type ViewMode = 'table' | 'compact';
 
 type TaxonomyListItem = {
   id: string;
@@ -109,41 +107,6 @@ const SearchIcon = () => (
     <path d="m21 21-4.35-4.35" />
   </svg>
 );
-const TableIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-4 w-4"
-    aria-hidden
-  >
-    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-    <path d="M9 3v18" />
-    <path d="M15 3v18" />
-    <path d="M3 9h18" />
-    <path d="M3 15h18" />
-  </svg>
-);
-const CardsIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="h-4 w-4"
-    aria-hidden
-  >
-    <rect width="9" height="13" x="3" y="4" rx="2" />
-    <rect width="9" height="13" x="12" y="7" rx="2" />
-  </svg>
-);
 const FilterIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -199,7 +162,7 @@ export default function TaxonomyManager() {
   const [editingItem, setEditingItem] = useState<TaxonomyListItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({
     pathologies: null,
     domains: null,
@@ -240,15 +203,39 @@ export default function TaxonomyManager() {
     setSaveAttempted(false);
   }, []);
 
+  const closeDrawer = useCallback(() => {
+    setIsDrawerOpen(false);
+    resetForm();
+  }, [resetForm]);
+
+  const openDrawer = useCallback(
+    (item?: TaxonomyListItem) => {
+      if (item) {
+        setEditingItem(item);
+        setLabelInput(item.label);
+        setDescInput(item.description || '');
+        setSynonymsInput(item.synonyms?.join(', ') || '');
+        setColorInput(item.color || '');
+      } else {
+        resetForm();
+      }
+
+      setErrorMessage(null);
+      setSaveAttempted(false);
+      setIsDrawerOpen(true);
+    },
+    [resetForm],
+  );
+
   // Reset form when tab changes
   useEffect(() => {
-    resetForm();
+    closeDrawer();
     setStatusFilter('all');
     setSearchTerm('');
-  }, [activeTab, resetForm]);
+  }, [activeTab, closeDrawer]);
 
   // --- Data Fetching ---
-  const { data, isLoading, isError, isFetching } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: taxonomyQueryKey(locale),
     queryFn: async () => {
       const res = await fetch(`/api/tests/taxonomy?locale=${locale}`, { cache: 'no-store' });
@@ -261,13 +248,13 @@ export default function TaxonomyManager() {
   const saveMutation = useMutation({
     mutationFn: async (payload: TaxonomyMutationInput & { id?: string }) => {
       const method = editingItem ? 'PUT' : 'POST';
-      
+
       const res = await fetch('/api/tests/taxonomy', {
-        method: method, 
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, id: editingItem?.id }),
       });
-      
+
       if (!res.ok) {
         const json = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(json.error || t('errors.createGeneric'));
@@ -283,9 +270,9 @@ export default function TaxonomyManager() {
         pathology: editingItem ? 'toast.pathologyUpdated' : 'toast.pathologyCreated',
       } as const;
 
-      const msg = t(toastKeys[variables.type]); 
+      const msg = t(toastKeys[variables.type]);
       showToast(msg);
-      resetForm();
+      closeDrawer();
     },
     onError: (err) => setErrorMessage(err instanceof Error ? err.message : t('errors.unknown')),
   });
@@ -305,7 +292,7 @@ export default function TaxonomyManager() {
       void queryClient.invalidateQueries({ queryKey: taxonomyQueryKey(locale) });
       showToast(t('toast.itemDeleted'));
       setDeletingId(null);
-      if (editingItem) resetForm();
+      closeDrawer();
     },
     onError: (err) => {
       setErrorMessage(err instanceof Error ? err.message : t('errors.unknown'));
@@ -334,19 +321,6 @@ export default function TaxonomyManager() {
     saveMutation.mutate(payload);
   };
 
-  const handleEdit = (item: TaxonomyListItem) => {
-    setEditingItem(item);
-    setLabelInput(item.label);
-    setDescInput(item.description || '');
-    setSynonymsInput(item.synonyms?.join(', ') || '');
-    setColorInput(item.color || '');
-    setErrorMessage(null);
-    setSaveAttempted(false);
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // --- Lists ---
   const activeList = useMemo<TaxonomyListItem[]>(() => {
     if (!data) return [];
     const list = (data[activeTab] ?? []) as TaxonomyListItem[];
@@ -396,14 +370,6 @@ export default function TaxonomyManager() {
     setActiveTab(nextTab);
     tabRefs.current[nextTab]?.focus();
   };
-
-  const showTabLoading = isLoading || isFetching;
-
-  const tabs = [
-    { value: 'pathologies' as const, icon: StethoscopeIcon },
-    { value: 'domains' as const, icon: FolderIcon },
-    { value: 'tags' as const, icon: HashIcon },
-  ];
 
   const statusOptions = useMemo(
     () =>
@@ -500,592 +466,467 @@ export default function TaxonomyManager() {
     />
   );
 
+  const handleRowKeyDown = (event: KeyboardEvent<HTMLDivElement>, item: TaxonomyListItem) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openDrawer(item);
+    }
+  };
+
   return (
-    <div className="grid gap-8">
+    <div className="space-y-6">
       {toastMessage && (
         <div className="fixed top-4 right-4 z-50 px-4 py-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-lg animate-in fade-in slide-in-from-top-2">
           {toastMessage}
         </div>
       )}
 
-      <div className="flex justify-center">
-        <div
-          role="tablist"
-          aria-label={t('common.listTitle')}
-          className="inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50/80 p-1 backdrop-blur"
-        >
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.value}
-                ref={(node) => {
-                  tabRefs.current[tab.value] = node;
-                }}
-                role="tab"
-                aria-selected={activeTab === tab.value}
-                aria-controls={tabPanelId}
-                id={`taxonomy-tab-${tab.value}`}
-                tabIndex={activeTab === tab.value ? 0 : -1}
-                onClick={() => setActiveTab(tab.value)}
-                onKeyDown={(event) => handleTabKeyDown(event, tab.value)}
-                className={`group inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50 ${
-                  activeTab === tab.value
-                    ? 'bg-white text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200'
-                    : 'text-slate-600 hover:bg-white/60 hover:text-slate-900'
-                }`}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div
+              role="tablist"
+              aria-label={t('common.listTitle')}
+              className="inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50/80 p-1 backdrop-blur"
+            >
+              {[
+                { value: 'pathologies' as Tab, icon: StethoscopeIcon },
+                { value: 'domains' as Tab, icon: FolderIcon },
+                { value: 'tags' as Tab, icon: HashIcon },
+              ].map((tab) => {
+                const Icon = tab.icon;
+
+                return (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    ref={(node) => (tabRefs.current[tab.value] = node)}
+                    role="tab"
+                    aria-selected={activeTab === tab.value}
+                    aria-controls={tabPanelId}
+                    id={`taxonomy-tab-${tab.value}`}
+                    tabIndex={activeTab === tab.value ? 0 : -1}
+                    className={cn(
+                      'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300',
+                      activeTab === tab.value
+                        ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
+                        : 'text-slate-500 hover:bg-white/70',
+                    )}
+                    onClick={() => setActiveTab(tab.value)}
+                    onKeyDown={(event) => handleTabKeyDown(event, tab.value)}
+                  >
+                    <span className="rounded-full bg-slate-100 p-1 text-slate-500">
+                      <Icon />
+                    </span>
+                    <span>{t(`${tab.value}.toolbarTitle`)}</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {tabCounts[tab.value]}
+                    </Badge>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <Button onClick={() => openDrawer()} className="ml-auto">
+            {t('buttons.add')}
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-64 max-w-full">
+            <Input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={t('filters.searchPlaceholder')}
+              className="pl-9"
+              aria-label={t('filters.searchPlaceholder')}
+            />
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+              <SearchIcon />
+            </span>
+          </div>
+
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+              <FilterIcon />
+            </span>
+            <Select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+              className="w-48 appearance-none pl-9 pr-10 text-sm"
+              aria-label={t('filters.status.all')}
+            >
+              {statusOptions[activeTab].map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden
               >
-                <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${
-                  activeTab === tab.value ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 shadow-inner'
-                }`}>
-                  <Icon />
-                </span>
-                <span className="truncate">{t(`${tab.value}.toolbarTitle`)}</span>
-                <Badge
-                  variant="secondary"
-                  className={`ml-1 h-6 min-w-[2rem] justify-center rounded-full px-2 text-xs font-semibold ${
-                    activeTab === tab.value
-                      ? 'bg-slate-900/10 text-slate-900'
-                      : 'bg-white text-slate-600'
-                  }`}
-                  aria-live="polite"
-                  aria-busy={showTabLoading}
-                >
-                  {showTabLoading ? (
-                    <span className="inline-flex h-3 w-8 animate-pulse rounded-full bg-slate-200" aria-hidden />
-                  ) : (
-                    tabCounts[tab.value]
-                  )}
-                  <span className="sr-only">{t('common.listTitle')}</span>
-                </Badge>
-              </button>
-            );
-          })}
+                <path d="m7 10 5 5 5-5" />
+              </svg>
+            </span>
+          </div>
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
-          {errorMessage}
-        </div>
-      )}
-
-      <div className="grid lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-4 lg:sticky lg:top-6">
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100">
-              <CardHeader className="p-0 space-y-0">
-                <CardTitle className="text-lg text-slate-800">
-                  {editingItem ? t('common.editTitle') : t(`${activeTab}.cardTitle`)}
-                </CardTitle>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  {t(`${activeTab}.cardHelper`)}
-                </p>
-              </CardHeader>
+      <Card
+        className="border-slate-200 shadow-sm"
+        role="tabpanel"
+        aria-labelledby={`taxonomy-tab-${activeTab}`}
+        id={tabPanelId}
+      >
+        <CardHeader className="bg-white border-b border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg text-slate-800">{t('common.listTitle')}</CardTitle>
+              <Badge variant="secondary" className="px-2.5 py-0.5 text-sm">
+                {activeList.length}
+              </Badge>
             </div>
-            
-            <CardContent className="p-6 space-y-6">
-              <div className="grid gap-6 lg:grid-cols-2">
-                <section className="space-y-3">
-                  <p className="text-sm font-semibold text-slate-700">{t('sections.mainInfo')}</p>
-                  <div className="space-y-2">
-                    <Label htmlFor="label" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                      {t(`${activeTab}.label`)}
-                    </Label>
-                    <Input
-                      id="label"
-                      value={labelInput}
-                      onChange={(e) => setLabelInput(e.target.value)}
-                      placeholder={t(`${activeTab}.placeholder`)}
-                      className={cn(
-                        'bg-white',
-                        labelHasError &&
-                          'border-red-300 text-red-900 focus-visible:ring-red-200 focus-visible:border-red-400',
-                      )}
-                      aria-invalid={labelHasError}
-                      aria-describedby="taxonomy-label-help"
-                    />
-                    <div id="taxonomy-label-help">
-                      {labelHasError
-                        ? renderStatusHelper('error', alreadyExists ? t(`${activeTab}.exists`) : t('validation.labelRequired'))
-                        : renderStatusHelper('info', t('helpers.label'))}
-                    </div>
-                  </div>
-                </section>
+            {editingItem && (
+              <Badge variant="outline" className="px-2 py-0.5 text-[11px] bg-amber-50 text-amber-700 border-amber-200">
+                {t('common.editingBadge')}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
 
-                {activeTab === 'tags' && (
-                  <section className="space-y-3">
-                    <p className="text-sm font-semibold text-slate-700">{t('sections.color')}</p>
-                    <div className="space-y-2">
-                      <Label htmlFor="color" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                        {t('tags.colorLabel')}
-                      </Label>
-                      <div className="flex items-center gap-3">
-                        <Input
-                          type="color"
-                          id="color"
-                          value={colorInput || colorSwatches[0]}
-                          onChange={(e) => setColorInput(e.target.value)}
-                          className="h-11 w-16 bg-white p-1"
-                          aria-describedby="taxonomy-color-help"
-                        />
-                        <Input
-                          type="text"
-                          inputMode="text"
-                          id="color-hex"
-                          value={colorInput}
-                          onChange={(e) => setColorInput(e.target.value)}
-                          placeholder={t('tags.colorPlaceholder')}
-                          className={cn(
-                            'flex-1 bg-white',
-                            colorHasError &&
-                              'border-red-300 text-red-900 focus-visible:ring-red-200 focus-visible:border-red-400',
-                          )}
-                          aria-invalid={colorHasError}
-                          aria-describedby="taxonomy-color-help"
-                        />
-                      </div>
-                      <div className="flex flex-wrap gap-2" role="list" aria-label={t('tags.swatchesLabel')}>
-                        {colorSwatches.map((swatch) => (
-                          <button
-                            key={swatch}
-                            type="button"
-                            className={cn(
-                              'h-8 w-8 rounded-full border ring-offset-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400',
-                              colorInput === swatch
-                                ? 'ring-2 ring-slate-500 border-slate-300'
-                                : 'border-slate-200 hover:scale-[1.02]',
-                            )}
-                            style={{ backgroundColor: swatch }}
-                            onClick={() => setColorInput(swatch)}
-                            aria-label={t('tags.swatchAria', { color: swatch })}
-                            role="listitem"
-                          />
-                        ))}
-                      </div>
-                      <div id="taxonomy-color-help">
-                        {colorHasError
-                          ? renderStatusHelper('error', t('validation.colorFormat'))
-                          : renderStatusHelper('info', t('helpers.color'))}
-                      </div>
-                    </div>
-                  </section>
-                )}
-
-                {activeTab === 'pathologies' && (
-                  <section className="space-y-3 lg:col-span-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-700">{t('sections.pathologyDetails')}</p>
-                      <Badge variant="secondary">{t('helpers.pathologyBadge')}</Badge>
-                    </div>
-                    <div className="grid gap-4 lg:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="desc" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                          {t('pathologies.descLabel')}
-                        </Label>
-                        <Textarea
-                          id="desc"
-                          value={descInput}
-                          onChange={(e) => setDescInput(e.target.value)}
-                          placeholder={t('pathologies.descPlaceholder')}
-                          className="min-h-[120px] bg-white resize-none"
-                        />
-                        {renderStatusHelper('info', t('helpers.description'))}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="synonyms" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                          {t('pathologies.synonymsLabel')}
-                        </Label>
-                        <Input
-                          id="synonyms"
-                          value={synonymsInput}
-                          onChange={(e) => setSynonymsInput(e.target.value)}
-                          placeholder={t('pathologies.synonymsPlaceholder')}
-                          className="bg-white"
-                        />
-                        {renderStatusHelper('info', t('pathologies.synonymsHelper'))}
-                      </div>
-                    </div>
-                  </section>
-                )}
-              </div>
-            </CardContent>
-            <div className="border-t border-slate-100 bg-white px-6 py-4 lg:sticky lg:bottom-4 lg:shadow-md">
-              <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                {editingItem && (
-                  <Button variant="ghost" onClick={resetForm} className="sm:w-auto">
-                    {t('buttons.cancel')}
-                  </Button>
-                )}
-                <Button
-                  onClick={handleSave}
-                  disabled={!labelInput.trim() || alreadyExists || saveMutation.isPending}
-                  className="sm:w-auto"
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="space-y-3 p-6">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="animate-pulse rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3"
                 >
-                  <span className="flex items-center gap-2">
-                    {saveMutation.isPending && <Spinner />}
-                    {actionLabel}
-                  </span>
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-8">
-          <Card
-            className="border-slate-200 shadow-sm h-full"
-            role="tabpanel"
-            aria-labelledby={`taxonomy-tab-${activeTab}`}
-            id={tabPanelId}
-          >
-            <div className="bg-white px-6 py-4 border-b border-slate-100 sticky top-0 z-10 rounded-t-xl">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg text-slate-800">{t('common.listTitle')}</CardTitle>
-                  <Badge variant="secondary" className="px-2.5 py-0.5 text-sm">
-                    {activeList.length}
-                  </Badge>
-                  {editingItem && (
-                    <Badge variant="outline" className="px-2 py-0.5 text-[11px] bg-amber-50 text-amber-700 border-amber-200">
-                      {t('common.editingBadge')}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative w-64 max-w-full">
-                    <Input
-                      value={searchTerm}
-                      onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder={t('filters.searchPlaceholder')}
-                      className="pl-9"
-                      aria-label={t('filters.searchPlaceholder')}
-                    />
-                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                      <SearchIcon />
-                    </span>
-                  </div>
-
-                  <div className="relative">
-                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                      <FilterIcon />
-                    </span>
-                    <Select
-                      value={statusFilter}
-                      onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-                      className="w-48 appearance-none pl-9 pr-10 text-sm"
-                      aria-label={t('filters.status.all')}
-                    >
-                      {statusOptions[activeTab].map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </Select>
-                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-4 w-4"
-                        aria-hidden
-                      >
-                        <path d="m7 10 5 5 5-5" />
-                      </svg>
-                    </span>
-                  </div>
-
-                  <div className="inline-flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 shadow-sm">
-                    <Button
-                      type="button"
-                      variant={viewMode === 'table' ? 'default' : 'ghost'}
-                      className="h-9 gap-2 rounded-none border-0 px-3 text-slate-700"
-                      onClick={() => setViewMode('table')}
-                      aria-pressed={viewMode === 'table'}
-                      aria-label={t('view.table')}
-                    >
-                      <TableIcon />
-                      <span className="hidden sm:inline text-xs font-medium">{t('view.table')}</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={viewMode === 'compact' ? 'default' : 'ghost'}
-                      className="h-9 gap-2 rounded-none border-0 px-3 text-slate-700"
-                      onClick={() => setViewMode('compact')}
-                      aria-pressed={viewMode === 'compact'}
-                      aria-label={t('view.compact')}
-                    >
-                      <CardsIcon />
-                      <span className="hidden sm:inline text-xs font-medium">{t('view.compact')}</span>
-                    </Button>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-1/3 rounded-full bg-slate-200" />
+                      <div className="h-3 w-2/3 rounded-full bg-slate-100" />
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="h-8 w-8 rounded-lg bg-slate-200" />
+                      <span className="h-8 w-8 rounded-lg bg-slate-200" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
+          ) : isError ? (
+            <div className="p-8 text-center text-red-500">{t('errors.unknown')}</div>
+          ) : filteredList.length === 0 ? (
+            <div className="p-12 text-center flex flex-col items-center justify-center gap-3 text-slate-500">
+              <EmptyIllustration />
+              <p className="text-base font-semibold text-slate-700">
+                {activeList.length === 0 ? t('common.empty') : t('filters.noResults')}
+              </p>
+              <p className="text-sm text-slate-500 max-w-md">
+                {activeList.length === 0
+                  ? t('states.emptyLead')
+                  : t('filters.noResultsHelper', { query: searchTerm || t('filters.statusLabel') })}
+              </p>
+              {activeList.length === 0 && (
+                <Button onClick={() => openDrawer()}>{t('buttons.add')}</Button>
+              )}
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              <div className="overflow-x-auto">
+                <div className="min-w-[720px] divide-y divide-slate-100">
+                  <div className="grid grid-cols-12 bg-slate-50/70 px-6 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <span className="col-span-4">{t('table.columns.label')}</span>
+                    <span className={activeTab === 'tags' ? 'col-span-4' : 'col-span-5'}>
+                      {activeTab === 'pathologies' ? t('table.columns.details') : t('table.columns.helper')}
+                    </span>
+                    {activeTab === 'tags' && <span className="col-span-2">{t('table.columns.color')}</span>}
+                    <span className={cn(activeTab === 'tags' ? 'col-span-2' : 'col-span-3', 'text-right')}>
+                      {t('table.columns.actions')}
+                    </span>
+                  </div>
 
-            <CardContent className="p-0">
-              {isLoading ? (
-                <div className="space-y-3 p-6">
-                  {Array.from({ length: 4 }).map((_, idx) => (
+                  {filteredList.map((item) => (
                     <div
-                      key={idx}
-                      className="animate-pulse rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3"
+                      key={item.id}
+                      className={cn(
+                        'group grid grid-cols-12 items-start gap-4 px-6 py-3 transition-colors',
+                        'hover:bg-slate-50',
+                        editingItem?.id === item.id && 'bg-amber-50/60 ring-1 ring-inset ring-amber-200',
+                      )}
+                      onClick={() => openDrawer(item)}
+                      onKeyDown={(event) => handleRowKeyDown(event, item)}
+                      role="button"
+                      tabIndex={0}
                     >
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1 space-y-2">
-                          <div className="h-3 w-1/3 rounded-full bg-slate-200" />
-                          <div className="h-3 w-2/3 rounded-full bg-slate-100" />
+                      <div className="col-span-4 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p
+                            className={cn(
+                              'truncate text-sm font-semibold text-slate-800',
+                              editingItem?.id === item.id && 'text-amber-900',
+                            )}
+                          >
+                            {item.label}
+                          </p>
+                          {editingItem?.id === item.id && (
+                            <Badge
+                              variant="outline"
+                              className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-700 border-amber-200"
+                            >
+                              {t('common.editingBadge')}
+                            </Badge>
+                          )}
                         </div>
-                        <div className="flex gap-2">
-                          <span className="h-8 w-8 rounded-lg bg-slate-200" />
-                          <span className="h-8 w-8 rounded-lg bg-slate-200" />
+                        {activeTab === 'domains' && (
+                          <p className="text-xs text-slate-500">{t('helpers.label')}</p>
+                        )}
+                      </div>
+
+                      <div className={cn('min-w-0 space-y-2', activeTab === 'tags' ? 'col-span-4' : 'col-span-5')}>
+                        {activeTab === 'pathologies' ? (
+                          <>
+                            {item.description && (
+                              <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{item.description}</p>
+                            )}
+                            {item.synonyms && item.synonyms.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {item.synonyms.map((syn, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+                                  >
+                                    {syn}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        ) : activeTab === 'domains' ? (
+                          <p className="text-xs text-slate-500">{t('helpers.label')}</p>
+                        ) : (
+                          <p className="text-xs text-slate-600">{t('tags.cardHelper')}</p>
+                        )}
+                      </div>
+
+                      {activeTab === 'tags' && (
+                        <div className="col-span-2 flex items-center gap-2">
+                          <span
+                            className="block h-5 w-5 rounded-full ring-1 ring-slate-200"
+                            style={{ backgroundColor: item.color || '#e2e8f0' }}
+                            title={item.color || t('tags.colorFallback')}
+                          />
+                          <span className="text-xs text-slate-600">{item.color || t('tags.colorFallback')}</span>
                         </div>
+                      )}
+
+                      <div
+                        className={cn(
+                          activeTab === 'tags' ? 'col-span-2' : 'col-span-3',
+                          'flex items-center justify-end gap-2 text-slate-500',
+                        )}
+                      >
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-8 px-2 text-slate-700 opacity-0 transition-opacity group-hover:opacity-100"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openDrawer(item);
+                          }}
+                          disabled={deleteMutation.isPending}
+                          aria-label={t('common.editTitle')}
+                        >
+                          <EditIcon />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-slate-600 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-700 group-hover:opacity-100"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            deleteMutation.mutate({
+                              type:
+                                activeTab === 'domains'
+                                  ? 'domain'
+                                  : activeTab === 'tags'
+                                    ? 'tag'
+                                    : 'pathology',
+                              id: item.id,
+                              locale,
+                            });
+                          }}
+                          disabled={deleteMutation.isPending && deletingId === item.id}
+                          aria-label={t('buttons.delete')}
+                        >
+                          {deleteMutation.isPending && deletingId === item.id ? (
+                            <Spinner className="h-3.5 w-3.5" />
+                          ) : (
+                            <TrashIcon />
+                          )}
+                          <span className="sr-only">{t('buttons.delete')}</span>
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : isError ? (
-                <div className="p-8 text-center text-red-500">{t('errors.unknown')}</div>
-              ) : filteredList.length === 0 ? (
-                <div className="p-12 text-center flex flex-col items-center justify-center gap-3 text-slate-500">
-                  <EmptyIllustration />
-                  <p className="text-base font-semibold text-slate-700">
-                    {activeList.length === 0 ? t('common.empty') : t('filters.noResults')}
-                  </p>
-                  <p className="text-sm text-slate-500 max-w-md">
-                    {activeList.length === 0
-                      ? t('states.emptyLead')
-                      : t('filters.noResultsHelper', { query: searchTerm || t('filters.statusLabel') })}
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {viewMode === 'table' ? (
-                    <div className="overflow-x-auto">
-                      <div className="min-w-[680px] divide-y divide-slate-100">
-                        <div className="grid grid-cols-12 bg-slate-50/70 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          <span className="col-span-4">{t('table.columns.label')}</span>
-                          <span className={activeTab === 'tags' ? 'col-span-4' : 'col-span-5'}>
-                            {activeTab === 'pathologies' ? t('table.columns.details') : t('table.columns.helper')}
-                          </span>
-                          {activeTab === 'tags' && <span className="col-span-2">{t('table.columns.color')}</span>}
-                          <span className={cn(activeTab === 'tags' ? 'col-span-2' : 'col-span-3', 'text-right')}>
-                            {t('table.columns.actions')}
-                          </span>
-                        </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                        {filteredList.map((item) => (
-                          <div
-                            key={item.id}
-                            className={cn(
-                              'grid grid-cols-12 items-start gap-4 px-6 py-4 transition-colors',
-                              'hover:bg-slate-50',
-                              editingItem?.id === item.id && 'bg-amber-50/60 ring-1 ring-inset ring-amber-200',
-                            )}
-                          >
-                            <div className="col-span-4 min-w-0 space-y-1">
-                              <div className="flex items-center gap-2">
-                                <p
-                                  className={cn(
-                                    'truncate text-sm font-semibold text-slate-800',
-                                    editingItem?.id === item.id && 'text-amber-900',
-                                  )}
-                                >
-                                  {item.label}
-                                </p>
-                                {editingItem?.id === item.id && (
-                                  <Badge
-                                    variant="outline"
-                                    className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-700 border-amber-200"
-                                  >
-                                    {t('common.editingBadge')}
-                                  </Badge>
-                                )}
-                              </div>
-                              {activeTab === 'domains' && (
-                                <p className="text-xs text-slate-500">{t('helpers.label')}</p>
-                              )}
-                            </div>
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-40 flex justify-end bg-slate-900/30 backdrop-blur-sm">
+          <div className="h-full w-full max-w-xl bg-white shadow-2xl ring-1 ring-slate-200 animate-in slide-in-from-right">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                  {editingItem ? t('common.editTitle') : t(`${activeTab}.cardTitle`)}
+                </p>
+                <h2 className="text-xl font-semibold text-slate-900">{t(`${activeTab}.toolbarTitle`)}</h2>
+              </div>
+              <Button variant="ghost" onClick={closeDrawer} aria-label={t('buttons.cancel')}>
+                ×
+              </Button>
+            </div>
 
-                            <div className={cn('min-w-0 space-y-2', activeTab === 'tags' ? 'col-span-4' : 'col-span-5')}>
-                              {activeTab === 'pathologies' ? (
-                                <>
-                                  {item.description && (
-                                    <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{item.description}</p>
-                                  )}
-                                  {item.synonyms && item.synonyms.length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
-                                      {item.synonyms.map((syn, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
-                                        >
-                                          {syn}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </>
-                              ) : (
-                                <p className="text-xs text-slate-600">
-                                  {activeTab === 'tags' ? t('helpers.color') : t('helpers.label')}
-                                </p>
-                              )}
-                            </div>
-
-                            {activeTab === 'tags' && (
-                              <div className="col-span-2 flex items-center gap-2">
-                                <span
-                                  className="block h-4 w-4 rounded-full ring-1 ring-slate-200"
-                                  style={{ backgroundColor: item.color || '#e2e8f0' }}
-                                  title={item.color || t('tags.colorFallback')}
-                                />
-                                <span className="text-xs text-slate-500">{item.color || t('tags.colorFallback')}</span>
-                              </div>
-                            )}
-
-                            <div className={cn('flex items-center justify-end gap-1', activeTab === 'tags' ? 'col-span-2' : 'col-span-3')}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-2 text-slate-600 hover:bg-amber-50 hover:text-amber-700"
-                                onClick={() => handleEdit(item)}
-                                disabled={deleteMutation.isPending}
-                                aria-label={t('buttons.edit')}
-                              >
-                                <EditIcon />
-                                <span className="sr-only">{t('buttons.edit')}</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-2 text-slate-600 hover:bg-red-50 hover:text-red-700"
-                                onClick={() =>
-                                  deleteMutation.mutate({
-                                    type:
-                                      activeTab === 'domains'
-                                        ? 'domain'
-                                        : activeTab === 'tags'
-                                          ? 'tag'
-                                          : 'pathology',
-                                    id: item.id,
-                                    locale,
-                                  })
-                                }
-                                disabled={deleteMutation.isPending && deletingId === item.id}
-                                aria-label={t('buttons.delete')}
-                              >
-                                {deleteMutation.isPending && deletingId === item.id ? (
-                                  <Spinner className="h-3.5 w-3.5" />
-                                ) : (
-                                  <TrashIcon />
-                                )}
-                                <span className="sr-only">{t('buttons.delete')}</span>
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <ul className="grid gap-3 p-4 sm:grid-cols-2">
-                      {filteredList.map((item) => (
-                        <li
-                          key={item.id}
-                          className={cn(
-                            'rounded-xl border border-slate-100 bg-white shadow-sm transition hover:border-slate-200',
-                            editingItem?.id === item.id && 'border-amber-200 bg-amber-50/70',
-                          )}
-                        >
-                          <div className="flex items-start gap-3 p-4">
-                            {activeTab === 'tags' && (
-                              <span
-                                className="mt-0.5 block h-4 w-4 rounded-full ring-1 ring-slate-200"
-                                style={{ backgroundColor: item.color || '#e2e8f0' }}
-                                title={item.color || t('tags.colorFallback')}
-                              />
-                            )}
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm font-semibold text-slate-800">{item.label}</p>
-                                {editingItem?.id === item.id && (
-                                  <Badge
-                                    variant="outline"
-                                    className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-700 border-amber-200"
-                                  >
-                                    {t('common.editingBadge')}
-                                  </Badge>
-                                )}
-                              </div>
-                              {activeTab === 'pathologies' && item.description && (
-                                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{item.description}</p>
-                              )}
-                              {activeTab === 'pathologies' && item.synonyms && item.synonyms.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {item.synonyms.map((syn, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
-                                    >
-                                      {syn}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="h-8 px-2 text-slate-700"
-                                onClick={() => handleEdit(item)}
-                                disabled={deleteMutation.isPending}
-                                aria-label={t('buttons.edit')}
-                              >
-                                <EditIcon />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-2 text-slate-600 hover:bg-red-50 hover:text-red-700"
-                                onClick={() =>
-                                  deleteMutation.mutate({
-                                    type:
-                                      activeTab === 'domains'
-                                        ? 'domain'
-                                        : activeTab === 'tags'
-                                          ? 'tag'
-                                          : 'pathology',
-                                    id: item.id,
-                                    locale,
-                                  })
-                                }
-                                disabled={deleteMutation.isPending && deletingId === item.id}
-                                aria-label={t('buttons.delete')}
-                              >
-                                {deleteMutation.isPending && deletingId === item.id ? (
-                                  <Spinner className="h-3.5 w-3.5" />
-                                ) : (
-                                  <TrashIcon />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+            <div className="flex h-[calc(100%-128px)] flex-col gap-6 overflow-y-auto px-6 py-6">
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-700">{t('sections.mainInfo')}</p>
+                  {activeTab === 'tags' && (
+                    <Badge variant="outline" className="text-[11px]">
+                      {t('tags.cardHelper')}
+                    </Badge>
                   )}
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="label" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    {t(`${activeTab}.label`)}
+                  </Label>
+                  <Input
+                    id="label"
+                    value={labelInput}
+                    onChange={(e) => setLabelInput(e.target.value)}
+                    placeholder={t(`${activeTab}.placeholder`)}
+                    aria-invalid={labelHasError}
+                    className={cn(labelHasError && 'border-red-200 bg-red-50 focus-visible:ring-red-200')}
+                  />
+                  {labelHasError && renderStatusHelper('error', alreadyExists ? t(`${activeTab}.exists`) : t('validation.labelRequired'))}
+                  {!labelHasError && renderStatusHelper('info', t('helpers.label'))}
+                  {errorMessage && renderStatusHelper('error', errorMessage)}
+                </div>
+              </section>
+
+              {activeTab === 'tags' && (
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-slate-700">{t('sections.color')}</p>
+                    <Badge variant="outline" className="text-[11px]">
+                      {t('helpers.color')}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="color" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      {t('tags.colorLabel')}
+                    </Label>
+                    <Input
+                      id="color"
+                      value={colorInput}
+                      onChange={(e) => setColorInput(e.target.value)}
+                      placeholder={t('tags.colorPlaceholder')}
+                      aria-invalid={colorHasError}
+                      className={cn(colorHasError && 'border-red-200 bg-red-50 focus-visible:ring-red-200')}
+                    />
+                    {colorHasError && renderStatusHelper('error', t('validation.colorFormat'))}
+
+                    <div className="flex flex-wrap gap-2">
+                      {colorSwatches.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setColorInput(color)}
+                          className={cn(
+                            'h-9 w-9 rounded-full border-2 transition',
+                            colorInput === color ? 'border-slate-900 ring-2 ring-slate-200' : 'border-transparent shadow-sm',
+                          )}
+                          style={{ backgroundColor: color }}
+                          aria-label={t('tags.swatchAria', { color })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </section>
               )}
-            </CardContent>
-          </Card>
+
+              {activeTab === 'pathologies' && (
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-slate-700">{t('sections.pathologyDetails')}</p>
+                    <Badge variant="secondary">{t('helpers.pathologyBadge')}</Badge>
+                  </div>
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="desc" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        {t('pathologies.descLabel')}
+                      </Label>
+                      <Textarea
+                        id="desc"
+                        value={descInput}
+                        onChange={(e) => setDescInput(e.target.value)}
+                        placeholder={t('pathologies.descPlaceholder')}
+                        className="min-h-[120px] bg-white resize-none"
+                      />
+                      {renderStatusHelper('info', t('helpers.description'))}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="synonyms" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        {t('pathologies.synonymsLabel')}
+                      </Label>
+                      <Input
+                        id="synonyms"
+                        value={synonymsInput}
+                        onChange={(e) => setSynonymsInput(e.target.value)}
+                        placeholder={t('pathologies.synonymsPlaceholder')}
+                        className="bg-white"
+                      />
+                      {renderStatusHelper('info', t('pathologies.synonymsHelper'))}
+                    </div>
+                  </div>
+                </section>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">
+              <Button variant="ghost" onClick={closeDrawer} className="sm:w-auto">
+                {t('buttons.cancel')}
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={!labelInput.trim() || alreadyExists || saveMutation.isPending}
+                className="sm:w-auto"
+              >
+                <span className="flex items-center gap-2">
+                  {saveMutation.isPending && <Spinner />}
+                  {actionLabel}
+                </span>
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
