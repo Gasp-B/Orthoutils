@@ -749,6 +749,89 @@
       "error": "An error occurred."
     }
   },
+  "taxonomyManagement": {
+    "meta": {
+      "title": "Manage taxonomy | Othoutils",
+      "description": "Maintain domains, tags, and pathologies used throughout the catalog."
+    },
+    "sectionLabel": "Taxonomy",
+    "pageTitle": "Manage taxonomy entries",
+    "pageLead": "Organize domains, tags, and pathologies to keep the catalog consistent across locales.",
+    "nav": {
+      "cardTitle": "Taxonomy management",
+      "cardEyebrow": "Catalog settings"
+    },
+    "sidebar": {
+      "title": "Choose a taxonomy",
+      "lead": "Select a category to review its entries."
+    },
+    "types": {
+      "pathologies": "Pathologies",
+      "domains": "Domains",
+      "tags": "Tags",
+      "hints": {
+        "pathologies": "Description and synonyms available",
+        "domains": "Used to structure the catalog",
+        "tags": "Optional color for quick scanning"
+      }
+    },
+    "descriptions": {
+      "pathologies": "Pathologies include a label, optional description, and synonyms to improve search.",
+      "domains": "Domains help structure the catalog hierarchy and group tools.",
+      "tags": "Tags add lightweight labels. You can associate a color to highlight them."
+    },
+    "aria": {
+      "panel": "Taxonomy management",
+      "sidebar": "Taxonomy selector"
+    },
+    "messages": {
+      "loading": "Loading taxonomy…",
+      "loadError": "Unable to load the taxonomy list.",
+      "saveError": "Unable to save this entry.",
+      "deleteError": "Unable to delete this entry.",
+      "deleteConfirm": "Delete this entry? This action cannot be undone.",
+      "created": "Entry created.",
+      "updated": "Entry updated.",
+      "deleted": "Entry deleted.",
+      "validationError": "Please review the highlighted fields."
+    },
+    "list": {
+      "title": "Existing {type}"
+    },
+    "empty": "No {type} defined yet.",
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "form": {
+      "title": "Create or update",
+      "fields": {
+        "label": "Label",
+        "description": "Description",
+        "synonyms": "Synonyms",
+        "color": "Color"
+      },
+      "hints": {
+        "required": "Required",
+        "optional": "Optional",
+        "commaSeparated": "Separate with commas"
+      },
+      "placeholders": {
+        "label": "Label displayed in the catalog",
+        "description": "Add context for clinicians…",
+        "synonyms": "Keywords separated by commas",
+        "color": "#0EA5E9"
+      },
+      "actions": {
+        "update": "Save changes",
+        "create": "Create entry",
+        "reset": "Reset"
+      }
+    },
+    "labels": {
+      "colorValue": "Color {value}"
+    }
+  },
   "ApiTools": {
     "errors": {
       "fetch": "Unable to retrieve tools"

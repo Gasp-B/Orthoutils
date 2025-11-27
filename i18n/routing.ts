@@ -21,6 +21,10 @@ export const pathnames = {
     fr: '/catalogue/[slug]/[tag]',
   },
   '/administration': '/administration',
+  '/administration/TaxonomyManagement': {
+    en: '/administration/TaxonomyManagement',
+    fr: '/administration/TaxonomyManagement',
+  },
   '/administration/taxonomy': '/administration/taxonomy',
   '/tests/manage': '/tests/manage',
 } satisfies Pathnames<typeof locales>;

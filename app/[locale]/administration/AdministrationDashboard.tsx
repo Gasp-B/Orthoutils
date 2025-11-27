@@ -8,6 +8,7 @@ import styles from './administration-page.module.css';
 
 function AdministrationDashboard() {
   const t = useTranslations('Header');
+  const tm = useTranslations('taxonomyManagement');
 
   return (
     <section className={`container section-shell ${styles.page}`}>
@@ -40,6 +41,20 @@ function AdministrationDashboard() {
           <div className={styles.cardBody}>
             <p className={styles.cardEyebrow}>{t('tagsLabel')}</p>
             <span className={styles.cardTitle}>{t('taxonomy')}</span>
+          </div>
+          <span aria-hidden className={styles.cardArrow}>
+            →
+          </span>
+        </Link>
+
+        <Link
+          href="/administration/TaxonomyManagement"
+          className={styles.card}
+          aria-label={tm('nav.cardTitle')}
+        >
+          <div className={styles.cardBody}>
+            <p className={styles.cardEyebrow}>{tm('nav.cardEyebrow')}</p>
+            <span className={styles.cardTitle}>{tm('nav.cardTitle')}</span>
           </div>
           <span aria-hidden className={styles.cardArrow}>
             →

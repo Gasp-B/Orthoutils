@@ -515,5 +515,88 @@
       "success": "La fiche a été créée. Elle apparaîtra dans le catalogue sous le label « Communauté ».",
       "error": "Une erreur est survenue."
     }
+  },
+  "taxonomyManagement": {
+    "meta": {
+      "title": "Gérer la taxonomie | Othoutils",
+      "description": "Maintenez les domaines, tags et pathologies utilisés dans le catalogue."
+    },
+    "sectionLabel": "Taxonomie",
+    "pageTitle": "Administrer les entrées de taxonomie",
+    "pageLead": "Organisez domaines, tags et pathologies pour garder un catalogue cohérent entre les langues.",
+    "nav": {
+      "cardTitle": "Gestion de la taxonomie",
+      "cardEyebrow": "Paramètres du catalogue"
+    },
+    "sidebar": {
+      "title": "Choisissez une taxonomie",
+      "lead": "Sélectionnez une catégorie pour examiner ses entrées."
+    },
+    "types": {
+      "pathologies": "Pathologies",
+      "domains": "Domaines",
+      "tags": "Tags",
+      "hints": {
+        "pathologies": "Description et synonymes disponibles",
+        "domains": "Utilisé pour structurer le catalogue",
+        "tags": "Couleur optionnelle pour repérer rapidement"
+      }
+    },
+    "descriptions": {
+      "pathologies": "Les pathologies incluent un libellé, une description optionnelle et des synonymes pour faciliter la recherche.",
+      "domains": "Les domaines structurent la hiérarchie du catalogue et regroupent les outils.",
+      "tags": "Les tags ajoutent des étiquettes légères. Vous pouvez associer une couleur pour les mettre en valeur."
+    },
+    "aria": {
+      "panel": "Gestion de la taxonomie",
+      "sidebar": "Sélecteur de taxonomie"
+    },
+    "messages": {
+      "loading": "Chargement de la taxonomie…",
+      "loadError": "Impossible de charger la liste des taxonomies.",
+      "saveError": "Impossible d'enregistrer cette entrée.",
+      "deleteError": "Impossible de supprimer cette entrée.",
+      "deleteConfirm": "Supprimer cette entrée ? Cette action est irréversible.",
+      "created": "Entrée créée.",
+      "updated": "Entrée mise à jour.",
+      "deleted": "Entrée supprimée.",
+      "validationError": "Merci de vérifier les champs indiqués."
+    },
+    "list": {
+      "title": "Entrées existantes : {type}"
+    },
+    "empty": "Aucune entrée {type} pour le moment.",
+    "actions": {
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "form": {
+      "title": "Créer ou mettre à jour",
+      "fields": {
+        "label": "Libellé",
+        "description": "Description",
+        "synonyms": "Synonymes",
+        "color": "Couleur"
+      },
+      "hints": {
+        "required": "Requis",
+        "optional": "Optionnel",
+        "commaSeparated": "Séparez par des virgules"
+      },
+      "placeholders": {
+        "label": "Libellé affiché dans le catalogue",
+        "description": "Ajoutez du contexte clinique…",
+        "synonyms": "Mots-clés séparés par des virgules",
+        "color": "#0EA5E9"
+      },
+      "actions": {
+        "update": "Enregistrer",
+        "create": "Créer l'entrée",
+        "reset": "Réinitialiser"
+      }
+    },
+    "labels": {
+      "colorValue": "Couleur {value}"
+    }
   }
 }
