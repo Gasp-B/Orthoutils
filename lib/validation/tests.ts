@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { defaultLocale, locales } from '@/i18n/routing';
 
 const localeEnum = z.enum(locales);
+const statusEnum = z.enum(['draft', 'in_review', 'published', 'archived']);
 
 const bibliographySchema = z
   .array(
@@ -28,6 +29,10 @@ export const testSchema = z.object({
   priceRange: z.string().nullable(),
   buyLink: z.string().url().nullable(),
   notes: z.string().nullable(),
+  status: statusEnum,
+  validatedBy: z.string().uuid().nullable(),
+  validatedAt: z.string().nullable(),
+  createdBy: z.string().uuid().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   domains: z.array(z.string()),
@@ -44,6 +49,7 @@ export type TestDto = z.infer<typeof testSchema>;
 export const testInputSchema = z.object({
   locale: localeEnum.default(defaultLocale),
   name: z.string().min(1),
+  slug: z.string().min(1),
   shortDescription: z.string().nullable().optional(),
   objective: z.string().nullable().optional(),
   ageMinMonths: z.number().int().nullable().optional(),
@@ -60,10 +66,22 @@ export const testInputSchema = z.object({
   tags: z.array(z.string().min(1)).default([]),
   pathologies: z.array(z.string().min(1)).default([]),
   bibliography: bibliographySchema,
+  status: statusEnum.default('draft'),
+  validatedBy: z.string().uuid().nullable().optional(),
+  validatedAt: z.string().nullable().optional(),
+  createdBy: z.string().uuid().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
 });
 
 export const updateTestInputSchema = testInputSchema.extend({
   id: z.string().uuid(),
+});
+
+export const adminTestFormSchema = updateTestInputSchema.partial({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const taxonomyResponseSchema = z.object({

@@ -12,6 +12,10 @@ type TestsBaseRow = {
   is_standardized: boolean | null;
   buy_link: string | null;
   bibliography: unknown[] | null;
+  status: string;
+  validated_by: string | null;
+  validated_at: string | null;
+  created_by: string | null;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -65,7 +69,7 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
   const { data: testRows, error: testsError } = await supabase
     .from('tests')
     .select(
-      'id, age_min_months, age_max_months, duration_minutes, is_standardized, buy_link, bibliography, created_at, updated_at',
+      'id, age_min_months, age_max_months, duration_minutes, is_standardized, buy_link, bibliography, status, validated_by, validated_at, created_by, created_at, updated_at',
     );
 
   if (testsError) {
@@ -219,6 +223,10 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
         priceRange: selectedTranslation?.price_range ?? null,
         buyLink: test.buy_link,
         notes: selectedTranslation?.notes ?? null,
+        status: test.status as TestDto['status'],
+        validatedBy: test.validated_by,
+        validatedAt: test.validated_at ? toIsoString(test.validated_at) : null,
+        createdBy: test.created_by,
         bibliography: Array.isArray(test.bibliography)
           ? test.bibliography.filter(
               (entry): entry is { label: string; url: string } =>
@@ -285,7 +293,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await request.json();
+    const body = await request.json();
+    const payload = {
+      ...body,
+      slug: body.slug ?? body.name,
+      createdBy: body.createdBy ?? user.id,
+    };
+
     const test = await createTestWithRelations(payload);
 
     return NextResponse.json({ test }, { status: 201 });
@@ -307,7 +321,13 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await request.json();
+    const body = await request.json();
+    const payload = {
+      ...body,
+      slug: body.slug ?? body.name,
+      createdBy: body.createdBy ?? user.id,
+    };
+
     const test = await updateTestWithRelations(payload);
 
     return NextResponse.json({ test }, { status: 200 });

@@ -301,6 +301,162 @@
       "number": "Enter a valid whole number."
     }
   },
+  "TestsAdmin": {
+    "metadata": {
+      "title": "Tests admin | Othoutils",
+      "description": "Create, classify and validate test sheets with a sectioned layout."
+    },
+    "eyebrow": "Admin",
+    "title": "Structured test sheet",
+    "description": "Pick an existing test or start a new one, then fill every clinical, editorial and system field before publishing.",
+    "form": {
+      "selector": {
+        "label": "Existing sheets",
+        "title": "Select or create",
+        "helper": "Choose a test to edit or start a new one without altering saved data.",
+        "controlLabel": "Test to edit",
+        "new": "New test",
+        "loading": "Loading tests..."
+      },
+      "actions": {
+        "saving": "Saving...",
+        "update": "Update",
+        "create": "Create sheet",
+        "reset": "Reset"
+      },
+      "validation": {
+        "required": "Required field"
+      },
+      "feedback": {
+        "updated": "Sheet saved.",
+        "created": "Test created.",
+        "error": "Unable to save the sheet."
+      },
+      "fields": {
+        "name": {
+          "label": "Test name",
+          "placeholder": "e.g. Speech assessment"
+        },
+        "slug": {
+          "label": "Slug",
+          "placeholder": "friendly-url"
+        },
+        "shortDescription": {
+          "label": "Short description",
+          "placeholder": "Concise summary for listings"
+        },
+        "objective": {
+          "label": "Objective",
+          "placeholder": "What the test measures"
+        },
+        "notes": {
+          "label": "Internal notes",
+          "placeholder": "Internal info or helpful links"
+        },
+        "ageMin": {
+          "label": "Min age (months)",
+          "placeholder": "36"
+        },
+        "ageMax": {
+          "label": "Max age (months)",
+          "placeholder": "120"
+        },
+        "duration": {
+          "label": "Duration (minutes)",
+          "placeholder": "45"
+        },
+        "population": {
+          "label": "Population",
+          "placeholder": "Children, adults..."
+        },
+        "materials": {
+          "label": "Materials",
+          "placeholder": "Required equipment or supports"
+        },
+        "publisher": {
+          "label": "Publisher",
+          "placeholder": "Publishing house"
+        },
+        "priceRange": {
+          "label": "Price range",
+          "placeholder": "e.g. €60-€90"
+        },
+        "buyLink": {
+          "label": "Buy link",
+          "placeholder": "https://example.com"
+        },
+        "isStandardized": {
+          "label": "Standardization",
+          "standardized": "Standardized",
+          "nonStandardized": "Non-standardized"
+        }
+      },
+      "sections": {
+        "translation": {
+          "title": "Translations & titles",
+          "helper": "Name, slug and descriptive texts for the active locale."
+        },
+        "usage": {
+          "title": "Audience & usage",
+          "helper": "Ages, duration, population and materials to guide clinicians."
+        },
+        "editorial": {
+          "title": "Editorial info",
+          "helper": "Publisher, price, purchase link and standardization."
+        },
+        "taxonomy": {
+          "title": "Domains and tags",
+          "helper": "Associate domains, tags and pathologies for better filtering.",
+          "domains": "Domains",
+          "domainsHelper": "Add the relevant clinical domains.",
+          "tags": "Tags",
+          "tagsHelper": "Keywords to improve search.",
+          "pathologies": "Pathologies",
+          "pathologiesHelper": "Link the disorders involved.",
+          "searchLabel": "Filter pathologies"
+        },
+        "system": {
+          "title": "System fields",
+          "helper": "Editorial status, validation and ownership."
+        },
+        "bibliography": {
+          "title": "Bibliography",
+          "helper": "Add links to external references.",
+          "empty": "No references yet.",
+          "entry": "Reference",
+          "remove": "Remove",
+          "titleLabel": "Title",
+          "titlePlaceholder": "Resource name",
+          "urlLabel": "Link",
+          "urlPlaceholder": "https://example.com/resource",
+          "add": "Add a reference"
+        }
+      },
+      "multiSelect": {
+        "placeholder": "No selection yet",
+        "searchPlaceholder": "Search...",
+        "emptyResults": "No results"
+      },
+      "status": {
+        "draft": "Draft",
+        "in_review": "In review",
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "system": {
+        "statusLabel": "Status",
+        "validatedBy": "Validated by",
+        "validatedByPlaceholder": "Validator id or email",
+        "validatedAt": "Validated on",
+        "createdBy": "Created by",
+        "createdByPlaceholder": "Creator id",
+        "timestamps": "History",
+        "createdAt": "Created at",
+        "updatedAt": "Updated at",
+        "notRecorded": "Not recorded"
+      }
+    }
+  },
   "Footer": {
     "note": "Made with care for speech-language pathology teams. Mobile-first, adaptive, and built for collaboration."
   },

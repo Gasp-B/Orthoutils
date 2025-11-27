@@ -301,6 +301,162 @@
       "number": "Saisissez un nombre entier valide."
     }
   },
+  "TestsAdmin": {
+    "metadata": {
+      "title": "Administration des tests | Othoutils",
+      "description": "Créer, classer et valider les fiches tests avec une vue structurée par familles de champs."
+    },
+    "eyebrow": "Administration",
+    "title": "Fiche test détaillée",
+    "description": "Sélectionnez un test existant ou démarrez une nouvelle fiche, puis remplissez toutes les données cliniques, éditoriales et système avant publication.",
+    "form": {
+      "selector": {
+        "label": "Fiches existantes",
+        "title": "Sélectionner ou créer",
+        "helper": "Choisissez un test à modifier ou démarrez une nouvelle fiche sans impacter les données existantes.",
+        "controlLabel": "Test à éditer",
+        "new": "Nouveau test",
+        "loading": "Chargement des tests..."
+      },
+      "actions": {
+        "saving": "Enregistrement...",
+        "update": "Mettre à jour",
+        "create": "Créer la fiche",
+        "reset": "Réinitialiser"
+      },
+      "validation": {
+        "required": "Champ requis"
+      },
+      "feedback": {
+        "updated": "La fiche a été sauvegardée.",
+        "created": "Le test a été créé.",
+        "error": "Impossible d'enregistrer la fiche."
+      },
+      "fields": {
+        "name": {
+          "label": "Nom du test",
+          "placeholder": "Ex. Bilan de la parole"
+        },
+        "slug": {
+          "label": "Slug",
+          "placeholder": "url-amicale"
+        },
+        "shortDescription": {
+          "label": "Description courte",
+          "placeholder": "Résumé concis pour les listes"
+        },
+        "objective": {
+          "label": "Objectif",
+          "placeholder": "Ce que mesure le test"
+        },
+        "notes": {
+          "label": "Notes internes",
+          "placeholder": "Informations internes ou liens utiles"
+        },
+        "ageMin": {
+          "label": "Âge minimum (mois)",
+          "placeholder": "36"
+        },
+        "ageMax": {
+          "label": "Âge maximum (mois)",
+          "placeholder": "120"
+        },
+        "duration": {
+          "label": "Durée (minutes)",
+          "placeholder": "45"
+        },
+        "population": {
+          "label": "Population",
+          "placeholder": "Enfants, adultes..."
+        },
+        "materials": {
+          "label": "Matériel",
+          "placeholder": "Matériel requis ou supports"
+        },
+        "publisher": {
+          "label": "Éditeur",
+          "placeholder": "Maison d'édition"
+        },
+        "priceRange": {
+          "label": "Fourchette de prix",
+          "placeholder": "Ex. 60-90€"
+        },
+        "buyLink": {
+          "label": "Lien d'achat",
+          "placeholder": "https://exemple.com"
+        },
+        "isStandardized": {
+          "label": "Standardisation",
+          "standardized": "Standardisé",
+          "nonStandardized": "Non standardisé"
+        }
+      },
+      "sections": {
+        "translation": {
+          "title": "Traductions et titres",
+          "helper": "Nom, slug et textes descriptifs pour la locale active."
+        },
+        "usage": {
+          "title": "Public et usage",
+          "helper": "Âges, durée, population et matériel pour guider l'orientation clinique."
+        },
+        "editorial": {
+          "title": "Informations éditoriales",
+          "helper": "Éditeur, prix, achat et standardisation."
+        },
+        "taxonomy": {
+          "title": "Domaines et tags",
+          "helper": "Associez des domaines, tags et pathologies pour faciliter le filtrage.",
+          "domains": "Domaines",
+          "domainsHelper": "Ajoutez les domaines cliniques pertinents.",
+          "tags": "Tags",
+          "tagsHelper": "Mots-clés pour la recherche.",
+          "pathologies": "Pathologies",
+          "pathologiesHelper": "Associez les troubles concernés.",
+          "searchLabel": "Filtrer les pathologies"
+        },
+        "system": {
+          "title": "Champs système",
+          "helper": "Status éditorial, validation et attribution."
+        },
+        "bibliography": {
+          "title": "Bibliographie",
+          "helper": "Ajoutez des liens vers des références externes.",
+          "empty": "Aucune référence pour le moment.",
+          "entry": "Référence",
+          "remove": "Supprimer",
+          "titleLabel": "Titre",
+          "titlePlaceholder": "Nom de la ressource",
+          "urlLabel": "Lien",
+          "urlPlaceholder": "https://exemple.com/ressource",
+          "add": "Ajouter une référence"
+        }
+      },
+      "multiSelect": {
+        "placeholder": "Aucun élément sélectionné",
+        "searchPlaceholder": "Rechercher...",
+        "emptyResults": "Aucun résultat"
+      },
+      "status": {
+        "draft": "Brouillon",
+        "in_review": "En relecture",
+        "published": "Publié",
+        "archived": "Archivé"
+      },
+      "system": {
+        "statusLabel": "Statut",
+        "validatedBy": "Validé par",
+        "validatedByPlaceholder": "Identifiant ou email du validateur",
+        "validatedAt": "Validé le",
+        "createdBy": "Créé par",
+        "createdByPlaceholder": "Identifiant créateur",
+        "timestamps": "Historique",
+        "createdAt": "Créé le",
+        "updatedAt": "Mis à jour le",
+        "notRecorded": "Non renseigné"
+      }
+    }
+  },
   "Footer": {
     "note": "Fait avec soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour la collaboration."
   },

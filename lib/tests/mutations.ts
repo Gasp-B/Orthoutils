@@ -248,6 +248,7 @@ async function upsertTestTranslation(
     testId: string;
     locale: Locale;
     name: string;
+    slug?: string;
     shortDescription: string | null;
     objective: string | null;
     population: string | null;
@@ -263,9 +264,10 @@ async function upsertTestTranslation(
     .where(and(eq(testsTranslations.testId, params.testId), eq(testsTranslations.locale, params.locale)))
     .limit(1);
 
+  const slugSource = params.slug?.trim() || params.name;
   const slug = await generateUniqueSlug({
     db,
-    name: params.name,
+    name: slugSource,
     table: testsTranslations,
     slugColumn: testsTranslations.slug,
     idColumn: testsTranslations.id,
@@ -324,6 +326,10 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
         isStandardized: payload.isStandardized ?? false,
         buyLink: payload.buyLink ?? null,
         bibliography: payload.bibliography ?? [],
+        status: payload.status,
+        validatedBy: payload.validatedBy ?? null,
+        validatedAt: payload.validatedAt ? new Date(payload.validatedAt) : null,
+        createdBy: payload.createdBy ?? null,
       })
       .returning({ id: tests.id });
 
@@ -331,6 +337,7 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
       testId: created.id,
       locale,
       name: payload.name,
+      slug: payload.slug,
       shortDescription: payload.shortDescription ?? null,
       objective: payload.objective ?? null,
       population: payload.population ?? null,
@@ -379,6 +386,10 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
         isStandardized: payload.isStandardized ?? false,
         buyLink: payload.buyLink ?? null,
         bibliography: payload.bibliography ?? [],
+        status: payload.status,
+        validatedBy: payload.validatedBy ?? null,
+        validatedAt: payload.validatedAt ? new Date(payload.validatedAt) : null,
+        createdBy: payload.createdBy ?? null,
       })
       .where(eq(tests.id, payload.id));
 
@@ -386,6 +397,7 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
       testId: payload.id,
       locale,
       name: payload.name,
+      slug: payload.slug,
       shortDescription: payload.shortDescription ?? null,
       objective: payload.objective ?? null,
       population: payload.population ?? null,

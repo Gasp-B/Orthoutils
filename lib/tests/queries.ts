@@ -70,6 +70,10 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
       buyLink: tests.buyLink,
       notes: notesExpression,
       bibliography: tests.bibliography,
+      status: tests.status,
+      validatedBy: tests.validatedBy,
+      validatedAt: tests.validatedAt,
+      createdBy: tests.createdBy,
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domainLabelExpression}) FILTER (WHERE ${domainLabelExpression} IS NOT NULL), '{}')`,
@@ -119,6 +123,9 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
       pathologies: row.pathologies ?? [],
       tags: row.tags ?? [],
       bibliography: row.bibliography ?? [],
+      validatedBy: row.validatedBy ?? null,
+      validatedAt: row.validatedAt ? toIsoString(row.validatedAt as Date | string | null) : null,
+      createdBy: row.createdBy ?? null,
     })),
   });
 
@@ -169,6 +176,10 @@ export async function getTestWithMetadata(
       buyLink: tests.buyLink,
       notes: notesExpression,
       bibliography: tests.bibliography,
+      status: tests.status,
+      validatedBy: tests.validatedBy,
+      validatedAt: tests.validatedAt,
+      createdBy: tests.createdBy,
       createdAt: tests.createdAt,
       updatedAt: tests.updatedAt,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domainLabelExpression}) FILTER (WHERE ${domainLabelExpression} IS NOT NULL), '{}')`,
@@ -219,6 +230,9 @@ export async function getTestWithMetadata(
       pathologies: row.pathologies ?? [],
       tags: row.tags ?? [],
       bibliography: row.bibliography ?? [],
+      validatedBy: row.validatedBy ?? null,
+      validatedAt: row.validatedAt ? toIsoString(row.validatedAt as Date | string | null) : null,
+      createdBy: row.createdBy ?? null,
     })),
   });
 
