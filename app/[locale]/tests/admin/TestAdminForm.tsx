@@ -690,8 +690,8 @@ export default function TestAdminForm({ locale }: { locale: Locale }) {
       <Separator />
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={mutation.isLoading}>
-          {mutation.isLoading
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending
             ? t('actions.saving')
             : selectedTestId
               ? t('actions.update')
