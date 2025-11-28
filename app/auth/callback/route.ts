@@ -2,62 +2,45 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { routing } from '@/i18n/routing';
 import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 
-type AuthActionType = 'recovery' | 'invite' | 'signup' | 'magiclink';
-
-function isSupportedType(type: string | null): type is AuthActionType {
-  return type === 'recovery' || type === 'invite' || type === 'signup' || type === 'magiclink';
-}
+export const dynamic = 'force-dynamic'; // Assure que la route n'est pas mise en cache
 
 function resolveLocale(nextPath: string | null): (typeof routing.locales)[number] {
-  if (!nextPath) {
-    return routing.defaultLocale;
-  }
-
-  const [, possibleLocale] = nextPath.split('/');
-  const matchedLocale = routing.locales.find((locale) => locale === possibleLocale);
-
+  if (!nextPath) return routing.defaultLocale;
+  const segment = nextPath.startsWith('/') ? nextPath.split('/')[1] : nextPath;
+  const matchedLocale = routing.locales.find((l) => l === segment);
   return matchedLocale ?? routing.defaultLocale;
 }
 
-function buildAbsoluteUrl(request: NextRequest, redirectPath: string) {
-  const url = new URL(request.url);
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const forwardedProto = request.headers.get('x-forwarded-proto');
-
-  const host = forwardedHost ?? url.host;
-  const protocol = forwardedProto ?? url.protocol.replace(':', '');
-
-  return `${protocol}://${host}${redirectPath}`;
-}
-
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get('code');
+  const next = requestUrl.searchParams.get('next');
+  const type = requestUrl.searchParams.get('type'); // 'recovery', 'invite', etc.
 
-  const code = searchParams.get('code');
-  const next = searchParams.get('next');
-  const type = searchParams.get('type');
-
-  if (code && isSupportedType(type)) {
+  if (code) {
     const supabase = await createRouteHandlerSupabaseClient();
 
+    // Échange le code contre une session (set-cookie est géré ici)
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      // Détermination de la locale
       const locale = resolveLocale(next);
-      const dashboardPath = next ?? `/${locale}/tests/manage`;
-      const redirectTo =
-        type === 'recovery'
-          ? `/${locale}/account` 
-          : dashboardPath;
-          
-      return NextResponse.redirect(buildAbsoluteUrl(request, redirectTo));
+      
+      // Logique spécifique pour le mot de passe oublié
+      if (type === 'recovery') {
+        // Redirection vers la page de changement de mot de passe
+        return NextResponse.redirect(`${requestUrl.origin}/${locale}/account`);
+      }
+
+      // Redirection par défaut (Dashboard ou URL 'next')
+      const targetPath = next ?? `/${locale}/tests/manage`;
+      return NextResponse.redirect(`${requestUrl.origin}${targetPath}`);
+    } else {
+      console.error('[Auth Callback] Code exchange error:', error.message);
     }
   }
 
-  const fallbackUrl = buildAbsoluteUrl(
-    request,
-    `/${routing.defaultLocale}/auth/auth-code-error`
-  );
-
-  return NextResponse.redirect(fallbackUrl);
+  // En cas d'erreur, redirection vers une page d'erreur
+  return NextResponse.redirect(`${requestUrl.origin}/${routing.defaultLocale}/login?error=auth_code_error`);
 }
