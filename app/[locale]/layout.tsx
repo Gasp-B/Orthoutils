@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 
 import AppFrame from '../AppFrame';
 import { locales, type Locale } from '@/i18n/routing';
@@ -21,6 +22,10 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
   if (!locales.includes(locale as Locale)) {
     notFound();
   }
+
+  // CORRECTION : On appelle headers() pour forcer le mode dynamique,
+  // mais sans assigner le résultat à une variable inutile.
+  await headers();
 
   setRequestLocale(locale);
 
