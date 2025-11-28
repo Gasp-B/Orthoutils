@@ -825,6 +825,8 @@
     "actions": {
       "viewSheet": "Voir la fiche",
       "viewResource": "Ouvrir la ressource"
+    }
+  },
   "Auth": {
     "login": {
       "title": "Connexion",

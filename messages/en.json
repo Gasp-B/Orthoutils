@@ -892,6 +892,7 @@
     "actions": {
       "viewSheet": "View sheet",
       "viewResource": "Open resource"
+    },
   "Auth": {
     "login": {
       "title": "Sign in",
@@ -945,4 +946,5 @@
       "fetch": "Unable to retrieve tools"
     }
   }
+}
 }
