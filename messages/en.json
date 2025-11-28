@@ -859,6 +859,8 @@
       },
       "domainsLabel": "Domains",
       "emptyDomains": "No domains available yet.",
+      "tagsLabel": "Tags",
+      "emptyTags": "No tags available yet.",
       "reset": "Reset filters"
     },
     "tags": {

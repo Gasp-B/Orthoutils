@@ -36,13 +36,14 @@ function buildTypeFilters(t: (key: string) => string) {
   ];
 }
 
-export default function SearchHub({ groups, domains }: SearchHubProps) {
+export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
   const t = useTranslations('SearchHub');
   const shared = useTranslations('Shared');
   const typeFilters = useMemo(() => buildTypeFilters(t), [t]);
 
   const [activeTypes, setActiveTypes] = useState<Set<SearchResultKind>>(new Set(['test', 'resource']));
   const [activeDomains, setActiveDomains] = useState<Set<string>>(new Set());
+  const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggleType = (value: SearchResultKind) => {
@@ -59,6 +60,18 @@ export default function SearchHub({ groups, domains }: SearchHubProps) {
 
   const toggleDomain = (value: string) => {
     setActiveDomains((current) => {
+      const next = new Set(current);
+      if (next.has(value)) {
+        next.delete(value);
+      } else {
+        next.add(value);
+      }
+      return next;
+    });
+  };
+
+  const toggleTag = (value: string) => {
+    setActiveTags((current) => {
       const next = new Set(current);
       if (next.has(value)) {
         next.delete(value);
@@ -89,11 +102,12 @@ export default function SearchHub({ groups, domains }: SearchHubProps) {
           const matchType = activeTypes.has(result.kind);
           const matchDomain =
             activeDomains.size === 0 || result.domains.some((domain) => activeDomains.has(domain));
-          return matchType && matchDomain;
+          const matchTag = activeTags.size === 0 || result.tags.some((tag) => activeTags.has(tag));
+          return matchType && matchDomain && matchTag;
         }),
       }))
       .filter((group) => group.results.length > 0);
-  }, [activeDomains, activeTypes, groups]);
+  }, [activeDomains, activeTags, activeTypes, groups]);
 
   const hasResults = filteredGroups.some((group) => group.results.length > 0);
 
@@ -144,12 +158,35 @@ export default function SearchHub({ groups, domains }: SearchHubProps) {
           </div>
         </div>
 
+        <div className={styles.filterGroup}>
+          <p className={styles.filterTitle}>{t('filters.tagsLabel')}</p>
+          <div className={styles.domainList}>
+            {tags.map((tag) => {
+              const isActive = activeTags.has(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  className={`${styles.domainChip} ${isActive ? styles.domainChipActive : ''}`}
+                  onClick={() => toggleTag(tag)}
+                  aria-pressed={isActive}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+
+            {tags.length === 0 && <p className={styles.emptyHelper}>{t('filters.emptyTags')}</p>}
+          </div>
+        </div>
+
         <div className={styles.filterFooter}>
           <button
             type="button"
             className={styles.resetButton}
             onClick={() => {
               setActiveDomains(new Set());
+              setActiveTags(new Set());
               setActiveTypes(new Set(['test', 'resource']));
             }}
           >

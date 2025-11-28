@@ -57,7 +57,7 @@ export default async function SearchPage({ params }: LocalePageProps) {
         </div>
       </header>
 
-      <SearchHub groups={searchHubData.groups} domains={searchHubData.domains} />
+      <SearchHub groups={searchHubData.groups} domains={searchHubData.domains} tags={searchHubData.tags} />
     </main>
   );
 }

@@ -37,4 +37,5 @@ export type SearchGroup = {
 export type SearchHubProps = {
   groups: SearchGroup[];
   domains: string[];
+  tags: string[];
 };

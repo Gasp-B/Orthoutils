@@ -792,6 +792,8 @@
       },
       "domainsLabel": "Domaines",
       "emptyDomains": "Aucun domaine disponible pour le moment.",
+      "tagsLabel": "Tags",
+      "emptyTags": "Aucun tag disponible pour le moment.",
       "reset": "Réinitialiser"
     },
     "tags": {

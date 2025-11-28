@@ -1,4 +1,8 @@
+import { and, eq, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { defaultLocale, type Locale } from '@/i18n/routing';
+import { getDb } from '@/lib/db/client';
+import { domains, domainsTranslations, tags, tagsTranslations } from '@/lib/db/schema';
 import { getResourcesWithMetadata } from '@/lib/resources/queries';
 import { getTestsWithMetadata } from '@/lib/tests/queries';
 import { searchLocaleSchema } from '@/lib/validation/search';
@@ -60,24 +64,46 @@ function sortByTitle<T extends { title: string }>(a: T, b: T) {
   return a.title.localeCompare(b.title);
 }
 
-function collectDomains(groups: SearchGroup[]) {
-  const domainSet = new Set<string>();
+async function getAvailableDomains(locale: Locale = defaultLocale) {
+  const localizedDomain = alias(domainsTranslations, 'localized_domain');
+  const fallbackDomain = alias(domainsTranslations, 'fallback_domain');
+  const domainLabelExpression = sql<string>`COALESCE(MAX(${localizedDomain.label}), MAX(${fallbackDomain.label}), '')`;
 
-  groups.forEach((group) => {
-    group.results.forEach((result) => {
-      result.domains.forEach((domain) => domainSet.add(domain));
-    });
-  });
+  const rows = await getDb()
+    .select({ label: domainLabelExpression })
+    .from(domains)
+    .leftJoin(localizedDomain, and(eq(localizedDomain.domainId, domains.id), eq(localizedDomain.locale, locale)))
+    .leftJoin(fallbackDomain, and(eq(fallbackDomain.domainId, domains.id), eq(fallbackDomain.locale, defaultLocale)))
+    .groupBy(domains.id)
+    .orderBy(domainLabelExpression);
 
-  return Array.from(domainSet).sort();
+  return rows.map((row) => row.label).filter((label) => label && label.trim().length > 0);
+}
+
+async function getAvailableTags(locale: Locale = defaultLocale) {
+  const localizedTag = alias(tagsTranslations, 'localized_tag');
+  const fallbackTag = alias(tagsTranslations, 'fallback_tag');
+  const labelExpression = sql<string>`COALESCE(MAX(${localizedTag.label}), MAX(${fallbackTag.label}), '')`;
+
+  const rows = await getDb()
+    .select({ label: labelExpression })
+    .from(tags)
+    .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
+    .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
+    .groupBy(tags.id)
+    .orderBy(labelExpression);
+
+  return rows.map((row) => row.label).filter((label) => label && label.trim().length > 0);
 }
 
 export async function getSearchHubData(locale: Locale = defaultLocale): Promise<SearchHubProps> {
   const parsedLocale = searchLocaleSchema.parse(locale);
 
-  const [tests, resources] = await Promise.all([
+  const [tests, resources, availableDomains, availableTags] = await Promise.all([
     getTestsWithMetadata(parsedLocale),
     getResourcesWithMetadata(parsedLocale),
+    getAvailableDomains(parsedLocale),
+    getAvailableTags(parsedLocale),
   ]);
 
   const testResults = tests.map(mapTestToResult).sort(sortByTitle);
@@ -94,6 +120,7 @@ export async function getSearchHubData(locale: Locale = defaultLocale): Promise<
 
   return {
     groups,
-    domains: collectDomains(groups),
+    domains: availableDomains,
+    tags: availableTags,
   };
 }
