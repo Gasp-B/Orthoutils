@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import createMiddleware from 'next-intl/middleware';
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { routing } from './i18n/routing';
@@ -119,7 +120,8 @@ function applySecurityHeaders(response: NextResponse, nonce: string) {
 
 const intlMiddleware = createMiddleware(routing);
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  // 1. Rate Limiting
   const key = getClientKey(request);
   const entry = getUpdatedEntry(key);
   const nonce = buildNonce();
@@ -143,28 +145,63 @@ export function proxy(request: NextRequest) {
     return limitedResponse;
   }
 
-  const response = NextResponse.next({
+  // 2. Initialisation de la réponse
+  let response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
+
+  // 3. Supabase Auth : Rafraîchissement de session
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
+        },
+      },
+    }
+  );
+
+  // Ceci rafraîchit le token si nécessaire
+  await supabase.auth.getUser();
+
+  // 4. Rate Limit Headers
   response.headers.set('X-RateLimit-Limit', `${MAX_REQUESTS}`);
   response.headers.set('X-RateLimit-Remaining', `${Math.max(0, MAX_REQUESTS - entry.count)}`);
   response.headers.set('X-RateLimit-Reset', `${entry.expires}`);
 
   applySecurityHeaders(response, nonce);
 
-  // IMPORTANT: On retourne la réponse sécurisée directement pour les API
-  // pour éviter que next-intl ne tente de rediriger l'API.
+  // 5. Gestion API : Retour direct
   if (request.nextUrl.pathname.startsWith('/api')) {
     return response;
   }
 
+  // 6. Gestion i18n (Next-Intl)
   const i18nResponse = intlMiddleware(request);
 
+  // Fusion des headers de sécurité et des cookies Supabase dans la réponse i18n
   response.headers.forEach((value, key) => {
     i18nResponse.headers.set(key, value);
   });
+  
+  // Important : copier les cookies de session Supabase vers la réponse finale
+  const setCookie = response.headers.get('set-cookie');
+  if (setCookie) {
+    i18nResponse.headers.set('set-cookie', setCookie);
+  }
 
   return i18nResponse;
 }
