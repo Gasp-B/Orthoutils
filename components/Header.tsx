@@ -136,8 +136,7 @@ function Header() {
             </div>
           </div>
 
-          {/* Séparateur avec marge augmentée pour éviter le chevauchement des menus */}
-          <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 1.25rem' }} />
+          <div className="u-separator-vertical" />
 
           {/* --- Zone Utilisateur / Connexion --- */}
           {!loadingAuth && (
@@ -199,7 +198,7 @@ function Header() {
             >
               FR
             </button>
-            <span style={{opacity: 0.3}}>|</span>
+            <span className="u-opacity-30">|</span>
             <button
               type="button"
               className="ph-header__locale-button"
