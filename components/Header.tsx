@@ -2,84 +2,104 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { createBrowserClient } from '@supabase/ssr';
+import type { User } from '@supabase/supabase-js';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import CatalogueMegaMenu from '@/components/CatalogueMegaMenu';
 import type { CatalogueDomain } from '@/lib/navigation/catalogue';
 
 function Header() {
   const t = useTranslations('Header');
-  const locale = useLocale(); // Récupère la langue active (fr ou en)
+  const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const navErrorMessage = t('navError');
+  
   const [catalogueDomains, setCatalogueDomains] = useState<CatalogueDomain[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingCatalogue, setLoadingCatalogue] = useState(true);
+  
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
   const [isNavigating, startTransition] = useTransition();
 
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  );
+
+  // 1. Gestion de l'authentification
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setLoadingAuth(false);
+    };
+
+    void checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoadingAuth(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  // 2. Chargement du catalogue
   useEffect(() => {
     let cancelled = false;
 
     async function loadCatalogue() {
       try {
-        // Appel avec la locale explicite
         const res = await fetch(`/api/catalogue?locale=${locale}`, {
           method: 'GET',
           cache: 'no-store',
         });
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        const data: { domains?: CatalogueDomain[] } = await res.json();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        // Typage explicite de la réponse API
+        const data = (await res.json()) as { domains: CatalogueDomain[] };
 
         if (!cancelled) {
           setCatalogueDomains(Array.isArray(data.domains) ? data.domains : []);
         }
-      } catch (err: unknown) {
+      } catch (err) {
         console.error('[Header] Failed to load catalogue:', err);
-        if (!cancelled) {
-          setError(String(navErrorMessage));
-        }
+        if (!cancelled) setError(t('navError'));
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoadingCatalogue(false);
       }
     }
 
-    // Recharger le catalogue à chaque changement de locale
     void loadCatalogue();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, navErrorMessage]);
+    return () => { cancelled = true; };
+  }, [locale, t]);
 
   const switchLocale = (nextLocale: 'fr' | 'en') => {
     if (nextLocale === locale) return;
-
     startTransition(() => {
-      router.replace(pathname as Parameters<typeof router.replace>[0], {
-        locale: nextLocale,
-      });
+      // @ts-expect-error -- pathname est valide mais le typage strict de next-intl peut nécessiter un cast complexe ici
+      router.replace(pathname, { locale: nextLocale });
     });
   };
 
   return (
     <header className="ph-header" role="banner">
       <div className="ph-header__bar container">
+        {/* Logo */}
         <Link className="ph-header__brand" href="/" aria-label={t('brandAria')}>
-          <div className="ph-header__logo" aria-hidden>
-            OT
-          </div>
+          <div className="ph-header__logo" aria-hidden>OT</div>
           <div>
             <p className="ph-header__name">{t('brandName')}</p>
             <p className="ph-header__tagline">{t('tagline')}</p>
           </div>
         </Link>
 
+        {/* Barre de recherche */}
         <div className="ph-header__search" role="search">
           <input
             type="search"
@@ -89,62 +109,51 @@ function Header() {
           />
         </div>
 
+        {/* Navigation Droite */}
         <nav className="ph-header__nav" aria-label={t('navAria')}>
-          {loading && (
-            <span className="ph-header__link ph-header__link--muted">
-              {t('navLoading')}
-            </span>
+          
+          {loadingCatalogue && (
+            <span className="ph-header__link ph-header__link--muted">{t('navLoading')}</span>
           )}
+          {!loadingCatalogue && !error && <CatalogueMegaMenu domains={catalogueDomains} />}
+          
+          <Link className="ph-header__link" href="/search">{t('searchHub')}</Link>
 
-          {!loading && !error && (
-            <CatalogueMegaMenu domains={catalogueDomains} />
-          )}
-
-          {!loading && error && (
-            <span className="ph-header__link ph-header__link--error">
-              {error}
-            </span>
-          )}
-
-          <Link className="ph-header__link" href="/search">
-            {t('searchHub')}
-          </Link>
-          <a className="ph-header__link" href="#collaboration">
-            {t('community')}
-          </a>
-          <a className="ph-header__link" href="#news">
-            {t('news')}
-          </a>
           <div className="ph-header__menu">
-            <button
-              className="ph-header__link ph-header__menu-toggle"
-              type="button"
-              aria-haspopup="true"
-              aria-expanded={false}
-            >
-              {t('admin')}
-              <span aria-hidden>▾</span>
+            <button className="ph-header__link ph-header__menu-toggle" type="button">
+              {t('admin')} <span aria-hidden>▾</span>
             </button>
             <div className="ph-header__submenu" aria-label={t('adminMenuLabel')}>
-              <Link className="ph-header__submenu-link" href="/administration">
-                {t('dashboard')}
-              </Link>
-              <Link className="ph-header__submenu-link" href="/tests/manage">
-                {t('addTest')}
-              </Link>
-              <Link className="ph-header__submenu-link" href="/administration/TaxonomyManagement">
-                {t('taxonomy')}
-              </Link>
+              <Link className="ph-header__submenu-link" href="/administration">{t('dashboard')}</Link>
+              <Link className="ph-header__submenu-link" href="/tests/manage">{t('addTest')}</Link>
+              <Link className="ph-header__submenu-link" href="/administration/TaxonomyManagement">{t('taxonomy')}</Link>
             </div>
           </div>
+
+          <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 0.5rem' }} />
+
+          {/* --- Zone Utilisateur / Connexion --- */}
+          {!loadingAuth && (
+            <>
+              {user ? (
+                <Link href="/administration" aria-label={t('profileAria')} title={user.email}>
+                  <div className="user-avatar">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </Link>
+              ) : (
+                <Link href="/login" className="login-btn">
+                  {t('login')}
+                </Link>
+              )}
+            </>
+          )}
         </nav>
 
-        <div
-          className="ph-header__locale-switcher"
-          role="group"
-          aria-label={t('localeSwitcher.ariaLabel')}
-        >
-          <span className="ph-header__locale-label">{t('localeSwitcher.label')}</span>
+        {/* Sélecteur de langue */}
+        <div className="ph-header__locale-switcher" role="group" aria-label={t('localeSwitcher.ariaLabel')}>
           <div className="ph-header__locale-options">
             <button
               type="button"
@@ -153,8 +162,9 @@ function Header() {
               disabled={isNavigating || locale === 'fr'}
               onClick={() => switchLocale('fr')}
             >
-              {t('localeSwitcher.french')}
+              FR
             </button>
+            <span style={{opacity: 0.3}}>|</span>
             <button
               type="button"
               className="ph-header__locale-button"
@@ -162,7 +172,7 @@ function Header() {
               disabled={isNavigating || locale === 'en'}
               onClick={() => switchLocale('en')}
             >
-              {t('localeSwitcher.english')}
+              EN
             </button>
           </div>
         </div>

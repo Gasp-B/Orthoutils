@@ -23,6 +23,9 @@
       "english": "Anglais",
       "french": "Français"
     },
+    "login": "Log in",
+    "account": "My account",
+    "profileAria": "Go to my profile",
     "dashboard": "Tableau de bord",
     "addTest": "Ajouter un test",
     "taxonomy": "Paramétrage des sections",
