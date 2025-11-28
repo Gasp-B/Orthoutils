@@ -8,6 +8,7 @@ export const localePrefix: LocalePrefix<typeof locales> = 'always';
 
 export const pathnames = {
   '/': '/',
+  '/login': '/login', // Nouvelle route ajoutée ici
   '/catalogue': {
     en: '/catalogue',
     fr: '/catalogue',
