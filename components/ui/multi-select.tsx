@@ -111,7 +111,8 @@ export function MultiSelect({
                   toggleValue(val);
                 }}
               >
-                {val} <span style={{ marginLeft: 4, opacity: 0.6 }}>×</span>
+                {/* CORRECTION : Remplacement du style inline par une classe */}
+                {val} <span className={styles.tokenRemove}>×</span>
               </Badge>
             ))
           ) : (

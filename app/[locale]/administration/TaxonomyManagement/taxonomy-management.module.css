@@ -347,3 +347,13 @@
     grid-template-columns: 1fr;
   }
 }
+
+.bg-sky-500 { background-color: #0EA5E9; color: white; border-color: #0EA5E9; }
+.bg-indigo-500 { background-color: #6366F1; color: white; border-color: #6366F1; }
+.bg-pink-500 { background-color: #EC4899; color: white; border-color: #EC4899; }
+.bg-amber-500 { background-color: #F59E0B; color: white; border-color: #F59E0B; }
+.bg-emerald-500 { background-color: #10B981; color: white; border-color: #10B981; }
+.bg-red-500 { background-color: #EF4444; color: white; border-color: #EF4444; }
+
+/* Fallback pour les couleurs inconnues */
+.bg-default { background-color: #cbd5e1; color: #0f172a; }
