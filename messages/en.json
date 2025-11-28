@@ -839,6 +839,54 @@
       "colorValue": "Color {value}"
     }
   },
+  "Auth": {
+    "login": {
+      "title": "Sign in",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "emailPlaceholder": "you@example.com",
+      "passwordPlaceholder": "Your password",
+      "submit": {
+        "idle": "Sign in",
+        "loading": "Signing in…"
+      },
+      "signupPrompt": "New to Othoutils?",
+      "signupCta": "Create an account"
+    },
+    "signup": {
+      "title": "Create your account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm password",
+      "emailPlaceholder": "you@example.com",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "submit": {
+        "idle": "Create account",
+        "loading": "Creating account…"
+      },
+      "loginPrompt": "Already have an account?",
+      "loginCta": "Sign in",
+      "feedback": {
+        "emailConfirmation": "Check your inbox to confirm your email and continue."
+      }
+    },
+    "validation": {
+      "email": {
+        "required": "Email is required",
+        "invalid": "Enter a valid email address"
+      },
+      "password": {
+        "length": "Password must be at least 8 characters"
+      },
+      "confirmPassword": {
+        "mismatch": "Passwords must match"
+      }
+    },
+    "feedback": {
+      "genericError": "Please review the highlighted fields."
+    }
+  },
   "ApiTools": {
     "errors": {
       "fetch": "Unable to retrieve tools"

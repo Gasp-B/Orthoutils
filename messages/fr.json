@@ -771,5 +771,53 @@
     "labels": {
       "colorValue": "Couleur {value}"
     }
+  },
+  "Auth": {
+    "login": {
+      "title": "Connexion",
+      "emailLabel": "Email",
+      "passwordLabel": "Mot de passe",
+      "emailPlaceholder": "vous@exemple.com",
+      "passwordPlaceholder": "Votre mot de passe",
+      "submit": {
+        "idle": "Se connecter",
+        "loading": "Connexion…"
+      },
+      "signupPrompt": "Nouveau sur Othoutils ?",
+      "signupCta": "Créer un compte"
+    },
+    "signup": {
+      "title": "Créer votre compte",
+      "emailLabel": "Email",
+      "passwordLabel": "Mot de passe",
+      "confirmPasswordLabel": "Confirmez le mot de passe",
+      "emailPlaceholder": "vous@exemple.com",
+      "passwordPlaceholder": "8 caractères minimum",
+      "confirmPasswordPlaceholder": "Répétez votre mot de passe",
+      "submit": {
+        "idle": "Créer le compte",
+        "loading": "Création du compte…"
+      },
+      "loginPrompt": "Vous avez déjà un compte ?",
+      "loginCta": "Se connecter",
+      "feedback": {
+        "emailConfirmation": "Vérifiez votre boîte mail pour confirmer votre adresse et continuer."
+      }
+    },
+    "validation": {
+      "email": {
+        "required": "L'email est requis",
+        "invalid": "Saisissez une adresse email valide"
+      },
+      "password": {
+        "length": "Le mot de passe doit contenir au moins 8 caractères"
+      },
+      "confirmPassword": {
+        "mismatch": "Les mots de passe doivent correspondre"
+      }
+    },
+    "feedback": {
+      "genericError": "Merci de corriger les champs indiqués."
+    }
   }
 }

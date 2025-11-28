@@ -10,31 +10,35 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createLoginSchema } from '@/lib/validation/auth';
+import { createSignupSchema } from '@/lib/validation/auth';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const locale = useLocale();
-  const t = useTranslations('Auth.login');
+  const t = useTranslations('Auth.signup');
   const authT = useTranslations('Auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
   );
 
-  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    setInfo(null);
 
-    const parsed = createLoginSchema(authT).safeParse({
+    const parsed = createSignupSchema(authT).safeParse({
       email,
       password,
+      confirmPassword,
     });
 
     if (!parsed.success) {
@@ -43,16 +47,25 @@ export default function LoginPage() {
       return;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword(parsed.data);
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
 
-    if (signInError) {
-      setError(signInError.message);
+    if (signUpError) {
+      setError(signUpError.message);
       setLoading(false);
       return;
     }
 
-    router.refresh();
-    router.push(`/${locale}/tests/manage`);
+    if (data.session) {
+      router.refresh();
+      router.push(`/${locale}/tests/manage`);
+      return;
+    }
+
+    setInfo(t('feedback.emailConfirmation'));
+    setLoading(false);
   };
 
   return (
@@ -64,7 +77,7 @@ export default function LoginPage() {
         <CardContent>
           <form
             onSubmit={(event) => {
-              void handleLogin(event);
+              void handleSignup(event);
             }}
             className="space-y-4"
           >
@@ -90,10 +103,26 @@ export default function LoginPage() {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">{t('confirmPasswordLabel')}</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder={t('confirmPasswordPlaceholder')}
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                required
+              />
+            </div>
 
             {error && (
               <div className="text-sm text-red-500 bg-red-50 p-2 rounded" role="alert">
                 {error}
+              </div>
+            )}
+            {info && (
+              <div className="text-sm text-green-600 bg-green-50 p-2 rounded" role="status">
+                {info}
               </div>
             )}
 
@@ -103,9 +132,9 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            {t('signupPrompt')}{' '}
-            <Link href={`/${locale}/signup`} className="font-medium text-primary hover:underline">
-              {t('signupCta')}
+            {t('loginPrompt')}{' '}
+            <Link href={`/${locale}/login`} className="font-medium text-primary hover:underline">
+              {t('loginCta')}
             </Link>
           </div>
         </CardContent>
