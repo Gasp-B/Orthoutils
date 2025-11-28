@@ -115,11 +115,10 @@ function TestForm({ locale }: TestFormProps) {
   const formT = useTranslations('ManageTests.form');
   const feedbackT = useTranslations('ManageTests.feedback');
   const multiSelectT = useTranslations('ManageTests.form.multiSelect');
-  
+
   const queryClient = useQueryClient();
-  
+
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
-  const [taxonomyPresetId, setTaxonomyPresetId] = useState<string>('');
   const [newBibliography, setNewBibliography] = useState({ label: '', url: '' });
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -154,7 +153,6 @@ function TestForm({ locale }: TestFormProps) {
   useEffect(() => {
     if (!selectedTestId) {
       reset(defaultValues);
-      setTaxonomyPresetId('');
       return;
     }
     const test = tests?.find((t) => t.id === selectedTestId);
@@ -204,18 +202,6 @@ function TestForm({ locale }: TestFormProps) {
     setValue('bibliography', next, { shouldDirty: true });
   };
 
-  const applyTaxonomyPreset = (testId: string) => {
-    setTaxonomyPresetId(testId);
-    if (!testId) return;
-
-    const preset = tests?.find((test) => test.id === testId);
-    if (!preset) return;
-
-    setValue('domains', preset.domains ?? [], { shouldDirty: true });
-    setValue('pathologies', preset.pathologies ?? [], { shouldDirty: true });
-    setValue('tags', preset.tags ?? [], { shouldDirty: true });
-  };
-
   const commonMultiSelectTrans = {
     add: multiSelectT('add'),
     remove: multiSelectT('remove'),
@@ -239,12 +225,12 @@ function TestForm({ locale }: TestFormProps) {
             <Label htmlFor="test-selector" className="text-xs uppercase tracking-wider text-slate-500">
               {formT('toolbar.sheetLabel')}
             </Label>
-            <Select
-              id="test-selector"
-              value={selectedTestId ?? ''}
-              onChange={(e) => setSelectedTestId(e.target.value || null)}
-              className="font-semibold bg-white/50"
-            >
+              <Select
+                id="test-selector"
+                value={selectedTestId ?? ''}
+                onChange={(e) => setSelectedTestId(e.currentTarget.value || null)}
+                className="font-semibold bg-white/50"
+              >
               <option value="">✨ {formT('toolbar.newTest')}</option>
               {tests?.map((test) => (
                 <option key={test.id} value={test.id}>
@@ -347,24 +333,6 @@ function TestForm({ locale }: TestFormProps) {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="taxonomy-preset">{formT('sections.taxonomy.presetLabel')}</Label>
-                <Select
-                  id="taxonomy-preset"
-                  value={taxonomyPresetId}
-                  onChange={(e) => applyTaxonomyPreset(e.target.value)}
-                  className="bg-white/60"
-                >
-                  <option value="">{formT('sections.taxonomy.presetPlaceholder')}</option>
-                  {tests?.map((test) => (
-                    <option key={test.id} value={test.id}>
-                      {test.name}
-                    </option>
-                  ))}
-                </Select>
-                <p className="helper-text">{formT('sections.taxonomy.presetHelper')}</p>
-              </div>
-
               <div className={styles.columnStack}>
                 <MultiSelect
                   label={formT('sections.taxonomy.domainsLabel')}

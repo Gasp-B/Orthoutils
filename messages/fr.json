@@ -423,10 +423,7 @@
           "domainsLabel": "Domaines",
           "pathologiesLabel": "Pathologies",
           "tagsLabel": "Tags",
-          "helper": "Associez la taxonomie pour optimiser le filtrage et la découverte.",
-          "presetLabel": "Réutiliser une taxonomie existante",
-          "presetPlaceholder": "Sélectionner une fiche à copier",
-          "presetHelper": "Copiez les domaines, pathologies et tags d'une fiche existante pour gagner du temps."
+          "helper": "Associez la taxonomie pour optimiser le filtrage et la découverte."
         }
       },
       "bibliography": {
