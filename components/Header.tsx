@@ -136,7 +136,8 @@ function Header() {
             </div>
           </div>
 
-          <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 0.5rem' }} />
+          {/* Séparateur avec marge augmentée pour éviter le chevauchement des menus */}
+          <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 1.25rem' }} />
 
           {/* --- Zone Utilisateur / Connexion --- */}
           {!loadingAuth && (
@@ -170,7 +171,7 @@ function Header() {
                     
                     <button 
                       type="button" 
-                      className="ph-header__submenu-link logout-btn" 
+                      className="ph-header__submenu-link" 
                       onClick={() => void handleLogout()}
                     >
                       {t('logout')}
