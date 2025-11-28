@@ -87,6 +87,12 @@ function Header() {
     });
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push('/login');
+  };
+
   return (
     <header className="ph-header" role="banner">
       <div className="ph-header__bar container">
@@ -136,13 +142,41 @@ function Header() {
           {!loadingAuth && (
             <>
               {user ? (
-                <Link href="/administration" aria-label={t('profileAria')} title={user.email}>
-                  <div className="user-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                      <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-                    </svg>
+                <div className="ph-header__menu">
+                  <Link 
+                    href="/administration" 
+                    className="ph-header__link ph-header__menu-toggle ph-header__menu-trigger--avatar"
+                    aria-label={t('profileAria')}
+                  >
+                    <div className="user-avatar">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </Link>
+
+                  <div className="ph-header__submenu" aria-label={t('profileAria')}>
+                    <div className="px-3 py-2 text-sm text-slate-500 border-b border-slate-100 mb-1">
+                      {user.email}
+                    </div>
+                    
+                    <Link className="ph-header__submenu-link" href="/administration">
+                      {t('dashboard')}
+                    </Link>
+                    
+                    <Link className="ph-header__submenu-link" href="/account">
+                      {t('account')}
+                    </Link>
+                    
+                    <button 
+                      type="button" 
+                      className="ph-header__submenu-link logout-btn" 
+                      onClick={() => void handleLogout()}
+                    >
+                      {t('logout')}
+                    </button>
                   </div>
-                </Link>
+                </div>
               ) : (
                 <Link href="/login" className="login-btn">
                   {t('login')}
