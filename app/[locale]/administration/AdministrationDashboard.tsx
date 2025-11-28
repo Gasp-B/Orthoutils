@@ -25,7 +25,7 @@ function AdministrationDashboard() {
 
   return (
     <section className={`container section-shell ${styles.page}`}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="u-flex-between-center">
         <div>
           <div className="section-title">
             <span />
