@@ -102,10 +102,10 @@ export default async function proxy(request: NextRequest) {
   const key = getClientKey(request);
   const entry = getUpdatedEntry(key);
   const nonce = buildNonce();
-  const requestHeaders = new Headers(request.headers);
-
-  // Injection du nonce dans la requête pour le Layout
-  requestHeaders.set('x-nonce', nonce);
+  
+  // CORRECTION MAJEURE : On modifie les headers de la requête entrante
+  // pour que intlMiddleware et Next.js voient le x-nonce.
+  request.headers.set('x-nonce', nonce);
 
   entry.count += 1;
 
@@ -122,14 +122,14 @@ export default async function proxy(request: NextRequest) {
     return limitedResponse;
   }
 
-  // 2. Création d'une réponse initiale pour gérer la session Supabase
+  // 2. Gestion de la session Supabase
+  // On crée une réponse temporaire juste pour gérer les cookies Supabase
   let response = NextResponse.next({
     request: {
-      headers: requestHeaders,
+      headers: request.headers,
     },
   });
 
-  // 3. Gestion de la session Supabase
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
@@ -139,14 +139,10 @@ export default async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // Met à jour les cookies de la requête pour que le Server Component les voie
           cookiesToSet.forEach(({ name, value }) => 
             request.cookies.set(name, value)
           );
-          
-          // Recrée la réponse pour y inclure les cookies mis à jour (set-cookie header)
           response = NextResponse.next({ request });
-          
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );
@@ -155,40 +151,36 @@ export default async function proxy(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Rafraîchit le token Auth si nécessaire
   await supabase.auth.getUser();
 
-  // Ajout des headers de sécurité sur la réponse intermédiaire
-  applySecurityHeaders(response, nonce);
-  response.headers.set('X-RateLimit-Limit', `${MAX_REQUESTS}`);
-  response.headers.set('X-RateLimit-Remaining', `${Math.max(0, MAX_REQUESTS - entry.count)}`);
-  response.headers.set('X-RateLimit-Reset', `${entry.expires}`);
-
-  // 4. Exclusion des routes API et Auth du middleware i18n
+  // 3. Exclusion des routes API et Auth
   if (request.nextUrl.pathname.startsWith('/api') || request.nextUrl.pathname.startsWith('/auth')) {
+    applySecurityHeaders(response, nonce);
     return response;
   }
 
-  // 5. Exécution du middleware next-intl
+  // 4. Exécution du middleware next-intl avec la requête modifiée (qui contient x-nonce)
   const i18nResponse = intlMiddleware(request);
 
-  // 6. FUSION CRITIQUE : Transfert des Headers et Cookies vers la réponse finale
-  
-  // Copie des headers de sécurité et de rate limit
+  // 5. Transfert des Headers et Cookies
   response.headers.forEach((value, key) => {
     if (key.toLowerCase() !== 'set-cookie') {
       i18nResponse.headers.set(key, value);
     }
   });
 
-  // Copie des cookies de session Supabase (essentiel pour rester connecté)
   const supabaseCookies = response.cookies.getAll();
   supabaseCookies.forEach((cookie) => {
     i18nResponse.cookies.set(cookie);
   });
 
-  // Assurance que le nonce est bien présent
-  i18nResponse.headers.set('x-nonce', nonce);
+  // Application finale des headers de sécurité sur la réponse i18n
+  applySecurityHeaders(i18nResponse, nonce);
+  
+  // Headers Rate Limit
+  i18nResponse.headers.set('X-RateLimit-Limit', `${MAX_REQUESTS}`);
+  i18nResponse.headers.set('X-RateLimit-Remaining', `${Math.max(0, MAX_REQUESTS - entry.count)}`);
+  i18nResponse.headers.set('X-RateLimit-Reset', `${entry.expires}`);
 
   return i18nResponse;
 }
