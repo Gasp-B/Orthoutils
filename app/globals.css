@@ -995,9 +995,33 @@ select.input {
   height: 20px;
 }
 
+/* --- Styles Bouton Déclencheur Avatar --- */
+.ph-header__menu-trigger--avatar {
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 50%;
+}
+
+.ph-header__menu-trigger--avatar:hover {
+  background: none;
+}
+
+/* --- Styles Bouton Déconnexion --- */
+.logout-btn {
+  width: 100%;
+  text-align: left;
+  color: #ef4444; /* Rouge */
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* --- Styles Bouton Connexion (si pas déjà présent) --- */
 .login-btn {
   font-weight: 700;
-  color: var(--accent);
+  color: #0ea5e9; /* var(--accent) */
   padding: 0.5rem 0.8rem;
   border-radius: 12px;
   transition: background 150ms ease;
@@ -1005,26 +1029,4 @@ select.input {
 
 .login-btn:hover {
   background: rgba(14, 165, 233, 0.08);
-}
-
-.ph-header__menu-trigger--avatar {
-  padding: 0;           /* Retire le padding standard des liens du header */
-  border: none;         /* Retire la bordure standard */
-  background: none;     /* Fond transparent */
-  border-radius: 50%;   /* Forme ronde */
-}
-
-.ph-header__menu-trigger--avatar:hover {
-  background: none;     /* Évite le fond gris au survol sur le conteneur carré */
-}
-
-/* Style pour le bouton de déconnexion dans le menu */
-.logout-btn {
-  width: 100%;
-  text-align: left;
-  color: #ef4444; /* Rouge pour l'action de sortie */
-}
-
-.logout-btn:hover {
-  background: rgba(239, 68, 68, 0.08);
 }
