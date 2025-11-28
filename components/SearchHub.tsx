@@ -14,7 +14,10 @@ const categoryAccentClass: Record<SearchGroup['category'], string> = {
   resources: styles.resourcesAccent,
 };
 
-function summarizeTags(tags: string[], t: (key: string) => string) {
+function summarizeTags(
+  tags: string[],
+  t: (key: string, values?: Record<string, string | number | Date>) => string,
+) {
   if (tags.length === 0) {
     return t('tags.empty');
   }
@@ -250,10 +253,15 @@ export default function SearchHub({ groups, domains }: SearchHubProps) {
                               <Button>{t('actions.viewSheet')}</Button>
                             </Link>
                           ) : (
-                            <Button asChild disabled={!result.url} variant={result.url ? 'default' : 'secondary'}>
-                              <a href={result.url ?? undefined} target="_blank" rel="noreferrer">
-                                {t('actions.viewResource')}
-                              </a>
+                            <Button
+                              disabled={!result.url}
+                              variant={result.url ? 'default' : 'outline'}
+                              onClick={() => {
+                                if (!result.url) return;
+                                window.open(result.url, '_blank', 'noreferrer');
+                              }}
+                            >
+                              {t('actions.viewResource')}
                             </Button>
                           )}
                         </div>
