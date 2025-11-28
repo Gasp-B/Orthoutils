@@ -1006,3 +1006,25 @@ select.input {
 .login-btn:hover {
   background: rgba(14, 165, 233, 0.08);
 }
+
+.ph-header__menu-trigger--avatar {
+  padding: 0;           /* Retire le padding standard des liens du header */
+  border: none;         /* Retire la bordure standard */
+  background: none;     /* Fond transparent */
+  border-radius: 50%;   /* Forme ronde */
+}
+
+.ph-header__menu-trigger--avatar:hover {
+  background: none;     /* Évite le fond gris au survol sur le conteneur carré */
+}
+
+/* Style pour le bouton de déconnexion dans le menu */
+.logout-btn {
+  width: 100%;
+  text-align: left;
+  color: #ef4444; /* Rouge pour l'action de sortie */
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+}

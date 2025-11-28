@@ -23,9 +23,10 @@
       "english": "Anglais",
       "french": "Français"
     },
-    "login": "Log in",
-    "account": "My account",
-    "profileAria": "Go to my profile",
+    "login": "Se connecter",
+    "account": "Mon compte",
+    "logout": "Se déconnecter",
+    "profileAria": "Menu utilisateur",
     "dashboard": "Tableau de bord",
     "addTest": "Ajouter un test",
     "taxonomy": "Paramétrage des sections",

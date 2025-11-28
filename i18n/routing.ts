@@ -8,7 +8,9 @@ export const localePrefix: LocalePrefix<typeof locales> = 'always';
 
 export const pathnames = {
   '/': '/',
-  '/login': '/login', // Nouvelle route ajoutée ici
+  '/login': '/login',
+  '/signup': '/signup',   // Ajouté pour la cohérence
+  '/account': '/account', // AJOUT CRITIQUE : Corrige l'erreur dans Header.tsx
   '/catalogue': {
     en: '/catalogue',
     fr: '/catalogue',
