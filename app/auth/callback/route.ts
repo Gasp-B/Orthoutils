@@ -1,12 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
+  
   const code = searchParams.get('code');
-  // Si vous avez un paramètre "next" pour rediriger après login, sinon défaut '/fr'
+  // Le paramètre "next" peut être défini par le client lors de l'appel (ex: ?next=/dashboard)
   const next = searchParams.get('next') ?? '/fr/tests/manage';
+  
+  // Supabase ajoute souvent le type d'action dans l'URL (signup, recovery, invite, magiclink...)
+  const type = searchParams.get('type');
 
   if (code) {
     const cookieStore = await cookies();
@@ -24,23 +28,44 @@ export async function GET(request: Request) {
                 cookieStore.set(name, value, options)
               );
             } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
+              // Ignorer les erreurs d'écriture dans un Server Component
             }
           },
         },
       }
     );
 
+    // 1. Échange du code contre une session (Gère: Login, Invite, Confirm Email, Magic Link)
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Connexion réussie : on redirige vers l'app avec la session active
-      return NextResponse.redirect(`${origin}${next}`);
+      // 2. Détermination de l'URL de redirection finale
+      let redirectTo = next;
+
+      // CAS SPÉCIAL : Réinitialisation de mot de passe (Reset Password)
+      if (type === 'recovery') {
+        redirectTo = '/fr/account/update-password'; 
+      }
+
+      // 3. Construction de l'URL absolue (Gestion Vercel / Localhost)
+      const forwardedHost = request.headers.get('x-forwarded-host');
+      const isLocal = origin.includes('localhost');
+      
+      let finalUrl = '';
+
+      if (isLocal) {
+        finalUrl = `${origin}${redirectTo}`;
+      } else if (forwardedHost) {
+        // En prod sur Vercel, on utilise le domaine réel (https)
+        finalUrl = `https://${forwardedHost}${redirectTo}`;
+      } else {
+        finalUrl = `${origin}${redirectTo}`;
+      }
+
+      return NextResponse.redirect(finalUrl);
     }
   }
 
-  // En cas d'erreur ou d'absence de code, on renvoie vers une page d'erreur ou login
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  // 4. Gestion d'erreur (Code invalide, expiré ou manquant)
+  return NextResponse.redirect(`${origin}/fr/auth/auth-code-error`);
 }
