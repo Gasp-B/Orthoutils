@@ -79,8 +79,18 @@ export default function LoginPage() {
                 required
               />
             </div>
+            
+            {/* Zone modifiée avec le lien Mot de passe oublié */}
             <div className="space-y-2">
-              <Label htmlFor="password">{t('passwordLabel')}</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">{t('passwordLabel')}</Label>
+                <Link 
+                  href={`/${locale}/forgot-password`}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {authT('forgotPassword.title')}
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"

@@ -10,6 +10,7 @@ export const pathnames = {
   '/': '/',
   '/login': '/login',
   '/signup': '/signup',   // Ajouté pour la cohérence
+  '/forgot-password': '/forgot-password',
   '/account': '/account', // AJOUT CRITIQUE : Corrige l'erreur dans Header.tsx
   '/catalogue': {
     en: '/catalogue',

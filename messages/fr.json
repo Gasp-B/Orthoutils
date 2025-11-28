@@ -832,6 +832,17 @@
     }
   },
   "Auth": {
+    "forgotPassword": {
+      "title": "Mot de passe oublié",
+      "emailLabel": "Email",
+      "emailPlaceholder": "vous@exemple.com",
+      "submit": {
+        "idle": "Envoyer le lien",
+        "loading": "Envoi..."
+      },
+      "successMessage": "Si ce compte existe, un email de réinitialisation a été envoyé.",
+      "backToLogin": "Retour à la connexion"
+    },
     "login": {
       "title": "Connexion",
       "emailLabel": "Email",

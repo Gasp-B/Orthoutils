@@ -47,9 +47,9 @@ export async function GET(request: NextRequest) {
       const dashboardPath = next ?? `/${locale}/tests/manage`;
       const redirectTo =
         type === 'recovery'
-          ? `/${locale}/account/update-password`
+          ? `/${locale}/account` 
           : dashboardPath;
-
+          
       return NextResponse.redirect(buildAbsoluteUrl(request, redirectTo));
     }
   }

@@ -898,6 +898,17 @@
       "viewResource": "Open resource"
     },
   "Auth": {
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": {
+        "idle": "Send link",
+        "loading": "Sending..."
+      },
+      "successMessage": "If this account exists, a reset email has been sent.",
+      "backToLogin": "Back to login"
+    },
     "login": {
       "title": "Sign in",
       "emailLabel": "Email",
