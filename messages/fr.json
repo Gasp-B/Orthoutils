@@ -832,8 +832,32 @@
     }
   },
   "Auth": {
+    "layout": {
+      "pill": "Espace Orthoutil",
+      "headline": "Outils cliniques, sécurisés et prêts à l'emploi",
+      "subheadline": "Authentifiez-vous pour gérer votre catalogue, publier des tests et collaborer sereinement.",
+      "features": {
+        "security": {
+          "title": "Sécurité éprouvée",
+          "description": "Sessions chiffrées et politiques Supabase précises pour protéger les données cliniques."
+        },
+        "speed": {
+          "title": "Connexion plus rapide",
+          "description": "Des parcours fluides pour vous reconnecter et retourner auprès de vos patients."
+        },
+        "catalog": {
+          "title": "Outils prêts à l'emploi",
+          "description": "Centralisez vos évaluations, domaines et étiquettes dans un même espace."
+        },
+        "support": {
+          "title": "Accompagnement expert",
+          "description": "Soutien de l'équipe Orthoutil pour ajuster les accès ou récupérer un compte."
+        }
+      }
+    },
     "forgotPassword": {
       "title": "Mot de passe oublié",
+      "subtitle": "Nous vous enverrons un lien sécurisé pour récupérer l'accès en quelques étapes.",
       "emailLabel": "Email",
       "emailPlaceholder": "vous@exemple.com",
       "submit": {
@@ -845,6 +869,7 @@
     },
     "login": {
       "title": "Connexion",
+      "subtitle": "Accédez à votre espace Orthoutil avec des identifiants sécurisés et une navigation simplifiée.",
       "emailLabel": "Email",
       "passwordLabel": "Mot de passe",
       "emailPlaceholder": "vous@exemple.com",
@@ -858,6 +883,7 @@
     },
     "signup": {
       "title": "Créer votre compte",
+      "subtitle": "Créez vos identifiants pour commencer à organiser évaluations, domaines et étiquettes.",
       "emailLabel": "Email",
       "passwordLabel": "Mot de passe",
       "confirmPasswordLabel": "Confirmez le mot de passe",

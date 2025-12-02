@@ -898,8 +898,32 @@
       "viewResource": "Open resource"
     },
   "Auth": {
+    "layout": {
+      "pill": "Orthoutil workspace",
+      "headline": "Clinical tools, securely at your fingertips",
+      "subheadline": "Authenticate to manage your catalogue, publish tests, and collaborate with your team without friction.",
+      "features": {
+        "security": {
+          "title": "Trusted security",
+          "description": "Encrypted sessions with granular Supabase policies safeguard clinical data."
+        },
+        "speed": {
+          "title": "Faster check-in",
+          "description": "Polished flows to help you sign in and get back to your patients quickly."
+        },
+        "catalog": {
+          "title": "Ready-to-use tools",
+          "description": "Centralize your assessments, domains, and tags in one streamlined hub."
+        },
+        "support": {
+          "title": "Specialist support",
+          "description": "Guidance from the Orthoutil team when you need to adjust access or recover an account."
+        }
+      }
+    },
     "forgotPassword": {
       "title": "Forgot Password",
+      "subtitle": "We will email you a secure reset link so you can regain access in a few steps.",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
       "submit": {
@@ -911,6 +935,7 @@
     },
     "login": {
       "title": "Sign in",
+      "subtitle": "Access your Orthoutil workspace with secure credentials and streamlined navigation.",
       "emailLabel": "Email",
       "passwordLabel": "Password",
       "emailPlaceholder": "you@example.com",
@@ -924,6 +949,7 @@
     },
     "signup": {
       "title": "Create your account",
+      "subtitle": "Set up your credentials to start curating assessments, domains, and tags.",
       "emailLabel": "Email",
       "passwordLabel": "Password",
       "confirmPasswordLabel": "Confirm password",

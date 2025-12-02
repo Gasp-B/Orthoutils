@@ -6,8 +6,8 @@ import { createBrowserClient } from '@supabase/ssr';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
+import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createLoginSchema } from '@/lib/validation/auth';
@@ -56,12 +56,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{t('title')}</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <AuthLayout
+      variant="compact"
+      card={{
+        title: t('title'),
+        description: t('subtitle'),
+        content: (
           <form
             onSubmit={(event) => {
               void handleLogin(event);
@@ -79,18 +79,9 @@ export default function LoginPage() {
                 required
               />
             </div>
-            
-            {/* Zone modifiée avec le lien Mot de passe oublié */}
+
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">{t('passwordLabel')}</Label>
-                <Link 
-                  href={`/${locale}/forgot-password`}
-                  className="text-xs text-primary hover:underline"
-                >
-                  {authT('forgotPassword.title')}
-                </Link>
-              </div>
+              <Label htmlFor="password">{t('passwordLabel')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -99,27 +90,43 @@ export default function LoginPage() {
                 onChange={(event) => setPassword(event.target.value)}
                 required
               />
+              <div className="text-right text-xs">
+                <Link
+                  href={`/${locale}/forgot-password`}
+                  className="font-semibold text-sky-700 underline-offset-4 hover:text-sky-900 hover:underline"
+                >
+                  {authT('forgotPassword.title')}
+                </Link>
+              </div>
             </div>
 
             {error && (
-              <div className="text-sm text-red-500 bg-red-50 p-2 rounded" role="alert">
-                {error}
+              <div
+                className="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
+                role="alert"
+              >
+                <span aria-hidden>⚠️</span>
+                <span>{error}</span>
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full shadow" disabled={loading}>
               {loading ? t('submit.loading') : t('submit.idle')}
             </Button>
           </form>
-
-          <div className="mt-4 text-center text-sm text-muted-foreground">
+        ),
+        footer: (
+          <>
             {t('signupPrompt')}{' '}
-            <Link href={`/${locale}/signup`} className="font-medium text-primary hover:underline">
+            <Link
+              href={`/${locale}/signup`}
+              className="font-semibold text-sky-700 underline-offset-4 hover:text-sky-900 hover:underline"
+            >
               {t('signupCta')}
             </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </>
+        ),
+      }}
+    />
   );
 }
