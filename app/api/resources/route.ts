@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import { createResourceWithRelations, updateResourceWithRelations } from '@/lib/resources/mutations';
+import { getResourcesWithMetadata } from '@/lib/resources/queries';
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createRouteHandlerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { searchParams } = new URL(request.url);
+    const requestedLocale = (searchParams.get('locale') as Locale | null) ?? defaultLocale;
+    const locale = locales.includes(requestedLocale) ? requestedLocale : defaultLocale;
+
+    const resources = await getResourcesWithMetadata(locale);
+
+    return NextResponse.json({ resources }, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching resources:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
 
 // POST: Créer une ressource
 export async function POST(request: NextRequest) {

@@ -10,6 +10,8 @@ import {
   tagsTranslations,
   pathologies,
   pathologyTranslations,
+  resourceTypes,
+  resourceTypesTranslations,
 } from '@/lib/db/schema';
 import {
   taxonomyDeletionSchema,
@@ -23,12 +25,15 @@ import {
   deleteDomain,
   deleteTag,
   deletePathology,
+  createResourceType,
+  deleteResourceType,
 } from '@/lib/tests/taxonomy';
 
 // Types helpers
 type DomainTranslationRow = typeof domainsTranslations.$inferSelect;
 type TagTranslationRow = typeof tagsTranslations.$inferSelect;
 type PathologyTranslationRow = typeof pathologyTranslations.$inferSelect;
+type ResourceTypeTranslationRow = typeof resourceTypesTranslations.$inferSelect;
 
 function resolveTranslation<T extends { locale: string }>(
   id: string,
@@ -48,14 +53,25 @@ export async function GET(request: NextRequest) {
 
     const db = getDb();
 
-    const [domainRows, tagRows, pathologyRows, allDomains, allTags, allPathologies] =
+    const [
+      domainRows,
+      tagRows,
+      pathologyRows,
+      resourceTypeRows,
+      allDomains,
+      allTags,
+      allPathologies,
+      allResourceTypes,
+    ] =
       await Promise.all([
         db.select().from(domainsTranslations).where(inArray(domainsTranslations.locale, [locale, defaultLocale])),
         db.select().from(tagsTranslations).where(inArray(tagsTranslations.locale, [locale, defaultLocale])),
         db.select().from(pathologyTranslations).where(inArray(pathologyTranslations.locale, [locale, defaultLocale])),
+        db.select().from(resourceTypesTranslations).where(inArray(resourceTypesTranslations.locale, [locale, defaultLocale])),
         db.select().from(domains),
         db.select().from(tags),
         db.select().from(pathologies),
+        db.select().from(resourceTypes),
       ]);
 
     // Mapping
@@ -78,6 +94,13 @@ export async function GET(request: NextRequest) {
       const list = pathologiesById.get(r.pathologyId) ?? [];
       list.push(r);
       pathologiesById.set(r.pathologyId, list);
+    }
+
+    const resourceTypesById = new Map<string, ResourceTypeTranslationRow[]>();
+    for (const r of resourceTypeRows) {
+      const list = resourceTypesById.get(r.resourceTypeId) ?? [];
+      list.push(r);
+      resourceTypesById.set(r.resourceTypeId, list);
     }
 
     // Build Response
@@ -113,10 +136,19 @@ export async function GET(request: NextRequest) {
       .filter((p): p is NonNullable<typeof p> => Boolean(p))
       .sort((a, b) => a.label.localeCompare(b.label));
 
+    const localizedResourceTypes = allResourceTypes
+      .map((type) => {
+        const tr = resolveTranslation(type.id, resourceTypesById, locale, defaultLocale);
+        return tr ? { id: type.id, label: tr.label } : null;
+      })
+      .filter((t): t is NonNullable<typeof t> => Boolean(t))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
     const payload = taxonomyResponseSchema.parse({
       domains: localizedDomains,
       tags: localizedTags,
       pathologies: localizedPathologies,
+      resourceTypes: localizedResourceTypes,
     });
 
     return NextResponse.json(payload, {
@@ -152,6 +184,11 @@ export async function POST(request: NextRequest) {
         locale,
       );
       return NextResponse.json({ pathology: created }, { status: 201 });
+    }
+
+    if (payload.type === 'resourceType') {
+      const created = await createResourceType(payload.value, locale);
+      return NextResponse.json({ resourceType: created }, { status: 201 });
     }
 
     return NextResponse.json({ error: 'Type invalide' }, { status: 400 });
@@ -217,6 +254,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true }, { status: 200 });
     }
 
+    if (payload.type === 'resourceType') {
+      await db
+        .update(resourceTypesTranslations)
+        .set({ label: payload.value })
+        .where(
+          and(
+            eq(resourceTypesTranslations.resourceTypeId, entityId),
+            eq(resourceTypesTranslations.locale, locale),
+          ),
+        );
+
+      return NextResponse.json({ success: true }, { status: 200 });
+    }
+
     return NextResponse.json({ error: 'Type invalide' }, { status: 400 });
   } catch (error) {
     console.error('Update taxonomy error', error);
@@ -233,6 +284,7 @@ export async function DELETE(request: NextRequest) {
     if (payload.type === 'domain') deleted = await deleteDomain(payload.id, locale);
     else if (payload.type === 'tag') deleted = await deleteTag(payload.id, locale);
     else if (payload.type === 'pathology') deleted = await deletePathology(payload.id, locale);
+    else if (payload.type === 'resourceType') deleted = await deleteResourceType(payload.id, locale);
 
     if (!deleted) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
     return NextResponse.json({ deleted }, { status: 200 });

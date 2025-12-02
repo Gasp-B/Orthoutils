@@ -11,6 +11,7 @@ import styles from './administration-page.module.css';
 function AdministrationDashboard() {
   const t = useTranslations('Header');
   const tm = useTranslations('taxonomyManagement');
+  const tr = useTranslations('ResourcesManage');
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -65,6 +66,20 @@ function AdministrationDashboard() {
           <div className={styles.cardBody}>
             <p className={styles.cardEyebrow}>{tm('nav.cardEyebrow')}</p>
             <span className={styles.cardTitle}>{tm('nav.cardTitle')}</span>
+          </div>
+          <span aria-hidden className={styles.cardArrow}>
+            →
+          </span>
+        </Link>
+
+        <Link
+          href="/administration/resources"
+          className={styles.card}
+          aria-label={tr('nav.cardTitle')}
+        >
+          <div className={styles.cardBody}>
+            <p className={styles.cardEyebrow}>{tr('nav.cardEyebrow')}</p>
+            <span className={styles.cardTitle}>{tr('nav.cardTitle')}</span>
           </div>
           <span aria-hidden className={styles.cardArrow}>
             →

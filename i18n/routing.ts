@@ -33,6 +33,10 @@ export const pathnames = {
     en: '/administration/TaxonomyManagement',
     fr: '/administration/TaxonomyManagement',
   },
+  '/administration/resources': {
+    en: '/administration/resources',
+    fr: '/administration/resources',
+  },
   '/tests/manage': '/tests/manage',
 } satisfies Pathnames<typeof locales>;
 

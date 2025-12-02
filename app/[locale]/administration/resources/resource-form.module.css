@@ -1,0 +1,27 @@
+.formGrid {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr;
+  gap: 1rem;
+}
+
+@media (max-width: 960px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.columnStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.helper {
+  margin: 0;
+  color: #475569;
+}
+
+.errorMessage {
+  margin: 0.25rem 0 0;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
