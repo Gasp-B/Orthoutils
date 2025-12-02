@@ -157,6 +157,85 @@
     "pageTitle": "Ajouter / Éditer un test",
     "pageLead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags et domaines associés."
   },
+  "ResourcesManage": {
+    "metadata": {
+      "title": "Gérer les ressources | Othoutils",
+      "description": "Créer ou mettre à jour des ressources du catalogue et leurs relations de taxonomie."
+    },
+    "sectionLabel": "Configuration des ressources",
+    "pageTitle": "Configurer les ressources",
+    "pageLead": "Ajoutez de nouvelles ressources ou modifiez les entrées existantes, avec leurs domaines, tags et pathologies.",
+    "nav": {
+      "cardEyebrow": "Ressources",
+      "cardTitle": "Configuration des ressources"
+    },
+    "form": {
+      "toolbar": {
+        "sheetLabel": "Ressource",
+        "newResource": "Nouvelle ressource",
+        "reset": "Réinitialiser",
+        "submit": {
+          "pending": "Enregistrement…",
+          "create": "Créer la ressource",
+          "update": "Mettre à jour"
+        }
+      },
+      "fields": {
+        "title": {
+          "label": "Titre",
+          "placeholder": "Titre de la ressource (ex. Fiche, Guide)"
+        },
+        "type": {
+          "label": "Type",
+          "placeholder": "Type de ressource (guide, fiche, lien)"
+        },
+        "url": {
+          "label": "URL",
+          "placeholder": "https://exemple.fr/ressource"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Contexte ou consignes d'utilisation de la ressource."
+        }
+      },
+      "sections": {
+        "identity": {
+          "title": "Détails de la ressource",
+          "helper": "Renseignez les informations essentielles de cette ressource."
+        },
+        "taxonomy": {
+          "title": "Taxonomie",
+          "helper": "Associez domaines, tags et pathologies pour faciliter le filtrage et la recherche.",
+          "domainsLabel": "Domaines",
+          "tagsLabel": "Tags",
+          "pathologiesLabel": "Pathologies"
+        }
+      },
+      "multiSelect": {
+        "add": "Ajouter",
+        "remove": "Retirer",
+        "clear": "Effacer",
+        "close": "Fermer",
+        "emptySelection": "Aucun élément sélectionné.",
+        "emptyResults": "Aucun résultat",
+        "loading": "Chargement…",
+        "searchPlaceholder": "Rechercher…",
+        "dialogTitle": "Sélectionner {label}",
+        "filterHelper": "Tapez pour filtrer, cliquez pour ajouter ou retirer."
+      }
+    },
+    "feedback": {
+      "errors": {
+        "title": "Erreur :",
+        "generic": "Une erreur est survenue. Réessayez.",
+        "genericWithReason": "Une erreur est survenue : {reason}",
+        "unauthorized": "Vous devez être connecté pour gérer les ressources."
+      },
+      "success": {
+        "saved": "Ressource enregistrée avec succès !"
+      }
+    }
+  },
   "TestsForm": {
     "toolbar": {
       "sheetLabel": "Fiche",

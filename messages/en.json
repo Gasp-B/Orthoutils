@@ -157,6 +157,85 @@
     "pageTitle": "Add / Edit a test",
     "pageLead": "Use this form to create a test or edit an existing sheet, including its associated tags and domains."
   },
+  "ResourcesManage": {
+    "metadata": {
+      "title": "Manage resources | Othoutils",
+      "description": "Create or update catalog resources and their taxonomy relations."
+    },
+    "sectionLabel": "Resource configuration",
+    "pageTitle": "Configure resources",
+    "pageLead": "Create new resources or edit existing entries, including their domains, tags, and pathologies.",
+    "nav": {
+      "cardEyebrow": "Resources",
+      "cardTitle": "Resource configuration"
+    },
+    "form": {
+      "toolbar": {
+        "sheetLabel": "Resource",
+        "newResource": "New resource",
+        "reset": "Reset",
+        "submit": {
+          "pending": "Saving…",
+          "create": "Create resource",
+          "update": "Update"
+        }
+      },
+      "fields": {
+        "title": {
+          "label": "Title",
+          "placeholder": "Resource title (e.g., Worksheet, Guide)"
+        },
+        "type": {
+          "label": "Type",
+          "placeholder": "Type of resource (guide, sheet, link)"
+        },
+        "url": {
+          "label": "URL",
+          "placeholder": "https://example.com/resource"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Context or how to use this resource."
+        }
+      },
+      "sections": {
+        "identity": {
+          "title": "Resource details",
+          "helper": "Provide the essential information for this resource."
+        },
+        "taxonomy": {
+          "title": "Taxonomy",
+          "helper": "Attach domains, tags, and pathologies to help filtering and discovery.",
+          "domainsLabel": "Domains",
+          "tagsLabel": "Tags",
+          "pathologiesLabel": "Pathologies"
+        }
+      },
+      "multiSelect": {
+        "add": "Add",
+        "remove": "Remove",
+        "clear": "Clear",
+        "close": "Close",
+        "emptySelection": "No item selected yet.",
+        "emptyResults": "No result",
+        "loading": "Loading…",
+        "searchPlaceholder": "Search…",
+        "dialogTitle": "Select {label}",
+        "filterHelper": "Type to filter, click to add or remove."
+      }
+    },
+    "feedback": {
+      "errors": {
+        "title": "Error:",
+        "generic": "An error occurred. Please try again.",
+        "genericWithReason": "An error occurred: {reason}",
+        "unauthorized": "You need to be logged in to manage resources."
+      },
+      "success": {
+        "saved": "Resource saved successfully!"
+      }
+    }
+  },
   "TestsForm": {
     "toolbar": {
       "sheetLabel": "Sheet",
