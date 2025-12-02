@@ -5,8 +5,8 @@ import { useState, type FormEvent } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useLocale, useTranslations } from 'next-intl';
 
+import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createForgotPasswordSchema } from '@/lib/validation/auth';
@@ -15,6 +15,7 @@ export default function ForgotPasswordPage() {
   const locale = useLocale();
   const t = useTranslations('Auth.forgotPassword');
   const authT = useTranslations('Auth');
+  const layoutT = useTranslations('Auth.layout');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,49 +55,83 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{t('title')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!success ? (
-            <form onSubmit={(e) => void handleReset(e)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('emailLabel')}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder={t('emailPlaceholder')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              {error && (
-                <div className="text-sm text-red-500 bg-red-50 p-2 rounded" role="alert">
-                  {error}
-                </div>
-              )}
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? t('submit.loading') : t('submit.idle')}
-              </Button>
-            </form>
-          ) : (
-            <div className="text-sm text-green-600 bg-green-50 p-4 rounded mb-4" role="status">
-              {t('successMessage')}
+    <AuthLayout
+      hero={{
+        pill: layoutT('pill'),
+        headline: layoutT('headline'),
+        subheadline: layoutT('subheadline'),
+        features: [
+          {
+            icon: '🛡️',
+            title: layoutT('features.security.title'),
+            description: layoutT('features.security.description'),
+          },
+          {
+            icon: '⚡',
+            title: layoutT('features.speed.title'),
+            description: layoutT('features.speed.description'),
+          },
+          {
+            icon: '📚',
+            title: layoutT('features.catalog.title'),
+            description: layoutT('features.catalog.description'),
+          },
+          {
+            icon: '💬',
+            title: layoutT('features.support.title'),
+            description: layoutT('features.support.description'),
+          },
+        ],
+      }}
+      card={{
+        title: t('title'),
+        description: t('subtitle'),
+        content: !success ? (
+          <form onSubmit={(event) => void handleReset(event)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('emailLabel')}</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder={t('emailPlaceholder')}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
             </div>
-          )}
 
-          <div className="mt-4 text-center text-sm">
-            <Link href={`/${locale}/login`} className="font-medium text-primary hover:underline">
-              {t('backToLogin')}
-            </Link>
+            {error && (
+              <div
+                className="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
+                role="alert"
+              >
+                <span aria-hidden>⚠️</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full shadow" disabled={loading}>
+              {loading ? t('submit.loading') : t('submit.idle')}
+            </Button>
+          </form>
+        ) : (
+          <div
+            className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-3 text-sm text-emerald-800"
+            role="status"
+          >
+            <span aria-hidden>✅</span>
+            <span>{t('successMessage')}</span>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        ),
+        footer: (
+          <Link
+            href={`/${locale}/login`}
+            className="font-semibold text-sky-700 underline-offset-4 hover:text-sky-900 hover:underline"
+          >
+            {t('backToLogin')}
+          </Link>
+        ),
+      }}
+    />
   );
 }
