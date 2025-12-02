@@ -17,7 +17,6 @@ export default function LoginPage() {
   const locale = useLocale();
   const t = useTranslations('Auth.login');
   const authT = useTranslations('Auth');
-  const layoutT = useTranslations('Auth.layout');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,33 +57,7 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
-      hero={{
-        pill: layoutT('pill'),
-        headline: layoutT('headline'),
-        subheadline: layoutT('subheadline'),
-        features: [
-          {
-            icon: '🛡️',
-            title: layoutT('features.security.title'),
-            description: layoutT('features.security.description'),
-          },
-          {
-            icon: '⚡',
-            title: layoutT('features.speed.title'),
-            description: layoutT('features.speed.description'),
-          },
-          {
-            icon: '📚',
-            title: layoutT('features.catalog.title'),
-            description: layoutT('features.catalog.description'),
-          },
-          {
-            icon: '💬',
-            title: layoutT('features.support.title'),
-            description: layoutT('features.support.description'),
-          },
-        ],
-      }}
+      variant="compact"
       card={{
         title: t('title'),
         description: t('subtitle'),
@@ -108,15 +81,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">{t('passwordLabel')}</Label>
-                <Link
-                  href={`/${locale}/forgot-password`}
-                  className="text-xs font-semibold text-sky-700 underline-offset-4 hover:text-sky-900 hover:underline"
-                >
-                  {authT('forgotPassword.title')}
-                </Link>
-              </div>
+              <Label htmlFor="password">{t('passwordLabel')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -125,6 +90,14 @@ export default function LoginPage() {
                 onChange={(event) => setPassword(event.target.value)}
                 required
               />
+              <div className="text-right text-xs">
+                <Link
+                  href={`/${locale}/forgot-password`}
+                  className="font-semibold text-sky-700 underline-offset-4 hover:text-sky-900 hover:underline"
+                >
+                  {authT('forgotPassword.title')}
+                </Link>
+              </div>
             </div>
 
             {error && (
