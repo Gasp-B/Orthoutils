@@ -38,7 +38,8 @@ const formSchema = resourceInputSchema
   .refine((value) => Boolean(value.title?.trim()), { path: ['title'] })
   .refine((value) => Boolean(value.type?.trim()), { path: ['type'] });
 
-const defaultValues: z.infer<typeof formSchema> = {
+const createDefaultValues = (locale: Locale): z.infer<typeof formSchema> => ({
+  locale,
   id: undefined,
   title: '',
   type: '',
@@ -47,7 +48,7 @@ const defaultValues: z.infer<typeof formSchema> = {
   domains: [],
   tags: [],
   pathologies: [],
-};
+});
 
 async function fetchResources(locale: Locale) {
   const response = await fetch(`/api/resources?locale=${locale}`, { credentials: 'include' });
@@ -126,7 +127,7 @@ function ResourceForm({ locale }: ResourceFormProps) {
     formState: { errors },
   } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: createDefaultValues(locale),
   });
 
   const currentDomains = watch('domains') ?? [];
@@ -135,19 +136,20 @@ function ResourceForm({ locale }: ResourceFormProps) {
 
   useEffect(() => {
     if (!selectedResourceId) {
-      reset(defaultValues);
+      reset(createDefaultValues(locale));
       return;
     }
 
     const resource = resources?.find((item) => item.id === selectedResourceId);
     if (resource) {
       reset({
+        locale,
         ...resource,
         url: resource.url ?? '',
         description: resource.description ?? '',
       });
     }
-  }, [selectedResourceId, resources, reset]);
+  }, [selectedResourceId, resources, reset, locale]);
 
   const mutation = useMutation({
     mutationFn: (payload: z.infer<typeof formSchema>) =>
@@ -156,13 +158,14 @@ function ResourceForm({ locale }: ResourceFormProps) {
       void queryClient.invalidateQueries({ queryKey: ['resources', locale] });
       void queryClient.invalidateQueries({ queryKey: ['taxonomy', locale] });
       setToastMsg(feedbackT('success.saved'));
-      if (!selectedResourceId) reset(defaultValues);
+      if (!selectedResourceId) reset(createDefaultValues(locale));
     },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const payload = {
       ...values,
+      locale,
       id: values.id || undefined,
       title: values.title.trim(),
       type: values.type.trim(),
@@ -221,7 +224,7 @@ function ResourceForm({ locale }: ResourceFormProps) {
             variant="ghost"
             onClick={() => {
               setSelectedResourceId(null);
-              reset(defaultValues);
+              reset(createDefaultValues(locale));
             }}
           >
             {formT('toolbar.reset')}
