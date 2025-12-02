@@ -874,11 +874,25 @@
       "passwordLabel": "Mot de passe",
       "emailPlaceholder": "vous@exemple.com",
       "passwordPlaceholder": "Votre mot de passe",
+      "social": {
+        "phone": "Continuer avec le téléphone",
+        "google": "Continuer avec Google",
+        "apple": "Continuer avec Apple",
+        "magicLink": "Recevoir un lien magique",
+        "separator": "Ou"
+      },
       "submit": {
         "idle": "Se connecter",
         "loading": "Connexion…"
       },
-      "signupPrompt": "Nouveau sur Othoutils ?",
+      "footer": {
+        "disclaimer": "En continuant, vous acceptez nos Conditions d'utilisation et reconnaissez la Politique de confidentialité."
+      },
+      "feedback": {
+        "magicLinkSent": "Consultez votre email pour un lien de connexion sécurisé.",
+        "phoneUnavailable": "La connexion par téléphone arrive bientôt."
+      },
+      "signupPrompt": "Nouveau sur Orthoutils ?",
       "signupCta": "Créer un compte"
     },
     "signup": {

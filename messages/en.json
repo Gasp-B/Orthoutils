@@ -940,11 +940,25 @@
       "passwordLabel": "Password",
       "emailPlaceholder": "you@example.com",
       "passwordPlaceholder": "Your password",
+      "social": {
+        "phone": "Continue with phone",
+        "google": "Continue with Google",
+        "apple": "Continue with Apple",
+        "magicLink": "Send me a magic link",
+        "separator": "Or"
+      },
       "submit": {
         "idle": "Sign in",
         "loading": "Signing in…"
       },
-      "signupPrompt": "New to Othoutils?",
+      "footer": {
+        "disclaimer": "By continuing, you agree to our Terms of Use and acknowledge the Privacy Policy."
+      },
+      "feedback": {
+        "magicLinkSent": "Check your email for a secure sign-in link.",
+        "phoneUnavailable": "Phone sign-in is coming soon."
+      },
+      "signupPrompt": "New to Orthoutils?",
       "signupCta": "Create an account"
     },
     "signup": {
