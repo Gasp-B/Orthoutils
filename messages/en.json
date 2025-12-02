@@ -188,7 +188,7 @@
         },
         "type": {
           "label": "Type",
-          "placeholder": "Type of resource (guide, sheet, link)"
+          "placeholder": "Select a resource type"
         },
         "url": {
           "label": "URL",
@@ -840,11 +840,11 @@
   "taxonomyManagement": {
     "meta": {
       "title": "Manage taxonomy | Othoutils",
-      "description": "Maintain domains, tags, and pathologies used throughout the catalog."
+      "description": "Maintain domains, tags, pathologies, and resource types used throughout the catalog."
     },
     "sectionLabel": "Taxonomy",
     "pageTitle": "Manage taxonomy entries",
-    "pageLead": "Organize domains, tags, and pathologies to keep the catalog consistent across locales.",
+    "pageLead": "Organize domains, tags, pathologies, and resource types to keep the catalog consistent across locales.",
     "nav": {
       "cardTitle": "Taxonomy management",
       "cardEyebrow": "Catalog settings"
@@ -857,16 +857,19 @@
       "pathologies": "Pathologies",
       "domains": "Domains",
       "tags": "Tags",
+      "resourceTypes": "Resource types",
       "hints": {
         "pathologies": "Description and synonyms available",
         "domains": "Used to structure the catalog",
-        "tags": "Optional color for quick scanning"
+        "tags": "Optional color for quick scanning",
+        "resourceTypes": "Shared list for resource creation"
       }
     },
     "descriptions": {
       "pathologies": "Pathologies include a label, optional description, and synonyms to improve search.",
       "domains": "Domains help structure the catalog hierarchy and group tools.",
-      "tags": "Tags add lightweight labels. You can associate a color to highlight them."
+      "tags": "Tags add lightweight labels. You can associate a color to highlight them.",
+      "resourceTypes": "Resource types keep resource sheets consistent and are reused in the admin form."
     },
     "aria": {
       "panel": "Taxonomy management",

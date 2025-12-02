@@ -133,6 +133,7 @@ function ResourceForm({ locale }: ResourceFormProps) {
   const currentDomains = watch('domains') ?? [];
   const currentTags = watch('tags') ?? [];
   const currentPathologies = watch('pathologies') ?? [];
+  const currentType = watch('type') ?? '';
 
   useEffect(() => {
     if (!selectedResourceId) {
@@ -275,7 +276,22 @@ function ResourceForm({ locale }: ResourceFormProps) {
             <div className="grid md:grid-cols-2 gap-3">
               <div className="grid gap-2">
                 <Label htmlFor="type">{formT('fields.type.label')}</Label>
-                <Input id="type" placeholder={formT('fields.type.placeholder')} {...register('type')} />
+                <select
+                  id="type"
+                  className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                  {...register('type')}
+                >
+                  <option value="">{formT('fields.type.placeholder')}</option>
+                  {taxonomy?.resourceTypes.map((resourceType) => (
+                    <option key={resourceType.id} value={resourceType.label}>
+                      {resourceType.label}
+                    </option>
+                  ))}
+                  {currentType &&
+                    taxonomy?.resourceTypes.every((type) => type.label !== currentType) && (
+                      <option value={currentType}>{currentType}</option>
+                    )}
+                </select>
                 {errors.type && <p className={styles.errorMessage}>{errors.type.message}</p>}
               </div>
               <div className="grid gap-2">

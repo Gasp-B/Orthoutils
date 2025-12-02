@@ -188,7 +188,7 @@
         },
         "type": {
           "label": "Type",
-          "placeholder": "Type de ressource (guide, fiche, lien)"
+          "placeholder": "Sélectionnez un type de ressource"
         },
         "url": {
           "label": "URL",
@@ -773,11 +773,11 @@
   "taxonomyManagement": {
     "meta": {
       "title": "Gérer la taxonomie | Othoutils",
-      "description": "Maintenez les domaines, tags et pathologies utilisés dans le catalogue."
+      "description": "Maintenez les domaines, tags, pathologies et types de ressource utilisés dans le catalogue."
     },
     "sectionLabel": "Taxonomie",
     "pageTitle": "Administrer les entrées de taxonomie",
-    "pageLead": "Organisez domaines, tags et pathologies pour garder un catalogue cohérent entre les langues.",
+    "pageLead": "Organisez domaines, tags, pathologies et types de ressource pour garder un catalogue cohérent entre les langues.",
     "nav": {
       "cardTitle": "Gestion de la taxonomie",
       "cardEyebrow": "Paramètres du catalogue"
@@ -790,16 +790,19 @@
       "pathologies": "Pathologies",
       "domains": "Domaines",
       "tags": "Tags",
+      "resourceTypes": "Types de ressource",
       "hints": {
         "pathologies": "Description et synonymes disponibles",
         "domains": "Utilisé pour structurer le catalogue",
-        "tags": "Couleur optionnelle pour repérer rapidement"
+        "tags": "Couleur optionnelle pour repérer rapidement",
+        "resourceTypes": "Liste commune pour la création de ressources"
       }
     },
     "descriptions": {
       "pathologies": "Les pathologies incluent un libellé, une description optionnelle et des synonymes pour faciliter la recherche.",
       "domains": "Les domaines structurent la hiérarchie du catalogue et regroupent les outils.",
-      "tags": "Les tags ajoutent des étiquettes légères. Vous pouvez associer une couleur pour les mettre en valeur."
+      "tags": "Les tags ajoutent des étiquettes légères. Vous pouvez associer une couleur pour les mettre en valeur.",
+      "resourceTypes": "Les types de ressource assurent la cohérence des fiches et sont réutilisés dans le formulaire admin."
     },
     "aria": {
       "panel": "Gestion de la taxonomie",
