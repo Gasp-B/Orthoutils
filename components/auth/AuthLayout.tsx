@@ -32,9 +32,15 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ hero, card, variant = 'full' }: AuthLayoutProps) {
   const showHero = variant !== 'compact' && hero;
+  const isCompact = variant === 'compact';
 
   return (
-    <div className="min-h-[82vh] bg-gradient-to-b from-sky-50/80 via-white to-slate-50/80 py-12">
+    <div
+      className={cn(
+        'min-h-screen bg-gradient-to-b from-sky-50/80 via-white to-slate-50/80',
+        isCompact ? 'flex items-center justify-center px-4 md:px-6 py-16' : 'py-12'
+      )}
+    >
       <div
         className={cn(
           'mx-auto max-w-5xl px-4 md:px-6',
