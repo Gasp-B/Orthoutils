@@ -12,6 +12,8 @@ import {
   testDomains,
   testTags,
   testPathologies,
+  resourceTypes,
+  resourceTypesTranslations,
 } from '@/lib/db/schema';
 import { generateUniqueSlug } from '@/lib/utils/slug';
 
@@ -216,6 +218,57 @@ export async function deletePathology(id: string, locale: Locale = defaultLocale
   const deleted = await db.transaction(async (tx) => {
     await tx.delete(testPathologies).where(eq(testPathologies.pathologyId, id));
     const [removed] = await tx.delete(pathologies).where(eq(pathologies.id, id)).returning({ id: pathologies.id });
+    return removed ? { id: removed.id, label: translation?.label ?? '' } : null;
+  });
+
+  return deleted;
+}
+
+// --- RESOURCE TYPES ---
+
+export async function createResourceType(label: string, locale: Locale = defaultLocale) {
+  const normalized = normalizeValue(label);
+  const db = getDb();
+
+  const [existingTranslation] = await db
+    .select({ id: resourceTypesTranslations.id, resourceTypeId: resourceTypesTranslations.resourceTypeId })
+    .from(resourceTypesTranslations)
+    .where(eq(resourceTypesTranslations.label, normalized))
+    .limit(1);
+
+  const resourceTypeId =
+    existingTranslation?.resourceTypeId ??
+    (await db.insert(resourceTypes).values({}).returning({ id: resourceTypes.id }))[0]?.id;
+
+  if (!resourceTypeId) throw new Error('Impossible de créer ou retrouver le type de ressource.');
+
+  const [created] = await db
+    .insert(resourceTypesTranslations)
+    .values({ resourceTypeId, label: normalized, locale })
+    .onConflictDoUpdate({
+      target: [resourceTypesTranslations.resourceTypeId, resourceTypesTranslations.locale],
+      set: { label: normalized },
+    })
+    .returning({ id: resourceTypesTranslations.resourceTypeId, label: resourceTypesTranslations.label });
+
+  return created;
+}
+
+export async function deleteResourceType(id: string, locale: Locale = defaultLocale) {
+  const db = getDb();
+  const localized = alias(resourceTypesTranslations, 'localized_res_type_del');
+  const fallback = alias(resourceTypesTranslations, 'fallback_res_type_del');
+
+  const [translation] = await db
+    .select({ label: sql<string>`COALESCE(${localized.label}, ${fallback.label}, '')` })
+    .from(resourceTypes)
+    .leftJoin(localized, and(eq(localized.resourceTypeId, resourceTypes.id), eq(localized.locale, locale)))
+    .leftJoin(fallback, and(eq(fallback.resourceTypeId, resourceTypes.id), eq(fallback.locale, defaultLocale)))
+    .where(eq(resourceTypes.id, id))
+    .limit(1);
+
+  const deleted = await db.transaction(async (tx) => {
+    const [removed] = await tx.delete(resourceTypes).where(eq(resourceTypes.id, id)).returning({ id: resourceTypes.id });
     return removed ? { id: removed.id, label: translation?.label ?? '' } : null;
   });
 

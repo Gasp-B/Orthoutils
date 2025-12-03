@@ -13,11 +13,12 @@ import {
 } from '@/lib/validation/tests';
 import { type Locale } from '@/i18n/routing';
 
-type TaxonomyType = 'pathologies' | 'domains' | 'tags';
+type TaxonomyType = 'pathologies' | 'domains' | 'tags' | 'resourceTypes';
 type TaxonomyEntry =
   | TaxonomyResponse['pathologies'][number]
   | TaxonomyResponse['domains'][number]
-  | TaxonomyResponse['tags'][number];
+  | TaxonomyResponse['tags'][number]
+  | TaxonomyResponse['resourceTypes'][number];
 
 type FormState = {
   label: string;
@@ -42,10 +43,11 @@ function getColorClass(hex: string | null | undefined) {
   }
 }
 
-const typeToApi: Record<TaxonomyType, 'pathology' | 'domain' | 'tag'> = {
+const typeToApi: Record<TaxonomyType, 'pathology' | 'domain' | 'tag' | 'resourceType'> = {
   pathologies: 'pathology',
   domains: 'domain',
   tags: 'tag',
+  resourceTypes: 'resourceType',
 };
 
 const initialFormState: FormState = {
@@ -108,6 +110,11 @@ export default function TaxonomyManagementPanel() {
         hint: t('types.hints.tags'),
         lead: t('descriptions.tags'),
       },
+      resourceTypes: {
+        label: t('types.resourceTypes'),
+        hint: t('types.hints.resourceTypes'),
+        lead: t('descriptions.resourceTypes'),
+      },
     }),
     [t],
   );
@@ -116,7 +123,8 @@ export default function TaxonomyManagementPanel() {
     if (!taxonomyQuery.data) return [];
     if (activeType === 'pathologies') return taxonomyQuery.data.pathologies;
     if (activeType === 'domains') return taxonomyQuery.data.domains;
-    return taxonomyQuery.data.tags;
+    if (activeType === 'tags') return taxonomyQuery.data.tags;
+    return taxonomyQuery.data.resourceTypes;
   }, [taxonomyQuery.data, activeType]);
 
   const filteredItems: TaxonomyEntry[] = useMemo(() => {

@@ -90,12 +90,18 @@ export const taxonomyResponseSchema = z.object({
       synonyms: z.array(z.string()),
     }),
   ),
+  resourceTypes: z.array(
+    z.object({
+      id: z.string().uuid(),
+      label: z.string(),
+    }),
+  ),
 });
 
 export type TaxonomyResponse = z.infer<typeof taxonomyResponseSchema>;
 
 export const taxonomyMutationSchema = z.object({
-  type: z.enum(['domain', 'tag', 'pathology']),
+  type: z.enum(['domain', 'tag', 'pathology', 'resourceType']),
   locale: localeEnum.default(defaultLocale),
   value: z.string().trim().min(1, { message: 'La valeur est requise.' }),
   // Champs additionnels optionnels
@@ -105,7 +111,7 @@ export const taxonomyMutationSchema = z.object({
 });
 
 export const taxonomyDeletionSchema = z.object({
-  type: z.enum(['domain', 'tag', 'pathology']),
+  type: z.enum(['domain', 'tag', 'pathology', 'resourceType']),
   id: z.string().uuid(),
   locale: localeEnum.default(defaultLocale),
 });
