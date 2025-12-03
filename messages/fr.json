@@ -27,11 +27,12 @@
     "account": "Mon compte",
     "logout": "Se déconnecter",
     "profileAria": "Menu utilisateur",
-    "dashboard": "Tableau de bord",
-    "addTest": "Ajouter un test",
-    "taxonomy": "Paramétrage des sections",
-    "catalogue": "Catalogue",
-    "megaMenuLabel": "Navigation catalogue",
+  "dashboard": "Tableau de bord",
+  "addTest": "Ajouter un test",
+  "taxonomy": "Paramétrage des sections",
+  "resources": "Configuration des ressources",
+  "catalogue": "Catalogue",
+  "megaMenuLabel": "Navigation catalogue",
     "domainsLabel": "Domaines du catalogue",
     "tagsLabel": "Tags"
   },
@@ -156,6 +157,85 @@
     "sectionLabel": "Créer ou mettre à jour un test",
     "pageTitle": "Ajouter / Éditer un test",
     "pageLead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags et domaines associés."
+  },
+  "ResourcesManage": {
+    "metadata": {
+      "title": "Gérer les ressources | Othoutils",
+      "description": "Créer ou mettre à jour des ressources du catalogue et leurs relations de taxonomie."
+    },
+    "sectionLabel": "Configuration des ressources",
+    "pageTitle": "Configurer les ressources",
+    "pageLead": "Ajoutez de nouvelles ressources ou modifiez les entrées existantes, avec leurs domaines, tags et pathologies.",
+    "nav": {
+      "cardEyebrow": "Ressources",
+      "cardTitle": "Configuration des ressources"
+    },
+    "form": {
+      "toolbar": {
+        "sheetLabel": "Ressource",
+        "newResource": "Nouvelle ressource",
+        "reset": "Réinitialiser",
+        "submit": {
+          "pending": "Enregistrement…",
+          "create": "Créer la ressource",
+          "update": "Mettre à jour"
+        }
+      },
+      "fields": {
+        "title": {
+          "label": "Titre",
+          "placeholder": "Titre de la ressource (ex. Fiche, Guide)"
+        },
+        "type": {
+          "label": "Type",
+          "placeholder": "Sélectionnez un type de ressource"
+        },
+        "url": {
+          "label": "URL",
+          "placeholder": "https://exemple.fr/ressource"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Contexte ou consignes d'utilisation de la ressource."
+        }
+      },
+      "sections": {
+        "identity": {
+          "title": "Détails de la ressource",
+          "helper": "Renseignez les informations essentielles de cette ressource."
+        },
+        "taxonomy": {
+          "title": "Taxonomie",
+          "helper": "Associez domaines, tags et pathologies pour faciliter le filtrage et la recherche.",
+          "domainsLabel": "Domaines",
+          "tagsLabel": "Tags",
+          "pathologiesLabel": "Pathologies"
+        }
+      },
+      "multiSelect": {
+        "add": "Ajouter",
+        "remove": "Retirer",
+        "clear": "Effacer",
+        "close": "Fermer",
+        "emptySelection": "Aucun élément sélectionné.",
+        "emptyResults": "Aucun résultat",
+        "loading": "Chargement…",
+        "searchPlaceholder": "Rechercher…",
+        "dialogTitle": "Sélectionner {label}",
+        "filterHelper": "Tapez pour filtrer, cliquez pour ajouter ou retirer."
+      }
+    },
+    "feedback": {
+      "errors": {
+        "title": "Erreur :",
+        "generic": "Une erreur est survenue. Réessayez.",
+        "genericWithReason": "Une erreur est survenue : {reason}",
+        "unauthorized": "Vous devez être connecté pour gérer les ressources."
+      },
+      "success": {
+        "saved": "Ressource enregistrée avec succès !"
+      }
+    }
   },
   "TestsForm": {
     "toolbar": {
@@ -693,11 +773,11 @@
   "taxonomyManagement": {
     "meta": {
       "title": "Gérer la taxonomie | Othoutils",
-      "description": "Maintenez les domaines, tags et pathologies utilisés dans le catalogue."
+      "description": "Maintenez les domaines, tags, pathologies et types de ressource utilisés dans le catalogue."
     },
     "sectionLabel": "Taxonomie",
     "pageTitle": "Administrer les entrées de taxonomie",
-    "pageLead": "Organisez domaines, tags et pathologies pour garder un catalogue cohérent entre les langues.",
+    "pageLead": "Organisez domaines, tags, pathologies et types de ressource pour garder un catalogue cohérent entre les langues.",
     "nav": {
       "cardTitle": "Gestion de la taxonomie",
       "cardEyebrow": "Paramètres du catalogue"
@@ -710,16 +790,19 @@
       "pathologies": "Pathologies",
       "domains": "Domaines",
       "tags": "Tags",
+      "resourceTypes": "Types de ressource",
       "hints": {
         "pathologies": "Description et synonymes disponibles",
         "domains": "Utilisé pour structurer le catalogue",
-        "tags": "Couleur optionnelle pour repérer rapidement"
+        "tags": "Couleur optionnelle pour repérer rapidement",
+        "resourceTypes": "Liste commune pour la création de ressources"
       }
     },
     "descriptions": {
       "pathologies": "Les pathologies incluent un libellé, une description optionnelle et des synonymes pour faciliter la recherche.",
       "domains": "Les domaines structurent la hiérarchie du catalogue et regroupent les outils.",
-      "tags": "Les tags ajoutent des étiquettes légères. Vous pouvez associer une couleur pour les mettre en valeur."
+      "tags": "Les tags ajoutent des étiquettes légères. Vous pouvez associer une couleur pour les mettre en valeur.",
+      "resourceTypes": "Les types de ressource assurent la cohérence des fiches et sont réutilisés dans le formulaire admin."
     },
     "aria": {
       "panel": "Gestion de la taxonomie",

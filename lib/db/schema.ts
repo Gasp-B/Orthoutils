@@ -161,6 +161,29 @@ export const resources = pgTable('resources', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+export const resourceTypes = pgTable('resource_types', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const resourceTypesTranslations = pgTable(
+  'resource_type_translations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    resourceTypeId: uuid('resource_type_id')
+      .notNull()
+      .references(() => resourceTypes.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    label: text('label').notNull(),
+  },
+  (table) => ({
+    localeConstraint: uniqueIndex('resource_type_translations_resource_type_id_locale_key').on(
+      table.resourceTypeId,
+      table.locale,
+    ),
+  }),
+);
+
 export const resourcesTranslations = pgTable(
   'resources_translations',
   {
