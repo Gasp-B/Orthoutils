@@ -13,3 +13,40 @@ CREATE TABLE IF NOT EXISTS resource_type_translations (
 
 CREATE UNIQUE INDEX IF NOT EXISTS resource_type_translations_resource_type_id_locale_key
   ON resource_type_translations (resource_type_id, locale);
+
+----------------------------------------------------------------------
+-- Enable RLS
+----------------------------------------------------------------------
+
+ALTER TABLE resource_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resource_type_translations ENABLE ROW LEVEL SECURITY;
+
+----------------------------------------------------------------------
+-- RLS POLICIES (aligned with other taxonomy tables)
+----------------------------------------------------------------------
+
+-- Public read access for catalogue usage
+CREATE POLICY "Public read resource_types"
+  ON resource_types
+  FOR SELECT
+  USING (true);
+
+CREATE POLICY "Public read resource_type_translations"
+  ON resource_type_translations
+  FOR SELECT
+  USING (true);
+
+-- Authenticated users can manage taxonomy
+CREATE POLICY "Authenticated modify resource_types"
+  ON resource_types
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "Authenticated modify resource_type_translations"
+  ON resource_type_translations
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
