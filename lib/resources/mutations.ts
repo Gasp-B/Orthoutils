@@ -88,7 +88,7 @@ async function upsertTags(db: DbClient, tagLabels: string[], locale: Locale) {
     let tagId = match?.tagId;
 
     if (!tagId) {
-      const [newTag] = await db.insert(tags).values({}).returning({ id: tags.id });
+      const [newTag] = await db.insert(tags).values({ label }).returning({ id: tags.id });
       tagId = newTag.id;
     }
 

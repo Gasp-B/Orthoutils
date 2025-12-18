@@ -36,6 +36,14 @@ const tsvector = customType<{ data: string }>({
   },
 });
 
+export const validationStatusEnum = pgEnum('validation_status', ['draft', 'in_review', 'published', 'archived']);
+
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector';
+  },
+});
+
 export const authUsers = auth.table('users', {
   id: uuid('id').primaryKey(),
 });
