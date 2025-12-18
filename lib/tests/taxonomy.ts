@@ -151,7 +151,10 @@ export async function createTag(
   let tagId = existingTranslation?.tagId;
 
   if (!tagId) {
-    const [newTag] = await db.insert(tags).values({ colorLabel: color }).returning({ id: tags.id });
+    const [newTag] = await db
+      .insert(tags)
+      .values({ label: normalized, colorLabel: color })
+      .returning({ id: tags.id });
     tagId = newTag?.id;
   } else if (color) {
     // Mise à jour de la couleur si le tag existe et qu'une couleur est fournie

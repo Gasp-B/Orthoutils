@@ -121,7 +121,7 @@ async function upsertTags(db: DbClient, tagLabels: string[], locale: Locale) {
 
     const targetTagId =
       translationForLocale?.tagId ?? translationAnyLocale?.tagId ??
-      (await db.insert(tags).values({}).returning({ id: tags.id }))[0]?.id;
+      (await db.insert(tags).values({ label }).returning({ id: tags.id }))[0]?.id;
 
     if (!targetTagId) {
       throw new Error('Impossible de créer ou retrouver le tag.');
