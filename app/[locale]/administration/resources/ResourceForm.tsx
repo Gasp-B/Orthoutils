@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -29,16 +29,27 @@ type ResourceFormProps = {
 
 type ApiResponse = { resource?: ResourceDto; resources?: ResourceDto[]; error?: string };
 
-const formSchema = resourceInputSchema
-  .extend({
+const buildFormSchema = ({
+  titleRequired,
+  typeRequired,
+  urlInvalid,
+}: {
+  titleRequired: string;
+  typeRequired: string;
+  urlInvalid: string;
+}) =>
+  resourceInputSchema.extend({
     id: z.string().uuid().optional(),
-    url: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    url: z.union([z.string().url(urlInvalid), z.literal(''), z.null()]).optional(),
     description: resourceInputSchema.shape.description.or(z.literal('')).optional(),
-  })
-  .refine((value) => Boolean(value.title?.trim()), { path: ['title'] })
-  .refine((value) => Boolean(value.type?.trim()), { path: ['type'] });
+    title: z.string().trim().min(1, titleRequired),
+    type: z.string().trim().min(1, typeRequired),
+  });
 
-const createDefaultValues = (locale: Locale): z.infer<typeof formSchema> => ({
+type FormSchema = ReturnType<typeof buildFormSchema>;
+type FormValues = z.infer<FormSchema>;
+
+const createDefaultValues = (locale: Locale): FormValues => ({
   locale,
   id: undefined,
   title: '',
@@ -63,7 +74,7 @@ async function fetchTaxonomy(locale: Locale) {
   return (await response.json()) as TaxonomyResponse;
 }
 
-async function saveResource(payload: z.infer<typeof formSchema>, locale: Locale, method: 'POST' | 'PATCH') {
+async function saveResource(payload: FormValues, locale: Locale, method: 'POST' | 'PATCH') {
   const response = await fetch('/api/resources', {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -100,13 +111,25 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 
 function ResourceForm({ locale }: ResourceFormProps) {
   const formT = useTranslations('ResourcesManage.form');
+  const validationT = useTranslations('ResourcesManage.form.validation');
   const feedbackT = useTranslations('ResourcesManage.feedback');
   const multiSelectT = useTranslations('ResourcesManage.form.multiSelect');
+
+  const formSchema = useMemo(
+    () =>
+      buildFormSchema({
+        titleRequired: validationT('titleRequired'),
+        typeRequired: validationT('typeRequired'),
+        urlInvalid: validationT('urlInvalid'),
+      }),
+    [validationT],
+  );
 
   const queryClient = useQueryClient();
 
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const { data: resources } = useQuery({
     queryKey: ['resources', locale],
@@ -125,9 +148,12 @@ function ResourceForm({ locale }: ResourceFormProps) {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<z.infer<typeof formSchema>>({
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: createDefaultValues(locale),
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+    shouldFocusError: true,
   });
 
   const currentDomains = watch('domains') ?? [];
@@ -153,17 +179,18 @@ function ResourceForm({ locale }: ResourceFormProps) {
   }, [selectedResourceId, resources, reset, locale]);
 
   const mutation = useMutation({
-    mutationFn: (payload: z.infer<typeof formSchema>) =>
-      saveResource(payload, locale, payload.id ? 'PATCH' : 'POST'),
+    mutationFn: (payload: FormValues) => saveResource(payload, locale, payload.id ? 'PATCH' : 'POST'),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['resources', locale] });
       void queryClient.invalidateQueries({ queryKey: ['taxonomy', locale] });
       setToastMsg(feedbackT('success.saved'));
+      setClientError(null);
       if (!selectedResourceId) reset(createDefaultValues(locale));
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: FormValues) => {
+    setClientError(null);
     const payload = {
       ...values,
       locale,
@@ -180,6 +207,18 @@ function ResourceForm({ locale }: ResourceFormProps) {
     mutation.mutate(payload);
   };
 
+  const onSubmitError = (submitErrors: FieldErrors<FormValues>) => {
+    const message =
+      submitErrors.type?.message ||
+      submitErrors.title?.message ||
+      submitErrors.url?.message ||
+      submitErrors.description?.message;
+
+    if (typeof message === 'string') {
+      setClientError(message);
+    }
+  };
+
   const commonMultiSelectTrans = {
     add: multiSelectT('add'),
     remove: multiSelectT('remove'),
@@ -194,7 +233,12 @@ function ResourceForm({ locale }: ResourceFormProps) {
   };
 
   return (
-    <form className="notion-form" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
+    <form className="notion-form" onSubmit={(e) => void handleSubmit(onSubmit, onSubmitError)(e)}>
+      {clientError && (
+        <div className="p-4 rounded-lg bg-red-50 text-red-700 border border-red-200 mt-3" role="alert">
+          {clientError}
+        </div>
+      )}
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
 
       <div className="notion-toolbar sticky top-4 z-40 shadow-sm">
@@ -279,6 +323,8 @@ function ResourceForm({ locale }: ResourceFormProps) {
                 <select
                   id="type"
                   className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                  aria-invalid={Boolean(errors.type)}
+                  aria-describedby={errors.type ? 'type-error' : undefined}
                   {...register('type')}
                 >
                   <option value="">{formT('fields.type.placeholder')}</option>
@@ -292,7 +338,11 @@ function ResourceForm({ locale }: ResourceFormProps) {
                       <option value={currentType}>{currentType}</option>
                     )}
                 </select>
-                {errors.type && <p className={styles.errorMessage}>{errors.type.message}</p>}
+                {errors.type && (
+                  <p id="type-error" className={styles.errorMessage} role="alert">
+                    {errors.type.message}
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="url">{formT('fields.url.label')}</Label>
