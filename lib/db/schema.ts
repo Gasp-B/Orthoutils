@@ -1,6 +1,7 @@
 import {
   boolean,
   check,
+  customType,
   integer,
   jsonb,
   pgSchema,
@@ -15,6 +16,9 @@ import {
 import { sql } from 'drizzle-orm';
 
 const auth = pgSchema('auth');
+const tsvector = customType<{ data: string; driverData: string }>({
+  dataType: () => 'tsvector',
+});
 
 export const authUsers = auth.table('users', {
   id: uuid('id').primaryKey(),
