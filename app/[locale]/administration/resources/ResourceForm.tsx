@@ -151,6 +151,9 @@ function ResourceForm({ locale }: ResourceFormProps) {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: createDefaultValues(locale),
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+    shouldFocusError: true,
   });
 
   const currentDomains = watch('domains') ?? [];
