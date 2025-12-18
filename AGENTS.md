@@ -26,7 +26,7 @@ CRITICAL TECHNICAL RULES (STRICT ENFORCEMENT):
 
         Tests Field: Table tests uses column name.
 
-        Migration: Always propose Drizzle migrations, never raw SQL.
+        Migration: Always propose SQL migrations, never Drizzle.
 
     NEXT.JS 16 & ARCHITECTURE:
 
