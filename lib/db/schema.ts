@@ -16,7 +16,7 @@ import { sql } from 'drizzle-orm';
 
 const auth = pgSchema('auth');
 const tsvector = customType<{ data: string; driverData: string }>({
-  dataType: 'tsvector',
+  dataType: () => 'tsvector',
 });
 
 export const authUsers = auth.table('users', {
