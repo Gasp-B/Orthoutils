@@ -1,6 +1,6 @@
 import {
   boolean,
-  check,
+  customType,
   integer,
   jsonb,
   pgSchema,
@@ -10,20 +10,36 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  pgEnum,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 const auth = pgSchema('auth');
 
+export const validationStatusEnum = pgEnum('validation_status', ['draft', 'in_review', 'published', 'archived']);
+
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector';
+  },
+});
+
 export const authUsers = auth.table('users', {
   id: uuid('id').primaryKey(),
 });
 
-export const tags = pgTable('tags', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  colorLabel: text('color_label'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const tags = pgTable(
+  'tags',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    label: text('label').notNull(),
+    colorLabel: text('color_label'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    labelConstraint: uniqueIndex('tags_label_key').on(table.label),
+  }),
+);
 
 export const tagsTranslations = pgTable(
   'tags_translations',
@@ -54,16 +70,14 @@ export const tests = pgTable(
       .notNull()
       .$type<Array<{ label: string; url: string }>>()
       .default(sql`'[]'::jsonb`),
-    status: text('status').notNull().default('draft'),
+    status: validationStatusEnum('status').notNull().default('draft'),
+    ftsVector: tsvector('fts_vector'),
     validatedBy: uuid('validated_by').references(() => authUsers.id),
     validatedAt: timestamp('validated_at', { withTimezone: true }),
     createdBy: uuid('created_by').references(() => authUsers.id),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => ({
-    statusCheck: check('tests_status_check', sql`${table.status} in ('draft','in_review','published','archived')`),
-  }),
 );
 
 export type TestRecord = typeof tests.$inferSelect;
@@ -89,6 +103,55 @@ export const testsTranslations = pgTable(
   (table) => ({
     localeConstraint: uniqueIndex('tests_translations_test_id_locale_key').on(table.testId, table.locale),
     slugLocaleConstraint: uniqueIndex('tests_translations_slug_locale_key').on(table.slug, table.locale),
+  }),
+);
+
+export const toolsCatalog = pgTable(
+  'tools_catalog',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    category: text('category').notNull(),
+    colorLabel: text('color_label'),
+    tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+    description: text('description'),
+    links: jsonb('links')
+      .notNull()
+      .$type<Array<{ label: string; url: string }>>()
+      .default(sql`'[]'::jsonb`),
+    notes: text('notes'),
+    targetPopulation: text('target_population'),
+    status: validationStatusEnum('status').notNull().default('draft'),
+    ftsVector: tsvector('fts_vector'),
+    validatedBy: uuid('validated_by').references(() => authUsers.id),
+    validatedAt: timestamp('validated_at', { withTimezone: true }),
+    createdBy: uuid('created_by').references(() => authUsers.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    titleConstraint: uniqueIndex('tools_catalog_title_key').on(table.title),
+  }),
+);
+
+export const toolsCatalogTranslations = pgTable(
+  'tools_catalog_translations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    toolCatalogId: uuid('tool_catalog_id')
+      .notNull()
+      .references(() => toolsCatalog.id, { onDelete: 'cascade' }),
+    locale: text('locale').notNull(),
+    title: text('title').notNull(),
+    category: text('category').notNull(),
+    description: text('description'),
+    notes: text('notes'),
+    targetPopulation: text('target_population'),
+  },
+  (table) => ({
+    localeConstraint: uniqueIndex('tools_catalog_translations_tool_catalog_id_locale_key').on(
+      table.toolCatalogId,
+      table.locale,
+    ),
   }),
 );
 
@@ -313,3 +376,8 @@ export type ResourceRecord = typeof resources.$inferSelect;
 export type NewResourceRecord = typeof resources.$inferInsert;
 export type ResourceTranslationRecord = typeof resourcesTranslations.$inferSelect;
 export type NewResourceTranslationRecord = typeof resourcesTranslations.$inferInsert;
+export type ToolsCatalogRecord = typeof toolsCatalog.$inferSelect;
+export type NewToolsCatalogRecord = typeof toolsCatalog.$inferInsert;
+export type ToolsCatalogTranslationRecord = typeof toolsCatalogTranslations.$inferSelect;
+export type NewToolsCatalogTranslationRecord = typeof toolsCatalogTranslations.$inferInsert;
+export type ValidationStatus = (typeof validationStatusEnum.enumValues)[number];
