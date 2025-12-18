@@ -865,14 +865,14 @@
       "resourceTypes": "Resource types",
       "hints": {
         "pathologies": "Description and synonyms available",
-        "domains": "Used to structure the catalog",
+        "domains": "Used to structure the catalog and searchable via synonyms",
         "tags": "Optional color for quick scanning",
         "resourceTypes": "Shared list for resource creation"
       }
     },
     "descriptions": {
       "pathologies": "Pathologies include a label, optional description, and synonyms to improve search.",
-      "domains": "Domains help structure the catalog hierarchy and group tools.",
+      "domains": "Domains help structure the catalog hierarchy, group tools, and can store synonyms to speed up discovery.",
       "tags": "Tags add lightweight labels. You can associate a color to highlight them.",
       "resourceTypes": "Resource types keep resource sheets consistent and are reused in the admin form."
     },
@@ -929,7 +929,8 @@
       }
     },
     "labels": {
-      "colorValue": "Color {value}"
+      "colorValue": "Color {value}",
+      "synonymsList": "Synonyms ({count})"
     }
   },
   "SearchHub": {

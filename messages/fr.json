@@ -798,14 +798,14 @@
       "resourceTypes": "Types de ressource",
       "hints": {
         "pathologies": "Description et synonymes disponibles",
-        "domains": "Utilisé pour structurer le catalogue",
+        "domains": "Utilisé pour structurer le catalogue et trouvable via ses synonymes",
         "tags": "Couleur optionnelle pour repérer rapidement",
         "resourceTypes": "Liste commune pour la création de ressources"
       }
     },
     "descriptions": {
       "pathologies": "Les pathologies incluent un libellé, une description optionnelle et des synonymes pour faciliter la recherche.",
-      "domains": "Les domaines structurent la hiérarchie du catalogue et regroupent les outils.",
+      "domains": "Les domaines structurent la hiérarchie du catalogue, regroupent les outils et peuvent inclure des synonymes pour accélérer la recherche.",
       "tags": "Les tags ajoutent des étiquettes légères. Vous pouvez associer une couleur pour les mettre en valeur.",
       "resourceTypes": "Les types de ressource assurent la cohérence des fiches et sont réutilisés dans le formulaire admin."
     },
@@ -862,7 +862,8 @@
       }
     },
     "labels": {
-      "colorValue": "Couleur {value}"
+      "colorValue": "Couleur {value}",
+      "synonymsList": "Synonymes ({count})"
     }
   },
   "SearchHub": {

@@ -25,10 +25,19 @@ function normalizeValue(value: string) {
   return normalized;
 }
 
+function normalizeSynonyms(synonyms: string | undefined | null) {
+  if (!synonyms) return [] as string[];
+  return synonyms
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 // --- DOMAINS ---
 
-export async function createDomain(label: string, locale: Locale = defaultLocale) {
+export async function createDomain(label: string, locale: Locale = defaultLocale, synonymsStr?: string) {
   const normalized = normalizeValue(label);
+  const synonyms = normalizeSynonyms(synonymsStr);
   const db = getDb();
 
   const [existingTranslation] = await db
@@ -54,12 +63,12 @@ export async function createDomain(label: string, locale: Locale = defaultLocale
 
   const [created] = await db
     .insert(domainsTranslations)
-    .values({ domainId, label: normalized, slug, locale })
+    .values({ domainId, label: normalized, slug, locale, synonyms })
     .onConflictDoUpdate({
       target: [domainsTranslations.domainId, domainsTranslations.locale],
-      set: { label: normalized, slug }, // slug update is optional strictly speaking but keeps sync
+      set: { label: normalized, slug, synonyms }, // slug update is optional strictly speaking but keeps sync
     })
-    .returning({ id: domainsTranslations.domainId, label: domainsTranslations.label });
+    .returning({ id: domainsTranslations.domainId, label: domainsTranslations.label, synonyms: domainsTranslations.synonyms });
 
   return created;
 }
@@ -154,9 +163,7 @@ export async function createPathology(
 ) {
   const normalized = normalizeValue(label);
   const db = getDb();
-  const synonymsArray = synonymsStr 
-    ? synonymsStr.split(',').map(s => s.trim()).filter(Boolean) 
-    : [];
+  const synonymsArray = normalizeSynonyms(synonymsStr);
 
   const [existingTranslation] = await db
     .select({ id: pathologyTranslations.pathologyId, pathologyId: pathologyTranslations.pathologyId })
