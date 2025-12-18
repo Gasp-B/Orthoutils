@@ -8,6 +8,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  tsvector,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -60,6 +61,7 @@ export const tests = pgTable(
     createdBy: uuid('created_by').references(() => authUsers.id),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    ftsVector: tsvector('fts_vector'),
   },
   (table) => ({
     statusCheck: check('tests_status_check', sql`${table.status} in ('draft','in_review','published','archived')`),
