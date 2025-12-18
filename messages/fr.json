@@ -212,6 +212,11 @@
           "pathologiesLabel": "Pathologies"
         }
       },
+      "validation": {
+        "titleRequired": "Le titre est requis",
+        "typeRequired": "Le type est requis",
+        "urlInvalid": "URL invalide"
+      },
       "multiSelect": {
         "add": "Ajouter",
         "remove": "Retirer",
