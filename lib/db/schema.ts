@@ -236,6 +236,21 @@ export const testThemes = pgTable(
   }),
 );
 
+export const themeDomains = pgTable(
+  'theme_domains',
+  {
+    themeId: uuid('theme_id')
+      .notNull()
+      .references(() => themes.id, { onDelete: 'cascade' }),
+    domainId: uuid('domain_id')
+      .notNull()
+      .references(() => domains.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.themeId, table.domainId] }),
+  }),
+);
+
 // ... existant imports
 
 // Ajoutez ces définitions à la suite de vos tables resources / resourcesTranslations
@@ -292,6 +307,7 @@ export type ResourceThemeRecord = typeof resourceThemes.$inferSelect;
 export type ThemeRecord = typeof themes.$inferSelect;
 export type ThemeTranslationRecord = typeof themeTranslations.$inferSelect;
 export type TestThemeRecord = typeof testThemes.$inferSelect;
+export type ThemeDomainRecord = typeof themeDomains.$inferSelect;
 export type ResourceRecord = typeof resources.$inferSelect;
 export type NewResourceRecord = typeof resources.$inferInsert;
 export type ResourceTranslationRecord = typeof resourcesTranslations.$inferSelect;

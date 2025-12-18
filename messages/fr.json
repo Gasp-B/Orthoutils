@@ -842,12 +842,14 @@
         "label": "Libellé",
         "description": "Description",
         "synonyms": "Synonymes",
-        "color": "Couleur"
+        "color": "Couleur",
+        "domains": "Domaines associés"
       },
       "hints": {
         "required": "Requis",
         "optional": "Optionnel",
-        "commaSeparated": "Séparez par des virgules"
+        "commaSeparated": "Séparez par des virgules",
+        "domainHelper": "Reliez le thème aux domaines pertinents"
       },
       "placeholders": {
         "label": "Libellé affiché dans le catalogue",
@@ -855,6 +857,7 @@
         "synonyms": "Mots-clés séparés par des virgules",
         "color": "#0EA5E9"
       },
+      "emptyDomains": "Aucun domaine disponible pour l'instant.",
       "actions": {
         "update": "Enregistrer",
         "create": "Créer l'entrée",
@@ -863,7 +866,8 @@
     },
     "labels": {
       "colorValue": "Couleur {value}",
-      "synonymsList": "Synonymes ({count})"
+      "synonymsList": "Synonymes ({count})",
+      "domainsList": "Domaines associés ({count})"
     }
   },
   "SearchHub": {

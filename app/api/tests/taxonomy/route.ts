@@ -10,6 +10,7 @@ import {
   tagsTranslations,
   themes,
   themeTranslations,
+  themeDomains,
   resourceTypes,
   resourceTypesTranslations,
 } from '@/lib/db/schema';
@@ -22,6 +23,7 @@ import {
   createDomain,
   createTag,
   createTheme,
+  updateTheme,
   deleteDomain,
   deleteTag,
   deleteTheme,
@@ -66,6 +68,7 @@ export async function GET(request: NextRequest) {
       tagRows,
       themeRows,
       resourceTypeRows,
+      themeDomainRows,
       allDomains,
       allTags,
       allThemes,
@@ -76,6 +79,7 @@ export async function GET(request: NextRequest) {
         db.select().from(tagsTranslations).where(inArray(tagsTranslations.locale, [locale, defaultLocale])),
         db.select().from(themeTranslations).where(inArray(themeTranslations.locale, [locale, defaultLocale])),
         db.select().from(resourceTypesTranslations).where(inArray(resourceTypesTranslations.locale, [locale, defaultLocale])),
+        db.select().from(themeDomains),
         db.select().from(domains),
         db.select().from(tags),
         db.select().from(themes),
@@ -102,6 +106,13 @@ export async function GET(request: NextRequest) {
       const list = themesById.get(r.themeId) ?? [];
       list.push(r);
       themesById.set(r.themeId, list);
+    }
+
+    const themeDomainsById = new Map<string, string[]>();
+    for (const relation of themeDomainRows) {
+      const existing = themeDomainsById.get(relation.themeId) ?? [];
+      existing.push(relation.domainId);
+      themeDomainsById.set(relation.themeId, existing);
     }
 
     const resourceTypesById = new Map<string, ResourceTypeTranslationRow[]>();
@@ -131,6 +142,13 @@ export async function GET(request: NextRequest) {
     const localizedThemes = allThemes
       .map((p) => {
         const tr = resolveTranslation(p.id, themesById, locale, defaultLocale);
+        const domainIds = themeDomainsById.get(p.id) ?? [];
+        const localizedDomains = domainIds
+          .map((domainId) => {
+            const translation = resolveTranslation(domainId, domainsById, locale, defaultLocale);
+            return translation ? { id: domainId, label: translation.label } : null;
+          })
+          .filter((domain): domain is { id: string; label: string } => Boolean(domain));
         return tr
           ? {
               id: p.id,
@@ -138,6 +156,7 @@ export async function GET(request: NextRequest) {
               slug: p.slug,
               description: tr.description,
               synonyms: tr.synonyms ?? [],
+              domains: localizedDomains,
             }
           : null;
       })
@@ -189,6 +208,7 @@ export async function POST(request: NextRequest) {
         payload.value,
         payload.description,
         payload.synonyms,
+        payload.domainIds ?? [],
         locale,
       );
       return NextResponse.json({ theme: created }, { status: 201 });
@@ -224,17 +244,15 @@ export async function PUT(request: NextRequest) {
     const db = getDb();
 
     if (payload.type === 'theme') {
-      const synonymsArray = parseSynonyms(payload.synonyms);
-      
-      // Update translation
-      await db.update(themeTranslations)
-        .set({ 
-          label: payload.value, 
-          description: payload.description ?? null, 
-          synonyms: synonymsArray 
-        })
-        .where(and(eq(themeTranslations.themeId, entityId), eq(themeTranslations.locale, locale)));
-        
+      await updateTheme({
+        id: entityId,
+        label: payload.value,
+        description: payload.description,
+        synonyms: payload.synonyms,
+        domainIds: payload.domainIds ?? [],
+        locale,
+      });
+
       return NextResponse.json({ success: true }, { status: 200 });
     }
 

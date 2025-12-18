@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { defaultLocale, type Locale } from '@/i18n/routing';
 import { getDb } from '@/lib/db/client';
@@ -14,8 +14,11 @@ import {
   testThemes,
   themeTranslations,
   themes,
+  themeDomains,
 } from '@/lib/db/schema';
 import { generateUniqueSlug } from '@/lib/utils/slug';
+
+type DbClient = ReturnType<typeof getDb>;
 
 function normalizeValue(value: string) {
   const normalized = value.trim();
@@ -31,6 +34,37 @@ function normalizeSynonyms(synonyms: string | undefined | null) {
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean);
+}
+
+function normalizeIds(ids: string[]) {
+  return Array.from(new Set(ids.map((value) => value.trim()).filter(Boolean)));
+}
+
+async function resolveDomainIds(db: DbClient, domainIds: string[]) {
+  const normalized = normalizeIds(domainIds);
+  if (normalized.length === 0) return [] as string[];
+
+  const rows = await db.select({ id: domains.id }).from(domains).where(inArray(domains.id, normalized));
+  const foundIds = rows.map((row) => row.id);
+
+  if (foundIds.length !== normalized.length) {
+    throw new Error('Certains domaines sélectionnés sont introuvables.');
+  }
+
+  return foundIds;
+}
+
+async function syncThemeDomains(db: DbClient, themeId: string, domainIds: string[]) {
+  await db.delete(themeDomains).where(eq(themeDomains.themeId, themeId));
+
+  if (domainIds.length === 0) {
+    return;
+  }
+
+  await db
+    .insert(themeDomains)
+    .values(domainIds.map((domainId) => ({ themeId, domainId })))
+    .onConflictDoNothing();
 }
 
 // --- DOMAINS ---
@@ -88,6 +122,7 @@ export async function deleteDomain(id: string, locale: Locale = defaultLocale) {
 
   const deleted = await db.transaction(async (tx) => {
     await tx.delete(testDomains).where(eq(testDomains.domainId, id));
+    await tx.delete(themeDomains).where(eq(themeDomains.domainId, id));
     const [removed] = await tx.delete(domains).where(eq(domains.id, id)).returning({ id: domains.id });
     return removed ? { id: removed.id, label: translation?.label ?? '' } : null;
   });
@@ -159,54 +194,60 @@ export async function createTheme(
   label: string,
   description: string | null | undefined,
   synonymsStr: string | undefined,
+  domainIds: string[],
   locale: Locale = defaultLocale
 ) {
   const normalized = normalizeValue(label);
   const db = getDb();
   const synonymsArray = normalizeSynonyms(synonymsStr);
+  const validDomainIds = await resolveDomainIds(db, domainIds);
 
-  const [existingTranslation] = await db
-    .select({ id: themeTranslations.themeId, themeId: themeTranslations.themeId })
-    .from(themeTranslations)
-    .where(eq(themeTranslations.label, normalized))
-    .limit(1);
+  return db.transaction(async (tx) => {
+    const [existingTranslation] = await tx
+      .select({ id: themeTranslations.themeId, themeId: themeTranslations.themeId })
+      .from(themeTranslations)
+      .where(eq(themeTranslations.label, normalized))
+      .limit(1);
 
-  let themeId = existingTranslation?.themeId;
+    let themeId = existingTranslation?.themeId;
 
-  if (!themeId) {
-    // Génération slug sur la table parente `themes`
-    const slug = await generateUniqueSlug({
-      db,
-      name: normalized,
-      table: themes,
-      slugColumn: themes.slug,
-    });
-    const [newTheme] = await db.insert(themes).values({ slug }).returning({ id: themes.id });
-    themeId = newTheme?.id;
-  }
+    if (!themeId) {
+      // Génération slug sur la table parente `themes`
+      const slug = await generateUniqueSlug({
+        db: tx,
+        name: normalized,
+        table: themes,
+        slugColumn: themes.slug,
+      });
+      const [newTheme] = await tx.insert(themes).values({ slug }).returning({ id: themes.id });
+      themeId = newTheme?.id;
+    }
 
-  if (!themeId) throw new Error('Impossible de créer ou retrouver le thème.');
+    if (!themeId) throw new Error('Impossible de créer ou retrouver le thème.');
 
-  const [created] = await db
-    .insert(themeTranslations)
-    .values({ 
-      themeId, 
-      label: normalized, 
-      description: description ?? null, 
-      synonyms: synonymsArray, 
-      locale 
-    })
-    .onConflictDoUpdate({
-      target: [themeTranslations.themeId, themeTranslations.locale],
-      set: { 
+    const [created] = await tx
+      .insert(themeTranslations)
+      .values({ 
+        themeId, 
         label: normalized, 
-        description: description ?? null,
-        synonyms: synonymsArray 
-      },
-    })
-    .returning({ id: themeTranslations.themeId, label: themeTranslations.label });
+        description: description ?? null, 
+        synonyms: synonymsArray, 
+        locale 
+      })
+      .onConflictDoUpdate({
+        target: [themeTranslations.themeId, themeTranslations.locale],
+        set: { 
+          label: normalized, 
+          description: description ?? null,
+          synonyms: synonymsArray 
+        },
+      })
+      .returning({ id: themeTranslations.themeId, label: themeTranslations.label });
 
-  return created;
+    await syncThemeDomains(tx as DbClient, themeId, validDomainIds);
+
+    return created;
+  });
 }
 
 export async function deleteTheme(id: string, locale: Locale = defaultLocale) {
@@ -224,11 +265,51 @@ export async function deleteTheme(id: string, locale: Locale = defaultLocale) {
 
   const deleted = await db.transaction(async (tx) => {
     await tx.delete(testThemes).where(eq(testThemes.themeId, id));
+    await tx.delete(themeDomains).where(eq(themeDomains.themeId, id));
     const [removed] = await tx.delete(themes).where(eq(themes.id, id)).returning({ id: themes.id });
     return removed ? { id: removed.id, label: translation?.label ?? '' } : null;
   });
 
   return deleted;
+}
+
+export async function updateTheme(params: {
+  id: string;
+  label: string;
+  description: string | null | undefined;
+  synonyms?: string | null;
+  domainIds?: string[];
+  locale?: Locale;
+}) {
+  const normalized = normalizeValue(params.label);
+  const synonymsArray = normalizeSynonyms(params.synonyms);
+  const locale = params.locale ?? defaultLocale;
+  const db = getDb();
+  const validDomainIds = await resolveDomainIds(db, params.domainIds ?? []);
+
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(themeTranslations)
+      .values({
+        themeId: params.id,
+        label: normalized,
+        description: params.description ?? null,
+        synonyms: synonymsArray,
+        locale,
+      })
+      .onConflictDoUpdate({
+        target: [themeTranslations.themeId, themeTranslations.locale],
+        set: {
+          label: normalized,
+          description: params.description ?? null,
+          synonyms: synonymsArray,
+        },
+      });
+
+    await syncThemeDomains(tx as DbClient, params.id, validDomainIds);
+  });
+
+  return { id: params.id, label: normalized };
 }
 
 // --- RESOURCE TYPES ---

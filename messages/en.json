@@ -909,12 +909,14 @@
         "label": "Label",
         "description": "Description",
         "synonyms": "Synonyms",
-        "color": "Color"
+        "color": "Color",
+        "domains": "Linked domains"
       },
       "hints": {
         "required": "Required",
         "optional": "Optional",
-        "commaSeparated": "Separate with commas"
+        "commaSeparated": "Separate with commas",
+        "domainHelper": "Attach the theme to one or more domains"
       },
       "placeholders": {
         "label": "Label displayed in the catalog",
@@ -922,6 +924,7 @@
         "synonyms": "Keywords separated by commas",
         "color": "#0EA5E9"
       },
+      "emptyDomains": "No domains available yet.",
       "actions": {
         "update": "Save changes",
         "create": "Create entry",
@@ -930,7 +933,8 @@
     },
     "labels": {
       "colorValue": "Color {value}",
-      "synonymsList": "Synonyms ({count})"
+      "synonymsList": "Synonyms ({count})",
+      "domainsList": "Linked domains ({count})"
     }
   },
   "SearchHub": {

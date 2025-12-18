@@ -41,6 +41,12 @@ export const testsResponseSchema = z.object({
 });
 
 export type TestDto = z.infer<typeof testSchema>;
+
+const taxonomyDomainSchema = z.object({
+  id: z.string().uuid(),
+  label: z.string(),
+});
+
 export const testInputSchema = z.object({
   locale: localeEnum.default(defaultLocale),
   name: z.string().min(1),
@@ -89,6 +95,7 @@ export const taxonomyResponseSchema = z.object({
       slug: z.string(),
       description: z.string().nullable(),
       synonyms: z.array(z.string()),
+      domains: z.array(taxonomyDomainSchema),
     }),
   ),
   resourceTypes: z.array(
@@ -109,6 +116,7 @@ export const taxonomyMutationSchema = z.object({
   description: z.string().nullable().optional(),
   synonyms: z.string().trim().optional(), // Reçu comme string "a, b, c" depuis le form
   color: z.string().nullable().optional(),
+  domainIds: z.array(z.string().uuid()).optional(),
 });
 
 export const taxonomyDeletionSchema = z.object({
