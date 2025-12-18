@@ -50,6 +50,7 @@ export const tagsTranslations = pgTable(
       .references(() => tags.id, { onDelete: 'cascade' }),
     locale: text('locale').notNull(),
     label: text('label').notNull(),
+    synonyms: text('synonyms').array().notNull().default(sql`'{}'::text[]`),
   },
   (table) => ({
     localeConstraint: uniqueIndex('tags_translations_tag_id_locale_key').on(table.tagId, table.locale),
