@@ -3,7 +3,13 @@
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import type { SearchGroup, SearchHubProps, SearchResultKind } from '@/lib/search/types';
+import type {
+  ResourceSearchResult,
+  SearchGroup,
+  SearchHubProps,
+  SearchResult,
+  SearchResultKind,
+} from '@/lib/search/types';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import styles from './search-hub.module.css';
@@ -12,6 +18,11 @@ const categoryAccentClass: Record<SearchGroup['category'], string> = {
   assessments: styles.assessmentsAccent,
   selfReports: styles.selfReportsAccent,
   resources: styles.resourcesAccent,
+};
+
+type ResourceTypeGroup = {
+  resourceType: string;
+  results: ResourceSearchResult[];
 };
 
 function summarizeTags(
@@ -34,6 +45,27 @@ function buildTypeFilters(t: (key: string) => string) {
     { value: 'test' as const, label: t('filters.types.tests') },
     { value: 'resource' as const, label: t('filters.types.resources') },
   ];
+}
+
+function groupResourcesByType(results: ResourceSearchResult[]): ResourceTypeGroup[] {
+  const grouped = new Map<string, ResourceSearchResult[]>();
+
+  for (const result of results) {
+    const list = grouped.get(result.resourceType) ?? [];
+    list.push(result);
+    grouped.set(result.resourceType, list);
+  }
+
+  return Array.from(grouped.entries())
+    .map(([resourceType, entries]) => ({
+      resourceType,
+      results: entries.sort((a, b) => a.title.localeCompare(b.title)),
+    }))
+    .sort((a, b) => a.resourceType.localeCompare(b.resourceType));
+}
+
+function isResourceResult(result: SearchResult): result is ResourceSearchResult {
+  return result.kind === 'resource';
 }
 
 export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
@@ -109,7 +141,112 @@ export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
       .filter((group) => group.results.length > 0);
   }, [activeDomains, activeTags, activeTypes, groups]);
 
+  const resourceTypeGroups = useMemo(() => {
+    const resourcesGroup = filteredGroups.find((group) => group.category === 'resources');
+    if (!resourcesGroup) return [];
+
+    const resourcesOnly = resourcesGroup.results.filter(isResourceResult);
+
+    return groupResourcesByType(resourcesOnly);
+  }, [filteredGroups]);
+
   const hasResults = filteredGroups.some((group) => group.results.length > 0);
+
+  const renderResultCard = (groupCategory: SearchGroup['category'], result: SearchResult) => {
+    const isExpanded = expanded.has(result.id);
+
+    return (
+      <article key={result.id} className={`glass panel ${styles.resultCard}`}>
+        <button
+          type="button"
+          className={styles.resultHeader}
+          onClick={() => toggleExpanded(result.id)}
+          aria-expanded={isExpanded}
+          aria-controls={`details-${result.id}`}
+        >
+          <div className={`${styles.resultIcon} ${categoryAccentClass[groupCategory]}`} aria-hidden>
+            {result.kind === 'test' ? '🧪' : '🔗'}
+          </div>
+          <div className={styles.resultSummary}>
+            <p className={styles.resultTitle}>{result.title}</p>
+            <p className={styles.resultTags}>{summarizeTags(result.tags, t)}</p>
+          </div>
+          <div className={styles.resultBadges}>
+            {result.domains.slice(0, 3).map((domain) => (
+              <Badge key={domain} variant="secondary" className={styles.badge}>
+                {domain}
+              </Badge>
+            ))}
+          </div>
+        </button>
+
+        {isExpanded && (
+          <div className={styles.resultDetails} id={`details-${result.id}`}>
+            <p className={styles.description}>{result.description ?? shared('placeholders.description')}</p>
+
+            <dl className={styles.metaGrid}>
+              {result.kind === 'test' && (
+                <>
+                  <div>
+                    <dt>{t('meta.population')}</dt>
+                    <dd>{result.population ?? shared('populationDefault')}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('meta.materials')}</dt>
+                    <dd>{result.materials ?? t('meta.materialsFallback')}</dd>
+                  </div>
+                </>
+              )}
+
+              {result.kind === 'resource' && (
+                <div>
+                  <dt>{t('meta.resourceType')}</dt>
+                  <dd>{result.resourceType}</dd>
+                </div>
+              )}
+
+              {result.pathologies.length > 0 && (
+                <div className={styles.pathologyRow}>
+                  <dt>{t('meta.pathologies')}</dt>
+                  <dd>
+                    <div className={styles.pillRow}>
+                      {result.pathologies.map((pathology) => (
+                        <Badge key={pathology} variant="outline" className={styles.badge}>
+                          {pathology}
+                        </Badge>
+                      ))}
+                    </div>
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            <div className={styles.ctaRow}>
+              {result.kind === 'test' ? (
+                <Link
+                  href={{ pathname: '/catalogue/[slug]', params: { slug: result.slug } }}
+                  className={styles.ctaLink}
+                >
+                  <Button>{t('actions.viewSheet')}</Button>
+                </Link>
+              ) : (
+                <Button
+                  disabled={!result.url}
+                  variant={result.url ? 'default' : 'outline'}
+                  onClick={() => {
+                    if (!result.url) return;
+                    window.open(result.url, '_blank', 'noreferrer');
+                  }}
+                >
+                  {t('actions.viewResource')}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </article>
+    );
+  };
 
   return (
     <div className={styles.layout}>
@@ -210,104 +347,25 @@ export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
               </div>
             </header>
 
-            <div className={styles.resultList}>
-              {group.results.map((result) => {
-                const isExpanded = expanded.has(result.id);
-                return (
-                  <article key={result.id} className={`glass panel ${styles.resultCard}`}>
-                    <button
-                      type="button"
-                      className={styles.resultHeader}
-                      onClick={() => toggleExpanded(result.id)}
-                      aria-expanded={isExpanded}
-                      aria-controls={`details-${result.id}`}
-                    >
-                      <div className={`${styles.resultIcon} ${categoryAccentClass[group.category]}`} aria-hidden>
-                        {result.kind === 'test' ? '🧪' : '🔗'}
-                      </div>
-                      <div className={styles.resultSummary}>
-                        <p className={styles.resultTitle}>{result.title}</p>
-                        <p className={styles.resultTags}>{summarizeTags(result.tags, t)}</p>
-                      </div>
-                      <div className={styles.resultBadges}>
-                        {result.domains.slice(0, 3).map((domain) => (
-                          <Badge key={domain} variant="secondary" className={styles.badge}>
-                            {domain}
-                          </Badge>
-                        ))}
-                      </div>
-                    </button>
-
-                    {isExpanded && (
-                      <div className={styles.resultDetails} id={`details-${result.id}`}>
-                        <p className={styles.description}>
-                          {result.description ?? shared('placeholders.description')}
-                        </p>
-
-                        <dl className={styles.metaGrid}>
-                          {result.kind === 'test' && (
-                            <>
-                              <div>
-                                <dt>{t('meta.population')}</dt>
-                                <dd>{result.population ?? shared('populationDefault')}</dd>
-                              </div>
-                              <div>
-                                <dt>{t('meta.materials')}</dt>
-                                <dd>{result.materials ?? t('meta.materialsFallback')}</dd>
-                              </div>
-                            </>
-                          )}
-
-                          {result.kind === 'resource' && (
-                            <div>
-                              <dt>{t('meta.resourceType')}</dt>
-                              <dd>{result.resourceType}</dd>
-                            </div>
-                          )}
-
-                          {result.pathologies.length > 0 && (
-                            <div className={styles.pathologyRow}>
-                              <dt>{t('meta.pathologies')}</dt>
-                              <dd>
-                                <div className={styles.pillRow}>
-                                  {result.pathologies.map((pathology) => (
-                                    <Badge key={pathology} variant="outline" className={styles.badge}>
-                                      {pathology}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </dd>
-                            </div>
-                          )}
-                        </dl>
-
-                        <div className={styles.ctaRow}>
-                          {result.kind === 'test' ? (
-                            <Link
-                              href={{ pathname: '/catalogue/[slug]', params: { slug: result.slug } }}
-                              className={styles.ctaLink}
-                            >
-                              <Button>{t('actions.viewSheet')}</Button>
-                            </Link>
-                          ) : (
-                            <Button
-                              disabled={!result.url}
-                              variant={result.url ? 'default' : 'outline'}
-                              onClick={() => {
-                                if (!result.url) return;
-                                window.open(result.url, '_blank', 'noreferrer');
-                              }}
-                            >
-                              {t('actions.viewResource')}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
+            {group.category === 'resources' ? (
+              <div className={styles.resourceTypeList}>
+                {resourceTypeGroups.map((resourceTypeGroup) => (
+                  <div key={resourceTypeGroup.resourceType} className={styles.resourceTypeGroup}>
+                    <div className={styles.resourceTypeHeader}>
+                      <p className={styles.resourceTypeLabel}>{t('meta.resourceType')}</p>
+                      <p className={styles.resourceTypeName}>{resourceTypeGroup.resourceType}</p>
+                    </div>
+                    <div className={styles.resultList}>
+                      {resourceTypeGroup.results.map((result) => renderResultCard(group.category, result))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.resultList}>
+                {group.results.map((result) => renderResultCard(group.category, result))}
+              </div>
+            )}
           </div>
         ))}
       </section>
