@@ -234,7 +234,7 @@ export default function TaxonomyManagementPanel() {
       setFormState({
         label: tag.label ?? '',
         description: '',
-        synonyms: '',
+        synonyms: Array.isArray(tag.synonyms) ? tag.synonyms.join(', ') : '',
         color: tag.color ?? '',
       });
       return;
@@ -258,7 +258,7 @@ export default function TaxonomyManagementPanel() {
       locale,
       value: formState.label.trim(),
       description: activeType === 'themes' ? formState.description.trim() || null : undefined,
-      synonyms: activeType === 'themes' || activeType === 'domains' ? formState.synonyms.trim() : undefined,
+      synonyms: activeType !== 'resourceTypes' ? formState.synonyms.trim() : undefined,
       color: activeType === 'tags' ? formState.color || null : undefined,
     };
 
@@ -442,7 +442,7 @@ export default function TaxonomyManagementPanel() {
                 </div>
               )}
 
-              {(activeType === 'themes' || activeType === 'domains') && (
+              {(activeType === 'themes' || activeType === 'domains' || activeType === 'tags') && (
                 <div className={styles.field}>
                   <div className={styles.labelRow}>
                     <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
