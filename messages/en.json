@@ -866,14 +866,14 @@
       "hints": {
         "themes": "Description and synonyms available",
         "domains": "Used to structure the catalog and searchable via synonyms",
-        "tags": "Optional color for quick scanning",
+        "tags": "Localized synonyms plus optional color",
         "resourceTypes": "Shared list for resource creation"
       }
     },
     "descriptions": {
       "themes": "Themes include a label, optional description, and synonyms to improve search.",
       "domains": "Domains help structure the catalog hierarchy, group tools, and can store synonyms to speed up discovery.",
-      "tags": "Tags add lightweight labels. You can associate a color to highlight them.",
+      "tags": "Tags add lightweight labels. Add localized synonyms and an optional color to highlight them.",
       "resourceTypes": "Resource types keep resource sheets consistent and are reused in the admin form."
     },
     "aria": {
