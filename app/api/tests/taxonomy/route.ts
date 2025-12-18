@@ -45,6 +45,14 @@ function resolveTranslation<T extends { locale: string }>(
   return list.find((x) => x.locale === locale) || list.find((x) => x.locale === defaultLoc);
 }
 
+function parseSynonyms(raw: string | null | undefined) {
+  if (!raw) return [] as string[];
+  return raw
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -107,7 +115,7 @@ export async function GET(request: NextRequest) {
     const localizedDomains = allDomains
       .map((d) => {
         const t = resolveTranslation(d.id, domainsById, locale, defaultLocale);
-        return t ? { id: d.id, label: t.label, slug: t.slug } : null;
+        return t ? { id: d.id, label: t.label, slug: t.slug, synonyms: t.synonyms ?? [] } : null;
       })
       .filter((d): d is NonNullable<typeof d> => Boolean(d))
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -167,7 +175,7 @@ export async function POST(request: NextRequest) {
     const locale = payload.locale ?? defaultLocale;
 
     if (payload.type === 'domain') {
-      const created = await createDomain(payload.value, locale);
+      const created = await createDomain(payload.value, locale, payload.synonyms);
       return NextResponse.json({ domain: created }, { status: 201 });
     }
 
@@ -216,9 +224,7 @@ export async function PUT(request: NextRequest) {
     const db = getDb();
 
     if (payload.type === 'pathology') {
-      const synonymsArray = payload.synonyms 
-        ? payload.synonyms.split(',').map(s => s.trim()).filter(Boolean) 
-        : [];
+      const synonymsArray = parseSynonyms(payload.synonyms);
       
       // Update translation
       await db.update(pathologyTranslations)
@@ -246,9 +252,10 @@ export async function PUT(request: NextRequest) {
     }
 
     if (payload.type === 'domain') {
+      const synonymsArray = parseSynonyms(payload.synonyms);
       // Update translation (slug should ideally be regenerated but skipped for simplicity here)
       await db.update(domainsTranslations)
-        .set({ label: payload.value })
+        .set({ label: payload.value, synonyms: synonymsArray })
         .where(and(eq(domainsTranslations.domainId, entityId), eq(domainsTranslations.locale, locale)));
 
       return NextResponse.json({ success: true }, { status: 200 });

@@ -245,7 +245,7 @@ export default function TaxonomyManagementPanel() {
     setFormState({
       label: domain.label ?? '',
       description: '',
-      synonyms: '',
+      synonyms: Array.isArray(domain.synonyms) ? domain.synonyms.join(', ') : '',
       color: '',
     });
   };
@@ -259,7 +259,10 @@ export default function TaxonomyManagementPanel() {
       value: formState.label.trim(),
       description:
         activeType === 'pathologies' ? formState.description.trim() || null : undefined,
-      synonyms: activeType === 'pathologies' ? formState.synonyms.trim() : undefined,
+      synonyms:
+        activeType === 'pathologies' || activeType === 'domains'
+          ? formState.synonyms.trim()
+          : undefined,
       color: activeType === 'tags' ? formState.color || null : undefined,
     };
 
@@ -370,7 +373,18 @@ export default function TaxonomyManagementPanel() {
                         </span>
                       );
                     })()}
-                    {/* ... description et synonymes inchangés ... */}
+                    {'synonyms' in item && Array.isArray(item.synonyms) && item.synonyms.length > 0 && (
+                      <div
+                        className={styles.synonyms}
+                        aria-label={t('labels.synonymsList', { count: item.synonyms.length })}
+                      >
+                        {item.synonyms.map((synonym) => (
+                          <span key={synonym} className={styles.synonym}>
+                            {synonym}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className={styles.actions}>
                     <button
@@ -416,37 +430,37 @@ export default function TaxonomyManagementPanel() {
               </div>
 
               {activeType === 'pathologies' && (
-                <>
-                  <div className={styles.field}>
-                    <div className={styles.labelRow}>
-                      <label htmlFor="description-input">{t('form.fields.description')}</label>
-                      <span className="text-subtle">{t('form.hints.optional')}</span>
-                    </div>
-                    <textarea
-                      id="description-input"
-                      name="description"
-                      className={styles.textarea}
-                      value={formState.description}
-                      onChange={(event) => setFormState({ ...formState, description: event.target.value })}
-                      placeholder={t('form.placeholders.description')}
-                    />
+                <div className={styles.field}>
+                  <div className={styles.labelRow}>
+                    <label htmlFor="description-input">{t('form.fields.description')}</label>
+                    <span className="text-subtle">{t('form.hints.optional')}</span>
                   </div>
+                  <textarea
+                    id="description-input"
+                    name="description"
+                    className={styles.textarea}
+                    value={formState.description}
+                    onChange={(event) => setFormState({ ...formState, description: event.target.value })}
+                    placeholder={t('form.placeholders.description')}
+                  />
+                </div>
+              )}
 
-                  <div className={styles.field}>
-                    <div className={styles.labelRow}>
-                      <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
-                      <span className="text-subtle">{t('form.hints.commaSeparated')}</span>
-                    </div>
-                    <input
-                      id="synonyms-input"
-                      name="synonyms"
-                      className={styles.input}
-                      value={formState.synonyms}
-                      onChange={(event) => setFormState({ ...formState, synonyms: event.target.value })}
-                      placeholder={t('form.placeholders.synonyms')}
-                    />
+              {(activeType === 'pathologies' || activeType === 'domains') && (
+                <div className={styles.field}>
+                  <div className={styles.labelRow}>
+                    <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
+                    <span className="text-subtle">{t('form.hints.commaSeparated')}</span>
                   </div>
-                </>
+                  <input
+                    id="synonyms-input"
+                    name="synonyms"
+                    className={styles.input}
+                    value={formState.synonyms}
+                    onChange={(event) => setFormState({ ...formState, synonyms: event.target.value })}
+                    placeholder={t('form.placeholders.synonyms')}
+                  />
+                </div>
               )}
 
               {activeType === 'tags' && (

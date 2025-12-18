@@ -105,6 +105,7 @@ export const domainsTranslations = pgTable(
     locale: text('locale').notNull(),
     label: text('label').notNull(),
     slug: text('slug').notNull(),
+    synonyms: text('synonyms').array().notNull().default(sql`'{}'::text[]`),
   },
   (table) => ({
     localeConstraint: uniqueIndex('domains_translations_domain_id_locale_key').on(table.domainId, table.locale),

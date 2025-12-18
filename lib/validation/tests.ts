@@ -72,6 +72,7 @@ export const taxonomyResponseSchema = z.object({
       id: z.string().uuid(),
       label: z.string(),
       slug: z.string(),
+      synonyms: z.array(z.string()),
     }),
   ),
   tags: z.array(
@@ -106,7 +107,7 @@ export const taxonomyMutationSchema = z.object({
   value: z.string().trim().min(1, { message: 'La valeur est requise.' }),
   // Champs additionnels optionnels
   description: z.string().nullable().optional(),
-  synonyms: z.string().optional(), // Reçu comme string "a, b, c" depuis le form
+  synonyms: z.string().trim().optional(), // Reçu comme string "a, b, c" depuis le form
   color: z.string().nullable().optional(),
 });
 
