@@ -25,6 +25,7 @@ type FormState = {
   description: string;
   synonyms: string;
   color: string;
+  domainIds: string[];
 };
 
 // La palette correspond aux classes CSS définies
@@ -55,6 +56,7 @@ const initialFormState: FormState = {
   description: '',
   synonyms: '',
   color: '',
+  domainIds: [],
 };
 
 export default function TaxonomyManagementPanel() {
@@ -126,6 +128,8 @@ export default function TaxonomyManagementPanel() {
     if (activeType === 'tags') return taxonomyQuery.data.tags;
     return taxonomyQuery.data.resourceTypes;
   }, [taxonomyQuery.data, activeType]);
+
+  const availableDomains = taxonomyQuery.data?.domains ?? [];
 
   const filteredItems: TaxonomyEntry[] = useMemo(() => {
     const normalizedTerm = searchTerm.trim().toLowerCase();
@@ -224,6 +228,7 @@ export default function TaxonomyManagementPanel() {
         description: theme.description ?? '',
         synonyms: Array.isArray(theme.synonyms) ? theme.synonyms.join(', ') : '',
         color: '',
+        domainIds: theme.domains?.map((domain) => domain.id) ?? [],
       });
       return;
     }
@@ -236,6 +241,7 @@ export default function TaxonomyManagementPanel() {
         description: '',
         synonyms: '',
         color: tag.color ?? '',
+        domainIds: [],
       });
       return;
     }
@@ -247,6 +253,7 @@ export default function TaxonomyManagementPanel() {
       description: '',
       synonyms: Array.isArray(domain.synonyms) ? domain.synonyms.join(', ') : '',
       color: '',
+      domainIds: [],
     });
   };
 
@@ -260,6 +267,7 @@ export default function TaxonomyManagementPanel() {
       description: activeType === 'themes' ? formState.description.trim() || null : undefined,
       synonyms: activeType === 'themes' || activeType === 'domains' ? formState.synonyms.trim() : undefined,
       color: activeType === 'tags' ? formState.color || null : undefined,
+      domainIds: activeType === 'themes' ? formState.domainIds : undefined,
     };
 
     const parsed = taxonomyMutationSchema.safeParse(payload);
@@ -381,6 +389,21 @@ export default function TaxonomyManagementPanel() {
                         ))}
                       </div>
                     )}
+                    {activeType === 'themes' &&
+                      'domains' in item &&
+                      Array.isArray(item.domains) &&
+                      item.domains.length > 0 && (
+                        <div
+                          className={styles.synonyms}
+                          aria-label={t('labels.domainsList', { count: item.domains.length })}
+                        >
+                          {item.domains.map((domain) => (
+                            <span key={domain.id} className={styles.synonym}>
+                              {domain.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                   </div>
                   <div className={styles.actions}>
                     <button
@@ -456,6 +479,48 @@ export default function TaxonomyManagementPanel() {
                     onChange={(event) => setFormState({ ...formState, synonyms: event.target.value })}
                     placeholder={t('form.placeholders.synonyms')}
                   />
+                </div>
+              )}
+
+              {activeType === 'themes' && (
+                <div className={styles.field}>
+                  <div className={styles.labelRow}>
+                    <span id="theme-domains-label">{t('form.fields.domains')}</span>
+                    <span className="text-subtle">{t('form.hints.domainHelper')}</span>
+                  </div>
+                  {taxonomyQuery.isLoading ? (
+                    <p className="text-subtle">{t('messages.loading')}</p>
+                  ) : availableDomains.length === 0 ? (
+                    <p className="text-subtle">{t('form.emptyDomains')}</p>
+                  ) : (
+                    <div
+                      className={styles.checkboxList}
+                      role="group"
+                      aria-labelledby="theme-domains-label"
+                    >
+                      {availableDomains.map((domain) => {
+                        const isChecked = formState.domainIds.includes(domain.id);
+                        return (
+                          <label key={domain.id} className={styles.checkboxItem}>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(event) => {
+                                const nextSelection = new Set(formState.domainIds);
+                                if (event.target.checked) {
+                                  nextSelection.add(domain.id);
+                                } else {
+                                  nextSelection.delete(domain.id);
+                                }
+                                setFormState({ ...formState, domainIds: Array.from(nextSelection) });
+                              }}
+                            />
+                            <span>{domain.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
