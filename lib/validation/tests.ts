@@ -85,6 +85,7 @@ export const taxonomyResponseSchema = z.object({
     z.object({
       id: z.string().uuid(),
       label: z.string(),
+      synonyms: z.array(z.string()),
       color: z.string().nullable().optional(),
     }),
   ),

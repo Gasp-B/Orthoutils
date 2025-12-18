@@ -132,8 +132,14 @@ export async function deleteDomain(id: string, locale: Locale = defaultLocale) {
 
 // --- TAGS ---
 
-export async function createTag(label: string, color: string | null | undefined, locale: Locale = defaultLocale) {
+export async function createTag(
+  label: string,
+  color: string | null | undefined,
+  locale: Locale = defaultLocale,
+  synonymsStr?: string,
+) {
   const normalized = normalizeValue(label);
+  const synonyms = normalizeSynonyms(synonymsStr);
   const db = getDb();
 
   const [existingTranslation] = await db
@@ -156,12 +162,12 @@ export async function createTag(label: string, color: string | null | undefined,
 
   const [created] = await db
     .insert(tagsTranslations)
-    .values({ tagId, label: normalized, locale })
+    .values({ tagId, label: normalized, locale, synonyms })
     .onConflictDoUpdate({
       target: [tagsTranslations.tagId, tagsTranslations.locale],
-      set: { label: normalized },
+      set: { label: normalized, synonyms },
     })
-    .returning({ id: tagsTranslations.tagId, label: tagsTranslations.label });
+    .returning({ id: tagsTranslations.tagId, label: tagsTranslations.label, synonyms: tagsTranslations.synonyms });
 
   return created;
 }

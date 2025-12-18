@@ -134,7 +134,14 @@ export async function GET(request: NextRequest) {
     const localizedTags = allTags
       .map((t) => {
         const tr = resolveTranslation(t.id, tagsById, locale, defaultLocale);
-        return tr ? { id: t.id, label: tr.label, color: t.colorLabel } : null;
+        return tr
+          ? {
+              id: t.id,
+              label: tr.label,
+              synonyms: tr.synonyms ?? [],
+              color: t.colorLabel,
+            }
+          : null;
       })
       .filter((t): t is NonNullable<typeof t> => Boolean(t))
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -199,7 +206,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (payload.type === 'tag') {
-      const created = await createTag(payload.value, payload.color, locale);
+      const created = await createTag(payload.value, payload.color, locale, payload.synonyms);
       return NextResponse.json({ tag: created }, { status: 201 });
     }
 
@@ -257,13 +264,15 @@ export async function PUT(request: NextRequest) {
     }
 
     if (payload.type === 'tag') {
+      const synonymsArray = parseSynonyms(payload.synonyms);
+
       // Update parent color
       if (payload.color !== undefined) {
         await db.update(tags).set({ colorLabel: payload.color }).where(eq(tags.id, entityId));
       }
       // Update translation
       await db.update(tagsTranslations)
-        .set({ label: payload.value })
+        .set({ label: payload.value, synonyms: synonymsArray })
         .where(and(eq(tagsTranslations.tagId, entityId), eq(tagsTranslations.locale, locale)));
 
       return NextResponse.json({ success: true }, { status: 200 });
