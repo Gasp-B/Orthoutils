@@ -25,6 +25,16 @@ type TestFormProps = {
 };
 
 // --- Schéma Zod ---
+const optionalNullableInt = z.preprocess(
+  (value) => {
+    if (typeof value === 'number' && Number.isNaN(value)) {
+      return null;
+    }
+    return value;
+  },
+  z.number().int().nullable().optional(),
+);
+
 const formSchemaBase = testSchema
   .omit({ id: true, slug: true, createdAt: true, updatedAt: true })
   .extend({
@@ -37,9 +47,9 @@ const formSchemaBase = testSchema
     priceRange: z.string().nullable().optional(),
     buyLink: z.string().url().nullable().optional(),
     notes: z.string().nullable().optional(),
-    ageMinMonths: z.number().int().nullable().optional(),
-    ageMaxMonths: z.number().int().nullable().optional(),
-    durationMinutes: z.number().int().nullable().optional(),
+    ageMinMonths: optionalNullableInt,
+    ageMaxMonths: optionalNullableInt,
+    durationMinutes: optionalNullableInt,
     bibliography: z.array(z.object({ label: z.string().min(1), url: z.string().url() })).default([]).optional(),
   });
 
