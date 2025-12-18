@@ -1,10 +1,22 @@
--- Add multilingual full-text search vectors for tests and tools catalog
 
-ALTER TABLE public.tests
-  ADD COLUMN IF NOT EXISTS fts_vector tsvector;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'tests'
+  ) THEN
+    ALTER TABLE public.tests
+      ADD COLUMN IF NOT EXISTS fts_vector tsvector;
+  END IF;
 
-ALTER TABLE public.tools_catalog
-  ADD COLUMN IF NOT EXISTS fts_vector tsvector;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'tools_catalog'
+  ) THEN
+    ALTER TABLE public.tools_catalog
+      ADD COLUMN IF NOT EXISTS fts_vector tsvector;
+  END IF;
+END$$;
 
 -- Build weighted, locale-aware FTS vectors for tests
 CREATE OR REPLACE FUNCTION public.build_tests_fts_vector(p_test_id uuid)
@@ -335,28 +347,64 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS tools_catalog_fts_vector_refresh ON public.tools_catalog;
-CREATE TRIGGER tools_catalog_fts_vector_refresh
-BEFORE INSERT OR UPDATE ON public.tools_catalog
-FOR EACH ROW
-EXECUTE FUNCTION public.set_tools_catalog_fts_vector();
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'tools_catalog'
+  ) THEN
+    DROP TRIGGER IF EXISTS tools_catalog_fts_vector_refresh ON public.tools_catalog;
+    CREATE TRIGGER tools_catalog_fts_vector_refresh
+    BEFORE INSERT OR UPDATE ON public.tools_catalog
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_tools_catalog_fts_vector();
+  END IF;
 
-DROP TRIGGER IF EXISTS tools_catalog_translations_fts_vector_refresh ON public.tools_catalog_translations;
-CREATE TRIGGER tools_catalog_translations_fts_vector_refresh
-AFTER INSERT OR UPDATE OR DELETE ON public.tools_catalog_translations
-FOR EACH ROW
-EXECUTE FUNCTION public.refresh_tools_catalog_fts_from_translation();
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'tools_catalog_translations'
+  ) THEN
+    DROP TRIGGER IF EXISTS tools_catalog_translations_fts_vector_refresh ON public.tools_catalog_translations;
+    CREATE TRIGGER tools_catalog_translations_fts_vector_refresh
+    AFTER INSERT OR UPDATE OR DELETE ON public.tools_catalog_translations
+    FOR EACH ROW
+    EXECUTE FUNCTION public.refresh_tools_catalog_fts_from_translation();
+  END IF;
 
-DROP TRIGGER IF EXISTS tags_translations_tools_catalog_fts_vector_refresh ON public.tags_translations;
-CREATE TRIGGER tags_translations_tools_catalog_fts_vector_refresh
-AFTER INSERT OR UPDATE OR DELETE ON public.tags_translations
-FOR EACH ROW
-EXECUTE FUNCTION public.refresh_tools_catalog_fts_from_tag_translation();
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'tags_translations'
+  ) THEN
+    DROP TRIGGER IF EXISTS tags_translations_tools_catalog_fts_vector_refresh ON public.tags_translations;
+    CREATE TRIGGER tags_translations_tools_catalog_fts_vector_refresh
+    AFTER INSERT OR UPDATE OR DELETE ON public.tags_translations
+    FOR EACH ROW
+    EXECUTE FUNCTION public.refresh_tools_catalog_fts_from_tag_translation();
+  END IF;
+END$$;
 
 -- Backfill existing rows
 UPDATE public.tests SET fts_vector = public.build_tests_fts_vector(id);
-UPDATE public.tools_catalog SET fts_vector = public.build_tools_catalog_fts_vector(id);
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'tools_catalog'
+  ) THEN
+    UPDATE public.tools_catalog SET fts_vector = public.build_tools_catalog_fts_vector(id);
+  END IF;
+END$$;
 
 -- Indexes for efficient search
 CREATE INDEX IF NOT EXISTS idx_tests_fts_vector ON public.tests USING GIN (fts_vector);
-CREATE INDEX IF NOT EXISTS idx_tools_catalog_fts_vector ON public.tools_catalog USING GIN (fts_vector);
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'tools_catalog'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_tools_catalog_fts_vector ON public.tools_catalog USING GIN (fts_vector);
+  END IF;
+END$$;
