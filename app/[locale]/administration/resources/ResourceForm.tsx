@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -129,6 +129,7 @@ function ResourceForm({ locale }: ResourceFormProps) {
 
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const { data: resources } = useQuery({
     queryKey: ['resources', locale],
@@ -175,17 +176,18 @@ function ResourceForm({ locale }: ResourceFormProps) {
   }, [selectedResourceId, resources, reset, locale]);
 
   const mutation = useMutation({
-    mutationFn: (payload: z.infer<typeof formSchema>) =>
-      saveResource(payload, locale, payload.id ? 'PATCH' : 'POST'),
+    mutationFn: (payload: FormValues) => saveResource(payload, locale, payload.id ? 'PATCH' : 'POST'),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['resources', locale] });
       void queryClient.invalidateQueries({ queryKey: ['taxonomy', locale] });
       setToastMsg(feedbackT('success.saved'));
+      setClientError(null);
       if (!selectedResourceId) reset(createDefaultValues(locale));
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: FormValues) => {
+    setClientError(null);
     const payload = {
       ...values,
       locale,
@@ -202,6 +204,18 @@ function ResourceForm({ locale }: ResourceFormProps) {
     mutation.mutate(payload);
   };
 
+  const onSubmitError = (submitErrors: FieldErrors<FormValues>) => {
+    const message =
+      submitErrors.type?.message ||
+      submitErrors.title?.message ||
+      submitErrors.url?.message ||
+      submitErrors.description?.message;
+
+    if (typeof message === 'string') {
+      setClientError(message);
+    }
+  };
+
   const commonMultiSelectTrans = {
     add: multiSelectT('add'),
     remove: multiSelectT('remove'),
@@ -216,7 +230,12 @@ function ResourceForm({ locale }: ResourceFormProps) {
   };
 
   return (
-    <form className="notion-form" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
+    <form className="notion-form" onSubmit={(e) => void handleSubmit(onSubmit, onSubmitError)(e)}>
+      {clientError && (
+        <div className="p-4 rounded-lg bg-red-50 text-red-700 border border-red-200 mt-3" role="alert">
+          {clientError}
+        </div>
+      )}
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
 
       <div className="notion-toolbar sticky top-4 z-40 shadow-sm">
@@ -301,6 +320,8 @@ function ResourceForm({ locale }: ResourceFormProps) {
                 <select
                   id="type"
                   className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                  aria-invalid={Boolean(errors.type)}
+                  aria-describedby={errors.type ? 'type-error' : undefined}
                   {...register('type')}
                 >
                   <option value="">{formT('fields.type.placeholder')}</option>
@@ -314,7 +335,11 @@ function ResourceForm({ locale }: ResourceFormProps) {
                       <option value={currentType}>{currentType}</option>
                     )}
                 </select>
-                {errors.type && <p className={styles.errorMessage}>{errors.type.message}</p>}
+                {errors.type && (
+                  <p id="type-error" className={styles.errorMessage} role="alert">
+                    {errors.type.message}
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="url">{formT('fields.url.label')}</Label>
