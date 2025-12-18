@@ -22,4 +22,4 @@ Two migrations ship the new publication workflow. The schema migration must run 
 
 ## Execution order and CI
 - The timestamps enforce ordering: `20250709120000_add_status_and_validation_metadata.sql` (schema) then `20250710120000_status_based_rls.sql` (policies).
-- GitHub Action `.github/workflows/supabase-migrations.yml` already runs `supabase migration up --include-all`, applying migrations lexicographically, so CI will process schema first, policies second.
+- GitHub Action `.github/workflows/supabase-migrations.yml` runs `supabase migration up --db-url "$SUPABASE_DB_URL"` so the CLI only applies migrations that are not already recorded in `supabase_migrations`. This avoids primary-key conflicts when a timestamp already exists on the remote.
