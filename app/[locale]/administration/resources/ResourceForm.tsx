@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,16 +29,27 @@ type ResourceFormProps = {
 
 type ApiResponse = { resource?: ResourceDto; resources?: ResourceDto[]; error?: string };
 
-const formSchema = resourceInputSchema
-  .extend({
+const buildFormSchema = ({
+  titleRequired,
+  typeRequired,
+  urlInvalid,
+}: {
+  titleRequired: string;
+  typeRequired: string;
+  urlInvalid: string;
+}) =>
+  resourceInputSchema.extend({
     id: z.string().uuid().optional(),
-    url: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+    url: z.union([z.string().url(urlInvalid), z.literal(''), z.null()]).optional(),
     description: resourceInputSchema.shape.description.or(z.literal('')).optional(),
-  })
-  .refine((value) => Boolean(value.title?.trim()), { path: ['title'] })
-  .refine((value) => Boolean(value.type?.trim()), { path: ['type'] });
+    title: z.string().trim().min(1, titleRequired),
+    type: z.string().trim().min(1, typeRequired),
+  });
 
-const createDefaultValues = (locale: Locale): z.infer<typeof formSchema> => ({
+type FormSchema = ReturnType<typeof buildFormSchema>;
+type FormValues = z.infer<FormSchema>;
+
+const createDefaultValues = (locale: Locale): FormValues => ({
   locale,
   id: undefined,
   title: '',
@@ -63,7 +74,7 @@ async function fetchTaxonomy(locale: Locale) {
   return (await response.json()) as TaxonomyResponse;
 }
 
-async function saveResource(payload: z.infer<typeof formSchema>, locale: Locale, method: 'POST' | 'PATCH') {
+async function saveResource(payload: FormValues, locale: Locale, method: 'POST' | 'PATCH') {
   const response = await fetch('/api/resources', {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -100,8 +111,19 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 
 function ResourceForm({ locale }: ResourceFormProps) {
   const formT = useTranslations('ResourcesManage.form');
+  const validationT = useTranslations('ResourcesManage.form.validation');
   const feedbackT = useTranslations('ResourcesManage.feedback');
   const multiSelectT = useTranslations('ResourcesManage.form.multiSelect');
+
+  const formSchema = useMemo(
+    () =>
+      buildFormSchema({
+        titleRequired: validationT('titleRequired'),
+        typeRequired: validationT('typeRequired'),
+        urlInvalid: validationT('urlInvalid'),
+      }),
+    [validationT],
+  );
 
   const queryClient = useQueryClient();
 
@@ -125,7 +147,7 @@ function ResourceForm({ locale }: ResourceFormProps) {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<z.infer<typeof formSchema>>({
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: createDefaultValues(locale),
   });
