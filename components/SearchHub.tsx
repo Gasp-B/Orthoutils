@@ -205,14 +205,14 @@ export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
                 </div>
               )}
 
-              {result.pathologies.length > 0 && (
-                <div className={styles.pathologyRow}>
-                  <dt>{t('meta.pathologies')}</dt>
+              {result.themes.length > 0 && (
+                <div className={styles.themeRow}>
+                  <dt>{t('meta.themes')}</dt>
                   <dd>
                     <div className={styles.pillRow}>
-                      {result.pathologies.map((pathology) => (
-                        <Badge key={pathology} variant="outline" className={styles.badge}>
-                          {pathology}
+                      {result.themes.map((theme) => (
+                        <Badge key={theme} variant="outline" className={styles.badge}>
+                          {theme}
                         </Badge>
                       ))}
                     </div>

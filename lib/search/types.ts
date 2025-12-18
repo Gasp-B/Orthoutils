@@ -7,7 +7,7 @@ export type BaseSearchResult = {
   description: string | null;
   tags: string[];
   domains: string[];
-  pathologies: string[];
+  themes: string[];
   category: SearchCategory;
 };
 

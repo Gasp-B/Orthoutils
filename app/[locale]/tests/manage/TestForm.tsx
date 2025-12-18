@@ -70,7 +70,7 @@ const defaultValues: FormValues = {
   priceRange: null,
   buyLink: null,
   notes: null,
-  pathologies: [],
+  themes: [],
   domains: [],
   tags: [],
   bibliography: [],
@@ -162,7 +162,7 @@ function TestForm({ locale }: TestFormProps) {
 
   const currentDomains = watch('domains') ?? [];
   const currentTags = watch('tags') ?? [];
-  const currentPathologies = watch('pathologies') ?? [];
+  const currentThemes = watch('themes') ?? [];
   const currentBibliography = watch('bibliography');
 
   // Chargement des données lors de la sélection d'un test
@@ -176,7 +176,7 @@ function TestForm({ locale }: TestFormProps) {
       reset({
         ...test,
         bibliography: test.bibliography ?? [],
-        pathologies: test.pathologies ?? [],
+        themes: test.themes ?? [],
         domains: test.domains ?? [],
         tags: test.tags ?? [],
       });
@@ -201,7 +201,7 @@ function TestForm({ locale }: TestFormProps) {
       bibliography: values.bibliography?.filter(b => b.label && b.url) ?? [],
       domains: values.domains ?? [],
       tags: values.tags ?? [],
-      pathologies: values.pathologies ?? [],
+      themes: values.themes ?? [],
     };
     mutation.mutate(payload);
   };
@@ -378,12 +378,12 @@ function TestForm({ locale }: TestFormProps) {
                 />
 
                 <MultiSelect
-                  label={formT('sections.taxonomy.pathologiesLabel')}
-                  options={taxonomy?.pathologies.map((p) => ({ id: p.id, label: p.label })) ?? []}
-                  selectedValues={currentPathologies}
-                  onChange={(vals: string[]) => setValue('pathologies', vals, { shouldDirty: true })}
+                  label={formT('sections.taxonomy.themesLabel')}
+                  options={taxonomy?.themes.map((p) => ({ id: p.id, label: p.label })) ?? []}
+                  selectedValues={currentThemes}
+                  onChange={(vals: string[]) => setValue('themes', vals, { shouldDirty: true })}
                   allowCreate={false}
-                  translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.pathologiesLabel') }}
+                  translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.themesLabel') }}
                 />
 
                 <MultiSelect

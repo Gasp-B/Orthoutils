@@ -6,15 +6,15 @@ import { getDb } from '@/lib/db/client';
 import {
   domains,
   domainsTranslations,
-  pathologies,
-  pathologyTranslations,
   tags,
   tagsTranslations,
   testDomains,
-  testPathologies,
   testTags,
   tests,
   testsTranslations,
+  testThemes,
+  themeTranslations,
+  themes,
 } from '@/lib/db/schema';
 import { testInputSchema, testSchema, updateTestInputSchema, type TestDto } from '@/lib/validation/tests';
 import { generateUniqueSlug } from '@/lib/utils/slug';
@@ -141,8 +141,8 @@ async function upsertTags(db: DbClient, tagLabels: string[], locale: Locale) {
   return results;
 }
 
-async function upsertPathologies(db: DbClient, pathologyLabels: string[], locale: Locale) {
-  const normalized = normalizeList(pathologyLabels);
+async function upsertThemes(db: DbClient, themeLabels: string[], locale: Locale) {
+  const normalized = normalizeList(themeLabels);
 
   if (normalized.length === 0) {
     return [] as { id: string; label: string }[];
@@ -150,12 +150,12 @@ async function upsertPathologies(db: DbClient, pathologyLabels: string[], locale
 
   const existingTranslations = await db
     .select({
-      pathologyId: pathologyTranslations.pathologyId,
-      label: pathologyTranslations.label,
-      locale: pathologyTranslations.locale,
+      themeId: themeTranslations.themeId,
+      label: themeTranslations.label,
+      locale: themeTranslations.locale,
     })
-    .from(pathologyTranslations)
-    .where(inArray(pathologyTranslations.label, normalized));
+    .from(themeTranslations)
+    .where(inArray(themeTranslations.label, normalized));
 
   const reservedSlugs = new Set<string>();
   const results: { id: string; label: string }[] = [];
@@ -166,38 +166,38 @@ async function upsertPathologies(db: DbClient, pathologyLabels: string[], locale
     );
     const translationAnyLocale = existingTranslations.find((entry) => entry.label === label);
 
-    let targetPathologyId = translationForLocale?.pathologyId ?? translationAnyLocale?.pathologyId;
+    let targetThemeId = translationForLocale?.themeId ?? translationAnyLocale?.themeId;
 
-    if (!targetPathologyId) {
+    if (!targetThemeId) {
       const slug = await generateUniqueSlug({
         db,
         name: label,
-        table: pathologies,
-        slugColumn: pathologies.slug,
+        table: themes,
+        slugColumn: themes.slug,
         reserved: reservedSlugs,
       });
 
       const [created] = await db
-        .insert(pathologies)
+        .insert(themes)
         .values({ slug })
-        .returning({ id: pathologies.id });
+        .returning({ id: themes.id });
 
-      targetPathologyId = created?.id;
+      targetThemeId = created?.id;
     }
 
-    if (!targetPathologyId) {
-      throw new Error('Impossible de créer ou retrouver la pathologie.');
+    if (!targetThemeId) {
+      throw new Error('Impossible de créer ou retrouver le thème.');
     }
 
     await db
-      .insert(pathologyTranslations)
-      .values({ pathologyId: targetPathologyId, label, locale })
+      .insert(themeTranslations)
+      .values({ themeId: targetThemeId, label, locale })
       .onConflictDoUpdate({
-        target: [pathologyTranslations.pathologyId, pathologyTranslations.locale],
+        target: [themeTranslations.themeId, themeTranslations.locale],
         set: { label },
       });
 
-    results.push({ id: targetPathologyId, label });
+    results.push({ id: targetThemeId, label });
   }
 
   return results;
@@ -229,16 +229,16 @@ async function syncTags(db: DbClient, testId: string, tagIds: string[]) {
     .onConflictDoNothing();
 }
 
-async function syncPathologies(db: DbClient, testId: string, pathologyIds: string[]) {
-  await db.delete(testPathologies).where(eq(testPathologies.testId, testId));
+async function syncThemes(db: DbClient, testId: string, themeIds: string[]) {
+  await db.delete(testThemes).where(eq(testThemes.testId, testId));
 
-  if (pathologyIds.length === 0) {
+  if (themeIds.length === 0) {
     return;
   }
 
   await db
-    .insert(testPathologies)
-    .values(pathologyIds.map((pathologyId) => ({ testId, pathologyId })))
+    .insert(testThemes)
+    .values(themeIds.map((themeId) => ({ testId, themeId })))
     .onConflictDoNothing();
 }
 
@@ -309,10 +309,10 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
   const payload = testInputSchema.parse(input);
   const locale = payload.locale ?? defaultLocale;
   const createdId = await getDb().transaction(async (tx) => {
-    const [domainRecords, tagRecords, pathologyRecords] = await Promise.all([
+    const [domainRecords, tagRecords, themeRecords] = await Promise.all([
       upsertDomains(tx as unknown as DbClient, payload.domains ?? [], locale),
       upsertTags(tx as unknown as DbClient, payload.tags ?? [], locale),
-      upsertPathologies(tx as unknown as DbClient, payload.pathologies ?? [], locale),
+      upsertThemes(tx as unknown as DbClient, payload.themes ?? [], locale),
     ]);
 
     const [created] = await tx
@@ -342,10 +342,10 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
 
     await syncDomains(tx as unknown as DbClient, created.id, domainRecords.map((domain) => domain.id));
     await syncTags(tx as unknown as DbClient, created.id, tagRecords.map((tag) => tag.id));
-    await syncPathologies(
+    await syncThemes(
       tx as unknown as DbClient,
       created.id,
-      pathologyRecords.map((pathology) => pathology.id),
+      themeRecords.map((theme) => theme.id),
     );
 
     return created.id;
@@ -364,10 +364,10 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
   const payload = updateTestInputSchema.parse(input);
   const locale = payload.locale ?? defaultLocale;
   await getDb().transaction(async (tx) => {
-    const [domainRecords, tagRecords, pathologyRecords] = await Promise.all([
+    const [domainRecords, tagRecords, themeRecords] = await Promise.all([
       upsertDomains(tx as unknown as DbClient, payload.domains ?? [], locale),
       upsertTags(tx as unknown as DbClient, payload.tags ?? [], locale),
-      upsertPathologies(tx as unknown as DbClient, payload.pathologies ?? [], locale),
+      upsertThemes(tx as unknown as DbClient, payload.themes ?? [], locale),
     ]);
 
     await tx
@@ -397,10 +397,10 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
 
     await syncDomains(tx as unknown as DbClient, payload.id, domainRecords.map((domain) => domain.id));
     await syncTags(tx as unknown as DbClient, payload.id, tagRecords.map((tag) => tag.id));
-    await syncPathologies(
+    await syncThemes(
       tx as unknown as DbClient,
       payload.id,
-      pathologyRecords.map((pathology) => pathology.id),
+      themeRecords.map((theme) => theme.id),
     );
   });
 

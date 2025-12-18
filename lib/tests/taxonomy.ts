@@ -7,13 +7,13 @@ import {
   domainsTranslations,
   tags,
   tagsTranslations,
-  pathologies,
-  pathologyTranslations,
   testDomains,
   testTags,
-  testPathologies,
   resourceTypes,
   resourceTypesTranslations,
+  testThemes,
+  themeTranslations,
+  themes,
 } from '@/lib/db/schema';
 import { generateUniqueSlug } from '@/lib/utils/slug';
 
@@ -153,9 +153,9 @@ export async function deleteTag(id: string, locale: Locale = defaultLocale) {
   return deleted;
 }
 
-// --- PATHOLOGIES ---
+// --- THEMES ---
 
-export async function createPathology(
+export async function createTheme(
   label: string,
   description: string | null | undefined,
   synonymsStr: string | undefined,
@@ -166,65 +166,65 @@ export async function createPathology(
   const synonymsArray = normalizeSynonyms(synonymsStr);
 
   const [existingTranslation] = await db
-    .select({ id: pathologyTranslations.pathologyId, pathologyId: pathologyTranslations.pathologyId })
-    .from(pathologyTranslations)
-    .where(eq(pathologyTranslations.label, normalized))
+    .select({ id: themeTranslations.themeId, themeId: themeTranslations.themeId })
+    .from(themeTranslations)
+    .where(eq(themeTranslations.label, normalized))
     .limit(1);
 
-  let pathologyId = existingTranslation?.pathologyId;
+  let themeId = existingTranslation?.themeId;
 
-  if (!pathologyId) {
-    // Génération slug sur la table parente `pathologies`
+  if (!themeId) {
+    // Génération slug sur la table parente `themes`
     const slug = await generateUniqueSlug({
       db,
       name: normalized,
-      table: pathologies,
-      slugColumn: pathologies.slug,
+      table: themes,
+      slugColumn: themes.slug,
     });
-    const [newPatho] = await db.insert(pathologies).values({ slug }).returning({ id: pathologies.id });
-    pathologyId = newPatho?.id;
+    const [newTheme] = await db.insert(themes).values({ slug }).returning({ id: themes.id });
+    themeId = newTheme?.id;
   }
 
-  if (!pathologyId) throw new Error('Impossible de créer ou retrouver la pathologie.');
+  if (!themeId) throw new Error('Impossible de créer ou retrouver le thème.');
 
   const [created] = await db
-    .insert(pathologyTranslations)
+    .insert(themeTranslations)
     .values({ 
-      pathologyId, 
+      themeId, 
       label: normalized, 
       description: description ?? null, 
       synonyms: synonymsArray, 
       locale 
     })
     .onConflictDoUpdate({
-      target: [pathologyTranslations.pathologyId, pathologyTranslations.locale],
+      target: [themeTranslations.themeId, themeTranslations.locale],
       set: { 
         label: normalized, 
         description: description ?? null,
         synonyms: synonymsArray 
       },
     })
-    .returning({ id: pathologyTranslations.pathologyId, label: pathologyTranslations.label });
+    .returning({ id: themeTranslations.themeId, label: themeTranslations.label });
 
   return created;
 }
 
-export async function deletePathology(id: string, locale: Locale = defaultLocale) {
+export async function deleteTheme(id: string, locale: Locale = defaultLocale) {
   const db = getDb();
-  const localized = alias(pathologyTranslations, 'localized_patho_del');
-  const fallback = alias(pathologyTranslations, 'fallback_patho_del');
+  const localized = alias(themeTranslations, 'localized_theme_del');
+  const fallback = alias(themeTranslations, 'fallback_theme_del');
 
   const [translation] = await db
     .select({ label: sql<string>`COALESCE(${localized.label}, ${fallback.label}, '')` })
-    .from(pathologies)
-    .leftJoin(localized, and(eq(localized.pathologyId, pathologies.id), eq(localized.locale, locale)))
-    .leftJoin(fallback, and(eq(fallback.pathologyId, pathologies.id), eq(fallback.locale, defaultLocale)))
-    .where(eq(pathologies.id, id))
+    .from(themes)
+    .leftJoin(localized, and(eq(localized.themeId, themes.id), eq(localized.locale, locale)))
+    .leftJoin(fallback, and(eq(fallback.themeId, themes.id), eq(fallback.locale, defaultLocale)))
+    .where(eq(themes.id, id))
     .limit(1);
 
   const deleted = await db.transaction(async (tx) => {
-    await tx.delete(testPathologies).where(eq(testPathologies.pathologyId, id));
-    const [removed] = await tx.delete(pathologies).where(eq(pathologies.id, id)).returning({ id: pathologies.id });
+    await tx.delete(testThemes).where(eq(testThemes.themeId, id));
+    const [removed] = await tx.delete(themes).where(eq(themes.id, id)).returning({ id: themes.id });
     return removed ? { id: removed.id, label: translation?.label ?? '' } : null;
   });
 

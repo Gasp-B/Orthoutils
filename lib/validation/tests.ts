@@ -32,7 +32,7 @@ export const testSchema = z.object({
   updatedAt: z.string(),
   domains: z.array(z.string()),
   tags: z.array(z.string()),
-  pathologies: z.array(z.string()),
+  themes: z.array(z.string()),
   bibliography: bibliographySchema,
 });
 
@@ -58,7 +58,7 @@ export const testInputSchema = z.object({
   notes: z.string().nullable().optional(),
   domains: z.array(z.string().min(1)).default([]),
   tags: z.array(z.string().min(1)).default([]),
-  pathologies: z.array(z.string().min(1)).default([]),
+  themes: z.array(z.string().min(1)).default([]),
   bibliography: bibliographySchema,
 });
 
@@ -82,7 +82,7 @@ export const taxonomyResponseSchema = z.object({
       color: z.string().nullable().optional(),
     }),
   ),
-  pathologies: z.array(
+  themes: z.array(
     z.object({
       id: z.string().uuid(),
       label: z.string(),
@@ -102,7 +102,7 @@ export const taxonomyResponseSchema = z.object({
 export type TaxonomyResponse = z.infer<typeof taxonomyResponseSchema>;
 
 export const taxonomyMutationSchema = z.object({
-  type: z.enum(['domain', 'tag', 'pathology', 'resourceType']),
+  type: z.enum(['domain', 'tag', 'theme', 'resourceType']),
   locale: localeEnum.default(defaultLocale),
   value: z.string().trim().min(1, { message: 'La valeur est requise.' }),
   // Champs additionnels optionnels
@@ -112,7 +112,7 @@ export const taxonomyMutationSchema = z.object({
 });
 
 export const taxonomyDeletionSchema = z.object({
-  type: z.enum(['domain', 'tag', 'pathology', 'resourceType']),
+  type: z.enum(['domain', 'tag', 'theme', 'resourceType']),
   id: z.string().uuid(),
   locale: localeEnum.default(defaultLocale),
 });
