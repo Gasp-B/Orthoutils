@@ -142,7 +142,7 @@
       "objective": "Objective:",
       "materials": "Materials:",
       "publisher": "Publisher:",
-      "pathologies": "Pathologies:"
+      "themes": "Themes:"
     },
     "empty": {
       "buyLink": "No purchase link provided"
@@ -165,7 +165,7 @@
     },
     "sectionLabel": "Resource configuration",
     "pageTitle": "Configure resources",
-    "pageLead": "Create new resources or edit existing entries, including their domains, tags, and pathologies.",
+    "pageLead": "Create new resources or edit existing entries, including their domains, tags, and themes.",
     "nav": {
       "cardEyebrow": "Resources",
       "cardTitle": "Resource configuration"
@@ -206,10 +206,10 @@
         },
         "taxonomy": {
           "title": "Taxonomy",
-          "helper": "Attach domains, tags, and pathologies to help filtering and discovery.",
+          "helper": "Attach domains, tags, and themes to help filtering and discovery.",
           "domainsLabel": "Domains",
           "tagsLabel": "Tags",
-          "pathologiesLabel": "Pathologies"
+          "themesLabel": "Themes"
         }
       },
       "validation": {
@@ -425,7 +425,7 @@
   "taxonomy": {
     "meta": {
       "title": "Manage taxonomy",
-      "description": "Manage domains, tags, and pathologies."
+      "description": "Manage domains, tags, and themes."
     },
     "sectionLabel": "Administration",
     "pageTitle": "Taxonomy",
@@ -440,21 +440,21 @@
     "sections": {
       "mainInfo": "Main information",
       "color": "Color",
-      "pathologyDetails": "Description & synonyms"
+      "themeDetails": "Description & synonyms"
     },
     "helpers": {
       "label": "Provide a clear label to help admins identify the entry.",
       "color": "Optional. Use a hex code or pick a predefined color to keep lists consistent.",
       "description": "Keep it concise so it fits in tooltips and list previews.",
-      "pathologyBadge": "Improves search and filters for clinical use."
+      "themeBadge": "Improves search and filters for clinical use."
     },
-    "pathologies": {
-      "toolbarTitle": "Pathologies",
-      "cardTitle": "New pathology",
-      "cardHelper": "Clinical entries for filtering by disorder.",
-      "label": "Pathology name",
-      "placeholder": "e.g., Aphasia",
-      "exists": "This pathology already exists.",
+    "themes": {
+      "toolbarTitle": "Themes",
+      "cardTitle": "New theme",
+      "cardHelper": "Clinical entries for filtering by topic.",
+      "label": "Theme name",
+      "placeholder": "e.g., Oral language",
+      "exists": "This theme already exists.",
       "descLabel": "Short description",
       "descPlaceholder": "Concise definition for tooltips...",
       "synonymsLabel": "Synonyms / Keywords",
@@ -507,7 +507,7 @@
     "toast": {
       "domainCreated": "Domain created successfully.",
       "tagCreated": "Tag created successfully.",
-      "pathologyCreated": "Pathology created successfully.",
+      "themeCreated": "Theme created successfully.",
       "itemDeleted": "Item deleted."
     },
     "view": {
@@ -631,10 +631,10 @@
           "description": "Add keywords to improve search.",
           "placeholder": "Search for a tag"
         },
-        "pathologies": {
-          "label": "Pathologies",
-          "description": "Associate related pathologies to improve filtering and discovery.",
-          "placeholder": "Search for a pathology"
+        "themes": {
+          "label": "Themes",
+          "description": "Associate related themes to improve filtering and discovery.",
+          "placeholder": "Search for a theme"
         }
       },
       "sections": {
@@ -658,7 +658,7 @@
       "taxonomy": {
         "title": "Taxonomy",
         "domainsLabel": "Domains",
-        "pathologiesLabel": "Pathologies",
+        "themesLabel": "Themes",
         "tagsLabel": "Tags",
         "helper": "Attach taxonomy to help with filtering and discovery."
       }
@@ -845,11 +845,11 @@
   "taxonomyManagement": {
     "meta": {
       "title": "Manage taxonomy | Othoutils",
-      "description": "Maintain domains, tags, pathologies, and resource types used throughout the catalog."
+      "description": "Maintain domains, tags, themes, and resource types used throughout the catalog."
     },
     "sectionLabel": "Taxonomy",
     "pageTitle": "Manage taxonomy entries",
-    "pageLead": "Organize domains, tags, pathologies, and resource types to keep the catalog consistent across locales.",
+    "pageLead": "Organize domains, tags, themes, and resource types to keep the catalog consistent across locales.",
     "nav": {
       "cardTitle": "Taxonomy management",
       "cardEyebrow": "Catalog settings"
@@ -859,19 +859,19 @@
       "lead": "Select a category to review its entries."
     },
     "types": {
-      "pathologies": "Pathologies",
+      "themes": "Themes",
       "domains": "Domains",
       "tags": "Tags",
       "resourceTypes": "Resource types",
       "hints": {
-        "pathologies": "Description and synonyms available",
+        "themes": "Description and synonyms available",
         "domains": "Used to structure the catalog and searchable via synonyms",
         "tags": "Optional color for quick scanning",
         "resourceTypes": "Shared list for resource creation"
       }
     },
     "descriptions": {
-      "pathologies": "Pathologies include a label, optional description, and synonyms to improve search.",
+      "themes": "Themes include a label, optional description, and synonyms to improve search.",
       "domains": "Domains help structure the catalog hierarchy, group tools, and can store synonyms to speed up discovery.",
       "tags": "Tags add lightweight labels. You can associate a color to highlight them.",
       "resourceTypes": "Resource types keep resource sheets consistent and are reused in the admin form."
@@ -980,7 +980,7 @@
       "materials": "Materials",
       "materialsFallback": "Materials not specified",
       "resourceType": "Resource type",
-      "pathologies": "Pathologies"
+      "themes": "Themes"
     },
     "actions": {
       "viewSheet": "View sheet",

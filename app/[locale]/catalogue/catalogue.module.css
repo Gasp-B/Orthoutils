@@ -74,7 +74,7 @@
   flex-wrap: wrap;
 }
 
-.pathologyBadge {
+.themeBadge {
   background: rgba(94, 234, 212, 0.18);
   border: 1px solid rgba(45, 212, 191, 0.45);
   color: #0f172a;

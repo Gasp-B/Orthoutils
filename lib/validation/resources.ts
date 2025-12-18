@@ -15,7 +15,7 @@ export const resourceSchema = z.object({
   // Relations
   domains: z.array(z.string()),
   tags: z.array(z.string()),
-  pathologies: z.array(z.string()),
+  themes: z.array(z.string()),
 });
 
 export const resourcesResponseSchema = z.object({
@@ -37,7 +37,7 @@ export const resourceInputSchema = z.object({
   // Ici on reprend la logique des tests : on envoie des labels (string)
   domains: z.array(z.string().min(1)).default([]),
   tags: z.array(z.string().min(1)).default([]),
-  pathologies: z.array(z.string().min(1)).default([]),
+  themes: z.array(z.string().min(1)).default([]),
 });
 
 export const updateResourceInputSchema = resourceInputSchema.extend({

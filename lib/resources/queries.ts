@@ -5,15 +5,15 @@ import { getDb } from '@/lib/db/client';
 import {
   domains,
   domainsTranslations,
-  pathologies,
-  pathologyTranslations,
   resources,
   resourcesTranslations,
   resourceDomains,
-  resourcePathologies,
+  resourceThemes,
   resourceTags,
   tags,
   tagsTranslations,
+  themeTranslations,
+  themes,
 } from '@/lib/db/schema';
 import {
   resourceSchema,
@@ -44,15 +44,15 @@ export async function getResourceWithMetadata(
   const localizedTag = alias(tagsTranslations, 'localized_tag');
   const fallbackTag = alias(tagsTranslations, 'fallback_tag');
   
-  const localizedPathology = alias(pathologyTranslations, 'localized_pathology');
-  const fallbackPathology = alias(pathologyTranslations, 'fallback_pathology');
+  const localizedTheme = alias(themeTranslations, 'localized_theme');
+  const fallbackTheme = alias(themeTranslations, 'fallback_theme');
 
   const titleExpression = sql<string>`COALESCE(MAX(${localizedResource.title}), MAX(${fallbackResource.title}), '')`;
   const descriptionExpression = sql<string | null>`COALESCE(MAX(${localizedResource.description}), MAX(${fallbackResource.description}))`;
   
   const domainLabelExpression = sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`;
   const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
-  const pathologyLabelExpression = sql<string>`COALESCE(${localizedPathology.label}, ${fallbackPathology.label}, '')`;
+  const themeLabelExpression = sql<string>`COALESCE(${localizedTheme.label}, ${fallbackTheme.label}, '')`;
 
   const rows = await getDb()
     .select({
@@ -64,7 +64,7 @@ export async function getResourceWithMetadata(
       description: descriptionExpression,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domainLabelExpression}) FILTER (WHERE ${domainLabelExpression} IS NOT NULL), '{}')`,
       tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tagLabelExpression}) FILTER (WHERE ${tagLabelExpression} IS NOT NULL), '{}')`,
-      pathologies: sql<string[]>`COALESCE(array_agg(DISTINCT ${pathologyLabelExpression}) FILTER (WHERE ${pathologyLabelExpression} IS NOT NULL), '{}')`,
+      themes: sql<string[]>`COALESCE(array_agg(DISTINCT ${themeLabelExpression}) FILTER (WHERE ${themeLabelExpression} IS NOT NULL), '{}')`,
     })
     .from(resources)
     .leftJoin(localizedResource, and(eq(localizedResource.resourceId, resources.id), eq(localizedResource.locale, locale)))
@@ -77,10 +77,10 @@ export async function getResourceWithMetadata(
     .leftJoin(tags, eq(resourceTags.tagId, tags.id))
     .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
     .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
-    .leftJoin(resourcePathologies, eq(resources.id, resourcePathologies.resourceId))
-    .leftJoin(pathologies, eq(resourcePathologies.pathologyId, pathologies.id))
-    .leftJoin(localizedPathology, and(eq(localizedPathology.pathologyId, pathologies.id), eq(localizedPathology.locale, locale)))
-    .leftJoin(fallbackPathology, and(eq(fallbackPathology.pathologyId, pathologies.id), eq(fallbackPathology.locale, defaultLocale)))
+    .leftJoin(resourceThemes, eq(resources.id, resourceThemes.resourceId))
+    .leftJoin(themes, eq(resourceThemes.themeId, themes.id))
+    .leftJoin(localizedTheme, and(eq(localizedTheme.themeId, themes.id), eq(localizedTheme.locale, locale)))
+    .leftJoin(fallbackTheme, and(eq(fallbackTheme.themeId, themes.id), eq(fallbackTheme.locale, defaultLocale)))
     .where(eq(resources.id, id))
     .groupBy(resources.id, resources.type, resources.url, resources.createdAt)
     .limit(1);
@@ -96,7 +96,7 @@ export async function getResourceWithMetadata(
     createdAt: toIsoString(row.createdAt),
     domains: row.domains ?? [],
     tags: row.tags ?? [],
-    pathologies: row.pathologies ?? [],
+    themes: row.themes ?? [],
   });
 }
 
@@ -110,15 +110,15 @@ export async function getResourcesWithMetadata(locale: Locale = defaultLocale): 
   const localizedTag = alias(tagsTranslations, 'localized_tag');
   const fallbackTag = alias(tagsTranslations, 'fallback_tag');
 
-  const localizedPathology = alias(pathologyTranslations, 'localized_pathology');
-  const fallbackPathology = alias(pathologyTranslations, 'fallback_pathology');
+  const localizedTheme = alias(themeTranslations, 'localized_theme');
+  const fallbackTheme = alias(themeTranslations, 'fallback_theme');
 
   const titleExpression = sql<string>`COALESCE(MAX(${localizedResource.title}), MAX(${fallbackResource.title}), '')`;
   const descriptionExpression = sql<string | null>`COALESCE(MAX(${localizedResource.description}), MAX(${fallbackResource.description}))`;
 
   const domainLabelExpression = sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`;
   const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
-  const pathologyLabelExpression = sql<string>`COALESCE(${localizedPathology.label}, ${fallbackPathology.label}, '')`;
+  const themeLabelExpression = sql<string>`COALESCE(${localizedTheme.label}, ${fallbackTheme.label}, '')`;
 
   const rows = await getDb()
     .select({
@@ -130,7 +130,7 @@ export async function getResourcesWithMetadata(locale: Locale = defaultLocale): 
       description: descriptionExpression,
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domainLabelExpression}) FILTER (WHERE ${domainLabelExpression} IS NOT NULL), '{}')`,
       tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tagLabelExpression}) FILTER (WHERE ${tagLabelExpression} IS NOT NULL), '{}')`,
-      pathologies: sql<string[]>`COALESCE(array_agg(DISTINCT ${pathologyLabelExpression}) FILTER (WHERE ${pathologyLabelExpression} IS NOT NULL), '{}')`,
+      themes: sql<string[]>`COALESCE(array_agg(DISTINCT ${themeLabelExpression}) FILTER (WHERE ${themeLabelExpression} IS NOT NULL), '{}')`,
     })
     .from(resources)
     .leftJoin(localizedResource, and(eq(localizedResource.resourceId, resources.id), eq(localizedResource.locale, locale)))
@@ -143,15 +143,15 @@ export async function getResourcesWithMetadata(locale: Locale = defaultLocale): 
     .leftJoin(tags, eq(resourceTags.tagId, tags.id))
     .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
     .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
-    .leftJoin(resourcePathologies, eq(resources.id, resourcePathologies.resourceId))
-    .leftJoin(pathologies, eq(resourcePathologies.pathologyId, pathologies.id))
+    .leftJoin(resourceThemes, eq(resources.id, resourceThemes.resourceId))
+    .leftJoin(themes, eq(resourceThemes.themeId, themes.id))
     .leftJoin(
-      localizedPathology,
-      and(eq(localizedPathology.pathologyId, pathologies.id), eq(localizedPathology.locale, locale)),
+      localizedTheme,
+      and(eq(localizedTheme.themeId, themes.id), eq(localizedTheme.locale, locale)),
     )
     .leftJoin(
-      fallbackPathology,
-      and(eq(fallbackPathology.pathologyId, pathologies.id), eq(fallbackPathology.locale, defaultLocale)),
+      fallbackTheme,
+      and(eq(fallbackTheme.themeId, themes.id), eq(fallbackTheme.locale, defaultLocale)),
     )
     .groupBy(resources.id, resources.type, resources.url, resources.createdAt)
     .orderBy(titleExpression);
@@ -162,7 +162,7 @@ export async function getResourcesWithMetadata(locale: Locale = defaultLocale): 
       createdAt: toIsoString(row.createdAt as Date | string | null),
       domains: row.domains ?? [],
       tags: row.tags ?? [],
-      pathologies: row.pathologies ?? [],
+      themes: row.themes ?? [],
     })),
   });
 

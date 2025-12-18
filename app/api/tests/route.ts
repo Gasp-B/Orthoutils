@@ -31,10 +31,10 @@ type TestTranslationRow = {
 };
 
 type DomainTranslationRow = { domain_id: string; locale: string; label: string; slug: string };
-type PathologyTranslationRow = { pathology_id: string; locale: string; label: string };
+type ThemeTranslationRow = { theme_id: string; locale: string; label: string };
 type TagTranslationRow = { tag_id: string; locale: string; label: string };
 type TestDomainRow = { test_id: string; domain_id: string };
-type TestPathologyRow = { test_id: string; pathology_id: string };
+type TestThemeRow = { test_id: string; theme_id: string };
 type TestTagRow = { test_id: string; tag_id: string };
 
 function toIsoString(value: string | null): string {
@@ -80,10 +80,10 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
 
   const testIds = tests.map((row) => row.id);
 
-  const [testDomainsResult, testTagsResult, testPathologiesResult] = await Promise.all([
+  const [testDomainsResult, testTagsResult, testThemesResult] = await Promise.all([
     supabase.from('test_domains').select('test_id, domain_id').in('test_id', testIds),
     supabase.from('test_tags').select('test_id, tag_id').in('test_id', testIds),
-    supabase.from('test_pathologies').select('test_id, pathology_id').in('test_id', testIds),
+    supabase.from('test_themes').select('test_id, theme_id').in('test_id', testIds),
   ]);
 
   if (testDomainsResult.error) {
@@ -94,19 +94,19 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
     throw testTagsResult.error;
   }
 
-  if (testPathologiesResult.error) {
-    throw testPathologiesResult.error;
+  if (testThemesResult.error) {
+    throw testThemesResult.error;
   }
 
   const testDomains = (testDomainsResult.data ?? []) as TestDomainRow[];
   const testTags = (testTagsResult.data ?? []) as TestTagRow[];
-  const testPathologies = (testPathologiesResult.data ?? []) as TestPathologyRow[];
+  const testThemes = (testThemesResult.data ?? []) as TestThemeRow[];
 
   const domainIds = Array.from(new Set(testDomains.map((relation) => relation.domain_id)));
   const tagIds = Array.from(new Set(testTags.map((relation) => relation.tag_id)));
-  const pathologyIds = Array.from(new Set(testPathologies.map((relation) => relation.pathology_id)));
+  const themeIds = Array.from(new Set(testThemes.map((relation) => relation.theme_id)));
 
-  const [translationsResult, domainsResult, tagsResult, pathologiesResult] = await Promise.all([
+  const [translationsResult, domainsResult, tagsResult, themesResult] = await Promise.all([
     supabase
       .from('tests_translations')
       .select(
@@ -120,11 +120,11 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
     tagIds.length > 0
       ? supabase.from('tags_translations').select('tag_id, locale, label').in('tag_id', tagIds)
       : { data: [], error: null },
-    pathologyIds.length > 0
+    themeIds.length > 0
       ? supabase
-          .from('pathology_translations')
-          .select('pathology_id, locale, label')
-          .in('pathology_id', pathologyIds)
+          .from('theme_translations')
+          .select('theme_id, locale, label')
+          .in('theme_id', themeIds)
       : { data: [], error: null },
   ]);
 
@@ -140,14 +140,14 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
     throw tagsResult.error;
   }
 
-  if (pathologiesResult.error) {
-    throw pathologiesResult.error;
+  if (themesResult.error) {
+    throw themesResult.error;
   }
 
   const translations = (translationsResult.data ?? []) as TestTranslationRow[];
   const domainTranslations = (domainsResult.data ?? []) as DomainTranslationRow[];
   const tagTranslations = (tagsResult.data ?? []) as TagTranslationRow[];
-  const pathologyTranslations = (pathologiesResult.data ?? []) as PathologyTranslationRow[];
+  const themeTranslations = (themesResult.data ?? []) as ThemeTranslationRow[];
 
   const domainsById = new Map<string, DomainTranslationRow[]>();
   for (const domainTranslation of domainTranslations) {
@@ -163,11 +163,11 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
     tagsById.set(tagTranslation.tag_id, existing);
   }
 
-  const pathologiesById = new Map<string, PathologyTranslationRow[]>();
-  for (const pathologyTranslation of pathologyTranslations) {
-    const existing = pathologiesById.get(pathologyTranslation.pathology_id) ?? [];
-    existing.push(pathologyTranslation);
-    pathologiesById.set(pathologyTranslation.pathology_id, existing);
+  const themesById = new Map<string, ThemeTranslationRow[]>();
+  for (const themeTranslation of themeTranslations) {
+    const existing = themesById.get(themeTranslation.theme_id) ?? [];
+    existing.push(themeTranslation);
+    themesById.set(themeTranslation.theme_id, existing);
   }
 
   const translationsByTest = new Map<string, TestTranslationRow[]>();
@@ -191,11 +191,11 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
     tagsByTest.set(relation.test_id, existing);
   }
 
-  const pathologiesByTest = new Map<string, string[]>();
-  for (const relation of testPathologies) {
-    const existing = pathologiesByTest.get(relation.test_id) ?? [];
-    existing.push(relation.pathology_id);
-    pathologiesByTest.set(relation.test_id, existing);
+  const themesByTest = new Map<string, string[]>();
+  for (const relation of testThemes) {
+    const existing = themesByTest.get(relation.test_id) ?? [];
+    existing.push(relation.theme_id);
+    themesByTest.set(relation.test_id, existing);
   }
 
   const parsed = testsResponseSchema.parse({
@@ -235,11 +235,8 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
         domains: (domainsByTest.get(test.id) ?? [])
           .map((domainId) => selectTranslation(domainsById.get(domainId) ?? [], { locale, defaultLocale })?.label)
           .filter((label): label is string => Boolean(label)),
-        pathologies: (pathologiesByTest.get(test.id) ?? [])
-          .map(
-            (pathologyId) =>
-              selectTranslation(pathologiesById.get(pathologyId) ?? [], { locale, defaultLocale })?.label,
-          )
+        themes: (themesByTest.get(test.id) ?? [])
+          .map((themeId) => selectTranslation(themesById.get(themeId) ?? [], { locale, defaultLocale })?.label)
           .filter((label): label is string => Boolean(label)),
         tags: (tagsByTest.get(test.id) ?? [])
           .map((tagId) => selectTranslation(tagsById.get(tagId) ?? [], { locale, defaultLocale })?.label)

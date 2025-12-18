@@ -8,13 +8,13 @@ import {
   resourcesTranslations,
   resourceDomains,
   resourceTags,
-  resourcePathologies,
+  resourceThemes,
   domains,
   domainsTranslations,
   tags,
   tagsTranslations,
-  pathologies,
-  pathologyTranslations,
+  themes,
+  themeTranslations,
 } from '@/lib/db/schema';
 import {
   resourceInputSchema,
@@ -101,29 +101,29 @@ async function upsertTags(db: DbClient, tagLabels: string[], locale: Locale) {
   return results;
 }
 
-async function upsertPathologies(db: DbClient, pathologyLabels: string[], locale: Locale) {
-  const normalized = normalizeList(pathologyLabels);
+async function upsertThemes(db: DbClient, themeLabels: string[], locale: Locale) {
+  const normalized = normalizeList(themeLabels);
   if (normalized.length === 0) return [] as { id: string }[];
 
-  const existing = await db.select().from(pathologyTranslations).where(inArray(pathologyTranslations.label, normalized));
+  const existing = await db.select().from(themeTranslations).where(inArray(themeTranslations.label, normalized));
   const results: { id: string }[] = [];
   const reservedSlugs = new Set<string>();
 
   for (const label of normalized) {
     const match = existing.find(t => t.label === label);
-    let pathologyId = match?.pathologyId;
+    let themeId = match?.themeId;
 
-    if (!pathologyId) {
-      const slug = await generateUniqueSlug({ db, name: label, table: pathologies, slugColumn: pathologies.slug, reserved: reservedSlugs });
-      const [newPatho] = await db.insert(pathologies).values({ slug }).returning({ id: pathologies.id });
-      pathologyId = newPatho.id;
+    if (!themeId) {
+      const slug = await generateUniqueSlug({ db, name: label, table: themes, slugColumn: themes.slug, reserved: reservedSlugs });
+      const [newTheme] = await db.insert(themes).values({ slug }).returning({ id: themes.id });
+      themeId = newTheme.id;
     }
 
-    await db.insert(pathologyTranslations)
-      .values({ pathologyId, label, locale })
-      .onConflictDoUpdate({ target: [pathologyTranslations.pathologyId, pathologyTranslations.locale], set: { label } });
+    await db.insert(themeTranslations)
+      .values({ themeId, label, locale })
+      .onConflictDoUpdate({ target: [themeTranslations.themeId, themeTranslations.locale], set: { label } });
 
-    results.push({ id: pathologyId });
+    results.push({ id: themeId });
   }
   return results;
 }
@@ -136,10 +136,10 @@ export async function createResourceWithRelations(input: unknown): Promise<Resou
 
   const createdId = await getDb().transaction(async (tx) => {
     // 1. Upsert Taxonomie
-    const [domainRecords, tagRecords, pathologyRecords] = await Promise.all([
+    const [domainRecords, tagRecords, themeRecords] = await Promise.all([
       upsertDomains(tx as unknown as DbClient, payload.domains, locale),
       upsertTags(tx as unknown as DbClient, payload.tags, locale),
-      upsertPathologies(tx as unknown as DbClient, payload.pathologies, locale),
+      upsertThemes(tx as unknown as DbClient, payload.themes, locale),
     ]);
 
     // 2. Création Resource
@@ -162,8 +162,8 @@ export async function createResourceWithRelations(input: unknown): Promise<Resou
     if (tagRecords.length) {
       await tx.insert(resourceTags).values(tagRecords.map(t => ({ resourceId: resource.id, tagId: t.id })));
     }
-    if (pathologyRecords.length) {
-      await tx.insert(resourcePathologies).values(pathologyRecords.map(p => ({ resourceId: resource.id, pathologyId: p.id })));
+    if (themeRecords.length) {
+      await tx.insert(resourceThemes).values(themeRecords.map(p => ({ resourceId: resource.id, themeId: p.id })));
     }
 
     return resource.id;
@@ -182,10 +182,10 @@ export async function updateResourceWithRelations(input: unknown): Promise<Resou
 
   await getDb().transaction(async (tx) => {
     // 1. Upsert Taxonomie
-    const [domainRecords, tagRecords, pathologyRecords] = await Promise.all([
+    const [domainRecords, tagRecords, themeRecords] = await Promise.all([
       upsertDomains(tx as unknown as DbClient, payload.domains, locale),
       upsertTags(tx as unknown as DbClient, payload.tags, locale),
-      upsertPathologies(tx as unknown as DbClient, payload.pathologies, locale),
+      upsertThemes(tx as unknown as DbClient, payload.themes, locale),
     ]);
 
     // 2. Update Resource
@@ -215,10 +215,10 @@ export async function updateResourceWithRelations(input: unknown): Promise<Resou
       await tx.insert(resourceTags).values(tagRecords.map(t => ({ resourceId: payload.id, tagId: t.id })));
     }
 
-    // Pathologies
-    await tx.delete(resourcePathologies).where(eq(resourcePathologies.resourceId, payload.id));
-    if (pathologyRecords.length) {
-      await tx.insert(resourcePathologies).values(pathologyRecords.map(p => ({ resourceId: payload.id, pathologyId: p.id })));
+    // Themes
+    await tx.delete(resourceThemes).where(eq(resourceThemes.resourceId, payload.id));
+    if (themeRecords.length) {
+      await tx.insert(resourceThemes).values(themeRecords.map(p => ({ resourceId: payload.id, themeId: p.id })));
     }
   });
 

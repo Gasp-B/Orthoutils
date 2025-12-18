@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { defaultLocale, type Locale } from '@/i18n/routing';
 import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 
-type PathologyTranslationRow = {
-  pathology_id: string;
+type ThemeTranslationRow = {
+  theme_id: string;
   locale: string;
   label: string;
   description: string | null;
   synonyms: string[] | null;
-  pathologies: { id: string; slug: string; status?: string } | null;
+  themes: { id: string; slug: string; status?: string } | null;
 };
 
 export async function GET(req: Request) {
@@ -25,10 +25,10 @@ export async function GET(req: Request) {
 
     const translationFilters = (searchLocale: Locale) => {
       const query = supabase
-        .from('pathology_translations')
-        .select('pathology_id, locale, label, description, synonyms, pathologies!inner(id, slug, status)')
+        .from('theme_translations')
+        .select('theme_id, locale, label, description, synonyms, themes!inner(id, slug, status)')
         .eq('locale', searchLocale)
-        .eq('pathologies.status', 'published')
+        .eq('themes.status', 'published')
         .order('label', { ascending: true })
         .limit(limit);
 
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
         query.or(`label.ilike.${like},description.ilike.${like}`);
       }
 
-      return query.returns<PathologyTranslationRow[]>();
+      return query.returns<ThemeTranslationRow[]>();
     };
 
     const { data, error } = await translationFilters(normalizedLocale);
@@ -60,8 +60,8 @@ export async function GET(req: Request) {
 
       return NextResponse.json({
         items: fallbackRows.map((row) => ({
-          id: row.pathologies?.id ?? row.pathology_id,
-          slug: row.pathologies?.slug ?? '',
+          id: row.themes?.id ?? row.theme_id,
+          slug: row.themes?.slug ?? '',
           label: row.label,
           description: row.description,
           synonyms: row.synonyms ?? [],
@@ -71,15 +71,15 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       items: rows.map((row) => ({
-        id: row.pathologies?.id ?? row.pathology_id,
-        slug: row.pathologies?.slug ?? '',
+        id: row.themes?.id ?? row.theme_id,
+        slug: row.themes?.slug ?? '',
         label: row.label,
         description: row.description,
         synonyms: row.synonyms ?? [],
       })),
     });
   } catch (err) {
-    console.error('[GET /api/pathologies] Error:', err);
+    console.error('[GET /api/themes] Error:', err);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

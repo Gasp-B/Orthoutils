@@ -13,9 +13,9 @@ import {
 } from '@/lib/validation/tests';
 import { type Locale } from '@/i18n/routing';
 
-type TaxonomyType = 'pathologies' | 'domains' | 'tags' | 'resourceTypes';
+type TaxonomyType = 'themes' | 'domains' | 'tags' | 'resourceTypes';
 type TaxonomyEntry =
-  | TaxonomyResponse['pathologies'][number]
+  | TaxonomyResponse['themes'][number]
   | TaxonomyResponse['domains'][number]
   | TaxonomyResponse['tags'][number]
   | TaxonomyResponse['resourceTypes'][number];
@@ -43,8 +43,8 @@ function getColorClass(hex: string | null | undefined) {
   }
 }
 
-const typeToApi: Record<TaxonomyType, 'pathology' | 'domain' | 'tag' | 'resourceType'> = {
-  pathologies: 'pathology',
+const typeToApi: Record<TaxonomyType, 'theme' | 'domain' | 'tag' | 'resourceType'> = {
+  themes: 'theme',
   domains: 'domain',
   tags: 'tag',
   resourceTypes: 'resourceType',
@@ -62,7 +62,7 @@ export default function TaxonomyManagementPanel() {
   const locale = useLocale() as Locale;
   const queryClient = useQueryClient();
 
-  const [activeType, setActiveType] = useState<TaxonomyType>('pathologies');
+  const [activeType, setActiveType] = useState<TaxonomyType>('themes');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [searchTerm, setSearchTerm] = useState('');
@@ -95,10 +95,10 @@ export default function TaxonomyManagementPanel() {
 
   const typeDetails = useMemo(
     () => ({
-      pathologies: {
-        label: t('types.pathologies'),
-        hint: t('types.hints.pathologies'),
-        lead: t('descriptions.pathologies'),
+      themes: {
+        label: t('types.themes'),
+        hint: t('types.hints.themes'),
+        lead: t('descriptions.themes'),
       },
       domains: {
         label: t('types.domains'),
@@ -121,7 +121,7 @@ export default function TaxonomyManagementPanel() {
 
   const items: TaxonomyEntry[] = useMemo(() => {
     if (!taxonomyQuery.data) return [];
-    if (activeType === 'pathologies') return taxonomyQuery.data.pathologies;
+    if (activeType === 'themes') return taxonomyQuery.data.themes;
     if (activeType === 'domains') return taxonomyQuery.data.domains;
     if (activeType === 'tags') return taxonomyQuery.data.tags;
     return taxonomyQuery.data.resourceTypes;
@@ -216,13 +216,13 @@ export default function TaxonomyManagementPanel() {
     if (!entry) return;
 
     setSelectedId(id);
-    if (activeType === 'pathologies') {
-      const pathology = entry as TaxonomyResponse['pathologies'][number];
+    if (activeType === 'themes') {
+      const theme = entry as TaxonomyResponse['themes'][number];
 
       setFormState({
-        label: pathology.label ?? '',
-        description: pathology.description ?? '',
-        synonyms: Array.isArray(pathology.synonyms) ? pathology.synonyms.join(', ') : '',
+        label: theme.label ?? '',
+        description: theme.description ?? '',
+        synonyms: Array.isArray(theme.synonyms) ? theme.synonyms.join(', ') : '',
         color: '',
       });
       return;
@@ -257,12 +257,8 @@ export default function TaxonomyManagementPanel() {
       type: typeToApi[activeType],
       locale,
       value: formState.label.trim(),
-      description:
-        activeType === 'pathologies' ? formState.description.trim() || null : undefined,
-      synonyms:
-        activeType === 'pathologies' || activeType === 'domains'
-          ? formState.synonyms.trim()
-          : undefined,
+      description: activeType === 'themes' ? formState.description.trim() || null : undefined,
+      synonyms: activeType === 'themes' || activeType === 'domains' ? formState.synonyms.trim() : undefined,
       color: activeType === 'tags' ? formState.color || null : undefined,
     };
 
@@ -429,7 +425,7 @@ export default function TaxonomyManagementPanel() {
                 />
               </div>
 
-              {activeType === 'pathologies' && (
+              {activeType === 'themes' && (
                 <div className={styles.field}>
                   <div className={styles.labelRow}>
                     <label htmlFor="description-input">{t('form.fields.description')}</label>
@@ -446,7 +442,7 @@ export default function TaxonomyManagementPanel() {
                 </div>
               )}
 
-              {(activeType === 'pathologies' || activeType === 'domains') && (
+              {(activeType === 'themes' || activeType === 'domains') && (
                 <div className={styles.field}>
                   <div className={styles.labelRow}>
                     <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>

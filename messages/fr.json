@@ -142,7 +142,7 @@
       "objective": "Objectif :",
       "materials": "Matériel :",
       "publisher": "Éditeur :",
-      "pathologies": "Pathologies :"
+      "themes": "Thèmes :"
     },
     "empty": {
       "buyLink": "Pas de lien d'achat renseigné"
@@ -165,7 +165,7 @@
     },
     "sectionLabel": "Configuration des ressources",
     "pageTitle": "Configurer les ressources",
-    "pageLead": "Ajoutez de nouvelles ressources ou modifiez les entrées existantes, avec leurs domaines, tags et pathologies.",
+    "pageLead": "Ajoutez de nouvelles ressources ou modifiez les entrées existantes, avec leurs domaines, tags et thèmes.",
     "nav": {
       "cardEyebrow": "Ressources",
       "cardTitle": "Configuration des ressources"
@@ -206,10 +206,10 @@
         },
         "taxonomy": {
           "title": "Taxonomie",
-          "helper": "Associez domaines, tags et pathologies pour faciliter le filtrage et la recherche.",
+          "helper": "Associez domaines, tags et thèmes pour faciliter le filtrage et la recherche.",
           "domainsLabel": "Domaines",
           "tagsLabel": "Tags",
-          "pathologiesLabel": "Pathologies"
+          "themesLabel": "Thèmes"
         }
       },
       "validation": {
@@ -399,7 +399,7 @@
     "page": {
       "sectionLabel": "Créer ou mettre à jour un test",
       "title": "Ajouter / Éditer un test",
-      "lead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags, domaines et pathologies."
+      "lead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags, domaines et thèmes."
     },
     "form": {
       "toolbar": {
@@ -484,10 +484,10 @@
           "description": "Ajoutez des mots-clés pour améliorer la recherche.",
           "placeholder": "Rechercher un tag"
         },
-        "pathologies": {
-          "label": "Pathologies",
-          "description": "Associez les troubles liés pour faciliter le filtrage et la découverte.",
-          "placeholder": "Rechercher une pathologie"
+        "themes": {
+          "label": "Thèmes",
+          "description": "Associez les thèmes liés pour faciliter le filtrage et la découverte.",
+          "placeholder": "Rechercher un thème"
         }
       },
       "sections": {
@@ -511,7 +511,7 @@
         "taxonomy": {
           "title": "Taxonomie",
           "domainsLabel": "Domaines",
-          "pathologiesLabel": "Pathologies",
+          "themesLabel": "Thèmes",
           "tagsLabel": "Tags",
           "helper": "Associez la taxonomie pour optimiser le filtrage et la découverte."
         }
@@ -594,7 +594,7 @@
   "taxonomy": {
     "meta": {
       "title": "Gérer la taxonomie",
-      "description": "Gérer les domaines, tags et pathologies."
+      "description": "Gérer les domaines, tags et thèmes."
     },
     "sectionLabel": "Administration",
     "pageTitle": "Taxonomie",
@@ -609,21 +609,21 @@
     "sections": {
       "mainInfo": "Informations principales",
       "color": "Couleur",
-      "pathologyDetails": "Description / Synonymes"
+      "themeDetails": "Description / Synonymes"
     },
     "helpers": {
       "label": "Saisissez un intitulé clair pour faciliter l'identification.",
       "color": "Optionnel. Utilisez un code hexadécimal ou une couleur prédéfinie pour harmoniser les listes.",
       "description": "Restez concis afin que le texte passe dans les infobulles et aperçus.",
-      "pathologyBadge": "Améliore la recherche et les filtres en clinique."
+      "themeBadge": "Améliore la recherche et les filtres en clinique."
     },
-    "pathologies": {
-      "toolbarTitle": "Pathologies",
-      "cardTitle": "Nouvelle Pathologie",
-      "cardHelper": "Entrées cliniques pour le filtrage par trouble.",
-      "label": "Nom de la pathologie",
-      "placeholder": "Ex. Aphasie",
-      "exists": "Cette pathologie existe déjà.",
+    "themes": {
+      "toolbarTitle": "Thèmes",
+      "cardTitle": "Nouveau thème",
+      "cardHelper": "Entrées cliniques pour le filtrage par thématique.",
+      "label": "Nom du thème",
+      "placeholder": "Ex. Langage oral",
+      "exists": "Ce thème existe déjà.",
       "descLabel": "Description courte",
       "descPlaceholder": "Définition succincte pour l'infobulle...",
       "synonymsLabel": "Synonymes / Mots-clés",
@@ -676,7 +676,7 @@
     "toast": {
       "domainCreated": "Domaine créé avec succès.",
       "tagCreated": "Tag créé avec succès.",
-      "pathologyCreated": "Pathologie créée avec succès.",
+      "themeCreated": "Thème créé avec succès.",
       "itemDeleted": "Élément supprimé."
     },
     "view": {
@@ -778,11 +778,11 @@
   "taxonomyManagement": {
     "meta": {
       "title": "Gérer la taxonomie | Othoutils",
-      "description": "Maintenez les domaines, tags, pathologies et types de ressource utilisés dans le catalogue."
+      "description": "Maintenez les domaines, tags, thèmes et types de ressource utilisés dans le catalogue."
     },
     "sectionLabel": "Taxonomie",
     "pageTitle": "Administrer les entrées de taxonomie",
-    "pageLead": "Organisez domaines, tags, pathologies et types de ressource pour garder un catalogue cohérent entre les langues.",
+    "pageLead": "Organisez domaines, tags, thèmes et types de ressource pour garder un catalogue cohérent entre les langues.",
     "nav": {
       "cardTitle": "Gestion de la taxonomie",
       "cardEyebrow": "Paramètres du catalogue"
@@ -792,19 +792,19 @@
       "lead": "Sélectionnez une catégorie pour examiner ses entrées."
     },
     "types": {
-      "pathologies": "Pathologies",
+      "themes": "Thèmes",
       "domains": "Domaines",
       "tags": "Tags",
       "resourceTypes": "Types de ressource",
       "hints": {
-        "pathologies": "Description et synonymes disponibles",
+        "themes": "Description et synonymes disponibles",
         "domains": "Utilisé pour structurer le catalogue et trouvable via ses synonymes",
         "tags": "Couleur optionnelle pour repérer rapidement",
         "resourceTypes": "Liste commune pour la création de ressources"
       }
     },
     "descriptions": {
-      "pathologies": "Les pathologies incluent un libellé, une description optionnelle et des synonymes pour faciliter la recherche.",
+      "themes": "Les thèmes incluent un libellé, une description optionnelle et des synonymes pour faciliter la recherche.",
       "domains": "Les domaines structurent la hiérarchie du catalogue, regroupent les outils et peuvent inclure des synonymes pour accélérer la recherche.",
       "tags": "Les tags ajoutent des étiquettes légères. Vous pouvez associer une couleur pour les mettre en valeur.",
       "resourceTypes": "Les types de ressource assurent la cohérence des fiches et sont réutilisés dans le formulaire admin."
@@ -913,7 +913,7 @@
       "materials": "Matériel",
       "materialsFallback": "Matériel non précisé",
       "resourceType": "Type de ressource",
-      "pathologies": "Pathologies"
+      "themes": "Thèmes"
     },
     "actions": {
       "viewSheet": "Voir la fiche",

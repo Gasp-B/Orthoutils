@@ -147,12 +147,12 @@ export default async function CataloguePage({ params }: LocalePageProps) {
                 </div>
               )}
 
-              {test.pathologies.length > 0 && (
-                <div className={styles.tagRow} aria-label={t('meta.pathologies')}>
-                  <span className="text-subtle">{t('meta.pathologies')}</span>
-                  {test.pathologies.map((pathology) => (
-                    <span key={pathology} className={`badge ${styles.pathologyBadge}`}>
-                      {pathology}
+              {test.themes.length > 0 && (
+                <div className={styles.tagRow} aria-label={t('meta.themes')}>
+                  <span className="text-subtle">{t('meta.themes')}</span>
+                  {test.themes.map((theme) => (
+                    <span key={theme} className={`badge ${styles.themeBadge}`}>
+                      {theme}
                     </span>
                   ))}
                 </div>

@@ -143,15 +143,15 @@ export const testTags = pgTable(
   }),
 );
 
-export const pathologies = pgTable(
-  'pathologies',
+export const themes = pgTable(
+  'themes',
   {
     id: uuid('id').defaultRandom().primaryKey(),
     slug: text('slug').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
-    slugConstraint: uniqueIndex('pathologies_slug_key').on(table.slug),
+    slugConstraint: uniqueIndex('themes_slug_key').on(table.slug),
   }),
 );
 
@@ -204,12 +204,12 @@ export const resourcesTranslations = pgTable(
   }),
 );
 
-export const pathologyTranslations = pgTable(
-  'pathology_translations',
+export const themeTranslations = pgTable(
+  'theme_translations',
   {
-    pathologyId: uuid('pathology_id')
+    themeId: uuid('theme_id')
       .notNull()
-      .references(() => pathologies.id, { onDelete: 'cascade' }),
+      .references(() => themes.id, { onDelete: 'cascade' }),
     locale: text('locale').notNull(),
     label: text('label').notNull(),
     description: text('description'),
@@ -217,22 +217,22 @@ export const pathologyTranslations = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.pathologyId, table.locale] }),
+    pk: primaryKey({ columns: [table.themeId, table.locale] }),
   }),
 );
 
-export const testPathologies = pgTable(
-  'test_pathologies',
+export const testThemes = pgTable(
+  'test_themes',
   {
     testId: uuid('test_id')
       .notNull()
       .references(() => tests.id, { onDelete: 'cascade' }),
-    pathologyId: uuid('pathology_id')
+    themeId: uuid('theme_id')
       .notNull()
-      .references(() => pathologies.id, { onDelete: 'cascade' }),
+      .references(() => themes.id, { onDelete: 'cascade' }),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.testId, table.pathologyId] }),
+    pk: primaryKey({ columns: [table.testId, table.themeId] }),
   }),
 );
 
@@ -270,28 +270,28 @@ export const resourceTags = pgTable(
   }),
 );
 
-export const resourcePathologies = pgTable(
-  'resource_pathologies',
+export const resourceThemes = pgTable(
+  'resource_themes',
   {
     resourceId: uuid('resource_id')
       .notNull()
       .references(() => resources.id, { onDelete: 'cascade' }),
-    pathologyId: uuid('pathology_id')
+    themeId: uuid('theme_id')
       .notNull()
-      .references(() => pathologies.id, { onDelete: 'cascade' }),
+      .references(() => themes.id, { onDelete: 'cascade' }),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.resourceId, table.pathologyId] }),
+    pk: primaryKey({ columns: [table.resourceId, table.themeId] }),
   }),
 );
 
 // ... vous pouvez aussi exporter les types si besoin en bas du fichier
 export type ResourceDomainRecord = typeof resourceDomains.$inferSelect;
 export type ResourceTagRecord = typeof resourceTags.$inferSelect;
-export type ResourcePathologyRecord = typeof resourcePathologies.$inferSelect;
-export type PathologyRecord = typeof pathologies.$inferSelect;
-export type PathologyTranslationRecord = typeof pathologyTranslations.$inferSelect;
-export type TestPathologyRecord = typeof testPathologies.$inferSelect;
+export type ResourceThemeRecord = typeof resourceThemes.$inferSelect;
+export type ThemeRecord = typeof themes.$inferSelect;
+export type ThemeTranslationRecord = typeof themeTranslations.$inferSelect;
+export type TestThemeRecord = typeof testThemes.$inferSelect;
 export type ResourceRecord = typeof resources.$inferSelect;
 export type NewResourceRecord = typeof resources.$inferInsert;
 export type ResourceTranslationRecord = typeof resourcesTranslations.$inferSelect;

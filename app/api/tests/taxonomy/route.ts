@@ -8,8 +8,8 @@ import {
   domainsTranslations,
   tags,
   tagsTranslations,
-  pathologies,
-  pathologyTranslations,
+  themes,
+  themeTranslations,
   resourceTypes,
   resourceTypesTranslations,
 } from '@/lib/db/schema';
@@ -21,10 +21,10 @@ import {
 import {
   createDomain,
   createTag,
-  createPathology,
+  createTheme,
   deleteDomain,
   deleteTag,
-  deletePathology,
+  deleteTheme,
   createResourceType,
   deleteResourceType,
 } from '@/lib/tests/taxonomy';
@@ -32,7 +32,7 @@ import {
 // Types helpers
 type DomainTranslationRow = typeof domainsTranslations.$inferSelect;
 type TagTranslationRow = typeof tagsTranslations.$inferSelect;
-type PathologyTranslationRow = typeof pathologyTranslations.$inferSelect;
+type ThemeTranslationRow = typeof themeTranslations.$inferSelect;
 type ResourceTypeTranslationRow = typeof resourceTypesTranslations.$inferSelect;
 
 function resolveTranslation<T extends { locale: string }>(
@@ -64,21 +64,21 @@ export async function GET(request: NextRequest) {
     const [
       domainRows,
       tagRows,
-      pathologyRows,
+      themeRows,
       resourceTypeRows,
       allDomains,
       allTags,
-      allPathologies,
+      allThemes,
       allResourceTypes,
     ] =
       await Promise.all([
         db.select().from(domainsTranslations).where(inArray(domainsTranslations.locale, [locale, defaultLocale])),
         db.select().from(tagsTranslations).where(inArray(tagsTranslations.locale, [locale, defaultLocale])),
-        db.select().from(pathologyTranslations).where(inArray(pathologyTranslations.locale, [locale, defaultLocale])),
+        db.select().from(themeTranslations).where(inArray(themeTranslations.locale, [locale, defaultLocale])),
         db.select().from(resourceTypesTranslations).where(inArray(resourceTypesTranslations.locale, [locale, defaultLocale])),
         db.select().from(domains),
         db.select().from(tags),
-        db.select().from(pathologies),
+        db.select().from(themes),
         db.select().from(resourceTypes),
       ]);
 
@@ -97,11 +97,11 @@ export async function GET(request: NextRequest) {
       tagsById.set(r.tagId, list);
     }
 
-    const pathologiesById = new Map<string, PathologyTranslationRow[]>();
-    for (const r of pathologyRows) {
-      const list = pathologiesById.get(r.pathologyId) ?? [];
+    const themesById = new Map<string, ThemeTranslationRow[]>();
+    for (const r of themeRows) {
+      const list = themesById.get(r.themeId) ?? [];
       list.push(r);
-      pathologiesById.set(r.pathologyId, list);
+      themesById.set(r.themeId, list);
     }
 
     const resourceTypesById = new Map<string, ResourceTypeTranslationRow[]>();
@@ -128,9 +128,9 @@ export async function GET(request: NextRequest) {
       .filter((t): t is NonNullable<typeof t> => Boolean(t))
       .sort((a, b) => a.label.localeCompare(b.label));
 
-    const localizedPathologies = allPathologies
+    const localizedThemes = allThemes
       .map((p) => {
-        const tr = resolveTranslation(p.id, pathologiesById, locale, defaultLocale);
+        const tr = resolveTranslation(p.id, themesById, locale, defaultLocale);
         return tr
           ? {
               id: p.id,
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
     const payload = taxonomyResponseSchema.parse({
       domains: localizedDomains,
       tags: localizedTags,
-      pathologies: localizedPathologies,
+      themes: localizedThemes,
       resourceTypes: localizedResourceTypes,
     });
 
@@ -184,14 +184,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ tag: created }, { status: 201 });
     }
 
-    if (payload.type === 'pathology') {
-      const created = await createPathology(
+    if (payload.type === 'theme') {
+      const created = await createTheme(
         payload.value,
         payload.description,
         payload.synonyms,
         locale,
       );
-      return NextResponse.json({ pathology: created }, { status: 201 });
+      return NextResponse.json({ theme: created }, { status: 201 });
     }
 
     if (payload.type === 'resourceType') {
@@ -223,17 +223,17 @@ export async function PUT(request: NextRequest) {
     const locale = payload.locale ?? defaultLocale;
     const db = getDb();
 
-    if (payload.type === 'pathology') {
+    if (payload.type === 'theme') {
       const synonymsArray = parseSynonyms(payload.synonyms);
       
       // Update translation
-      await db.update(pathologyTranslations)
+      await db.update(themeTranslations)
         .set({ 
           label: payload.value, 
           description: payload.description ?? null, 
           synonyms: synonymsArray 
         })
-        .where(and(eq(pathologyTranslations.pathologyId, entityId), eq(pathologyTranslations.locale, locale)));
+        .where(and(eq(themeTranslations.themeId, entityId), eq(themeTranslations.locale, locale)));
         
       return NextResponse.json({ success: true }, { status: 200 });
     }
@@ -290,7 +290,7 @@ export async function DELETE(request: NextRequest) {
 
     if (payload.type === 'domain') deleted = await deleteDomain(payload.id, locale);
     else if (payload.type === 'tag') deleted = await deleteTag(payload.id, locale);
-    else if (payload.type === 'pathology') deleted = await deletePathology(payload.id, locale);
+    else if (payload.type === 'theme') deleted = await deleteTheme(payload.id, locale);
     else if (payload.type === 'resourceType') deleted = await deleteResourceType(payload.id, locale);
 
     if (!deleted) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });

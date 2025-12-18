@@ -58,7 +58,7 @@ const createDefaultValues = (locale: Locale): FormValues => ({
   description: '',
   domains: [],
   tags: [],
-  pathologies: [],
+  themes: [],
 });
 
 async function fetchResources(locale: Locale) {
@@ -155,7 +155,7 @@ function ResourceForm({ locale }: ResourceFormProps) {
 
   const currentDomains = watch('domains') ?? [];
   const currentTags = watch('tags') ?? [];
-  const currentPathologies = watch('pathologies') ?? [];
+  const currentThemes = watch('themes') ?? [];
   const currentType = watch('type') ?? '';
 
   useEffect(() => {
@@ -198,7 +198,7 @@ function ResourceForm({ locale }: ResourceFormProps) {
       description: values.description?.trim() ? values.description.trim() : null,
       domains: values.domains ?? [],
       tags: values.tags ?? [],
-      pathologies: values.pathologies ?? [],
+      themes: values.themes ?? [],
     };
 
     mutation.mutate(payload);
@@ -389,12 +389,12 @@ function ResourceForm({ locale }: ResourceFormProps) {
               />
 
               <MultiSelect
-                label={formT('sections.taxonomy.pathologiesLabel')}
-                options={taxonomy?.pathologies.map((pathology) => ({ id: pathology.id, label: pathology.label })) ?? []}
-                selectedValues={currentPathologies}
-                onChange={(vals: string[]) => setValue('pathologies', vals, { shouldDirty: true })}
+                label={formT('sections.taxonomy.themesLabel')}
+                options={taxonomy?.themes.map((theme) => ({ id: theme.id, label: theme.label })) ?? []}
+                selectedValues={currentThemes}
+                onChange={(vals: string[]) => setValue('themes', vals, { shouldDirty: true })}
                 allowCreate={false}
-                translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.pathologiesLabel') }}
+                translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.themesLabel') }}
               />
             </div>
           </CardContent>
