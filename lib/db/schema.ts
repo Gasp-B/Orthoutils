@@ -23,6 +23,8 @@ const tsvector = customType<{ data: string }>({
 });
 
 export const validationStatusEnum = pgEnum('validation_status', ['draft', 'in_review', 'published', 'archived']);
+// Ajout de l'enum pour l'audience cible
+export const targetAudienceEnum = pgEnum('target_audience', ['child', 'adult']);
 
 export const authUsers = auth.table('users', {
   id: uuid('id').primaryKey(),
@@ -86,10 +88,12 @@ export const themeTranslations = pgTable('theme_translations', {
   pk: primaryKey({ columns: [table.themeId, table.locale] }),
 }));
 
-// --- TESTS (Vos anciens "Tools") ---
+// --- TESTS ---
 
 export const tests = pgTable('tests', {
   id: uuid('id').defaultRandom().primaryKey(),
+  // Ajout de la colonne targetAudience
+  targetAudience: targetAudienceEnum('target_audience').notNull().default('child'),
   ageMinMonths: integer('age_min_months'),
   ageMaxMonths: integer('age_max_months'),
   durationMinutes: integer('duration_minutes'),
