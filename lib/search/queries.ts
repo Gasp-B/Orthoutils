@@ -157,13 +157,14 @@ export async function getSearchHubData({
   const pagination = searchPaginationSchema.parse({ limit, page });
   const normalizedQuery = typeof query === 'string' ? query.trim() : '';
   const parsedQuery = searchQuerySchema.safeParse(normalizedQuery);
+  const hasQuery = normalizedQuery.length > 0 && parsedQuery.success;
 
   const [availableDomains, availableTags] = await Promise.all([
     getAvailableDomains(parsedLocale),
     getAvailableTags(parsedLocale),
   ]);
 
-  if (!parsedQuery.success) {
+  if (normalizedQuery.length > 0 && !parsedQuery.success) {
     return {
       groups: [],
       domains: availableDomains,
@@ -172,7 +173,9 @@ export async function getSearchHubData({
   }
 
   const language = parsedLocale === 'fr' ? 'french' : 'english';
-  const tsQuery = sql`websearch_to_tsquery(${language}, ${parsedQuery.data})`;
+  const tsQuery = hasQuery
+    ? sql`websearch_to_tsquery(${language}, ${parsedQuery.data})`
+    : null;
   const offset = (pagination.page - 1) * pagination.limit;
 
   const localizedTest = alias(testsTranslations, 'localized_test');
@@ -193,7 +196,10 @@ export async function getSearchHubData({
   const domainLabelExpression = sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`;
   const themeLabelExpression = sql<string>`COALESCE(${localizedTheme.label}, ${fallbackTheme.label}, '')`;
   const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
-  const testRankExpression = sql<number>`ts_rank(${tests.ftsVector}, ${tsQuery})`;
+  const testRankExpression = hasQuery ? sql<number>`ts_rank(${tests.ftsVector}, ${tsQuery})` : null;
+  const testWhereClause = hasQuery
+    ? and(eq(tests.status, 'published'), sql`${tests.ftsVector} @@ ${tsQuery}`)
+    : eq(tests.status, 'published');
 
   const testRows = await getDb()
     .select({
@@ -231,13 +237,13 @@ export async function getSearchHubData({
     .leftJoin(tags, eq(testTags.tagId, tags.id))
     .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, parsedLocale)))
     .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
-    .where(and(eq(tests.status, 'published'), sql`${tests.ftsVector} @@ ${tsQuery}`))
+    .where(testWhereClause)
     .groupBy(
       tests.id,
       tests.durationMinutes,
       tests.isStandardized,
     )
-    .orderBy(desc(testRankExpression), nameExpression)
+    .orderBy(hasQuery && testRankExpression ? desc(testRankExpression) : nameExpression, nameExpression)
     .limit(pagination.limit)
     .offset(offset);
 
@@ -246,7 +252,10 @@ export async function getSearchHubData({
   const toolTitleExpression = sql<string>`COALESCE(MAX(${localizedTool.title}), MAX(${fallbackTool.title}), '')`;
   const toolDescriptionExpression = sql<string | null>`COALESCE(MAX(${localizedTool.description}), MAX(${fallbackTool.description}))`;
   const toolCategoryExpression = sql<string>`COALESCE(MAX(${localizedTool.category}), MAX(${fallbackTool.category}), '')`;
-  const toolRankExpression = sql<number>`ts_rank(${toolsCatalog.ftsVector}, ${tsQuery})`;
+  const toolRankExpression = hasQuery ? sql<number>`ts_rank(${toolsCatalog.ftsVector}, ${tsQuery})` : null;
+  const toolWhereClause = hasQuery
+    ? and(eq(toolsCatalog.status, 'published'), sql`${toolsCatalog.ftsVector} @@ ${tsQuery}`)
+    : eq(toolsCatalog.status, 'published');
 
   const toolRows = await getDb()
     .select({
@@ -266,9 +275,12 @@ export async function getSearchHubData({
       fallbackTool,
       and(eq(fallbackTool.toolCatalogId, toolsCatalog.id), eq(fallbackTool.locale, defaultLocale)),
     )
-    .where(and(eq(toolsCatalog.status, 'published'), sql`${toolsCatalog.ftsVector} @@ ${tsQuery}`))
+    .where(toolWhereClause)
     .groupBy(toolsCatalog.id, toolsCatalog.tags, toolsCatalog.links)
-    .orderBy(desc(toolRankExpression), toolTitleExpression)
+    .orderBy(
+      hasQuery && toolRankExpression ? desc(toolRankExpression) : toolTitleExpression,
+      toolTitleExpression,
+    )
     .limit(pagination.limit)
     .offset(offset);
 
