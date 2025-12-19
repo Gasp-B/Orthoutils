@@ -3,6 +3,9 @@ import { defaultLocale, locales } from '@/i18n/routing';
 
 const localeEnum = z.enum(locales);
 
+// Définition du schéma pour l'audience cible
+export const targetAudienceSchema = z.enum(['child', 'adult']);
+
 const bibliographySchema = z
   .array(
     z.object({
@@ -16,6 +19,8 @@ export const testSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   slug: z.string(),
+  // Ajout du champ dans l'objet lu depuis la BDD
+  targetAudience: targetAudienceSchema,
   shortDescription: z.string().nullable(),
   objective: z.string().nullable(),
   ageMinMonths: z.number().int().nullable(),
@@ -50,6 +55,8 @@ const taxonomyDomainSchema = z.object({
 export const testInputSchema = z.object({
   locale: localeEnum.default(defaultLocale),
   name: z.string().min(1),
+  // Ajout du champ dans l'objet envoyé au formulaire (avec défaut 'child')
+  targetAudience: targetAudienceSchema.default('child'),
   shortDescription: z.string().nullable().optional(),
   objective: z.string().nullable().optional(),
   ageMinMonths: z.number().int().nullable().optional(),
@@ -113,9 +120,8 @@ export const taxonomyMutationSchema = z.object({
   type: z.enum(['domain', 'tag', 'theme', 'resourceType']),
   locale: localeEnum.default(defaultLocale),
   value: z.string().trim().min(1, { message: 'La valeur est requise.' }),
-  // Champs additionnels optionnels
   description: z.string().nullable().optional(),
-  synonyms: z.string().trim().optional(), // Reçu comme string "a, b, c" depuis le form
+  synonyms: z.string().trim().optional(),
   color: z.string().nullable().optional(),
   domainIds: z.array(z.string().uuid()).optional(),
 });
