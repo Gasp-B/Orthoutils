@@ -82,7 +82,6 @@ async function upsertDomains(db: DbClient, domainLabels: string[], locale: Local
 
     await db
       .insert(domainsTranslations)
-      // Utilisation de sql`'{}'::text[]` pour forcer le type tableau vide Postgres
       .values({ domainId: targetDomainId, label, slug, locale, synonyms: sql`'{}'::text[]` })
       .onConflictDoUpdate({
         target: [domainsTranslations.domainId, domainsTranslations.locale],
@@ -130,7 +129,6 @@ async function upsertTags(db: DbClient, tagLabels: string[], locale: Locale) {
 
     await db
       .insert(tagsTranslations)
-      // Utilisation de sql`'{}'::text[]` pour éviter les erreurs de driver sur les tableaux vides
       .values({ tagId: targetTagId, label, locale, synonyms: sql`'{}'::text[]` })
       .onConflictDoUpdate({
         target: [tagsTranslations.tagId, tagsTranslations.locale],
@@ -193,7 +191,6 @@ async function upsertThemes(db: DbClient, themeLabels: string[], locale: Locale)
 
     await db
       .insert(themeTranslations)
-      // Utilisation de sql`'{}'::text[]`
       .values({ themeId: targetThemeId, label, locale, synonyms: sql`'{}'::text[]` })
       .onConflictDoUpdate({
         target: [themeTranslations.themeId, themeTranslations.locale],
@@ -321,6 +318,7 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
     const [created] = await tx
       .insert(tests)
       .values({
+        targetAudience: payload.targetAudience, // <-- Sauvegarde de la valeur structurée
         ageMinMonths: payload.ageMinMonths ?? null,
         ageMaxMonths: payload.ageMaxMonths ?? null,
         durationMinutes: payload.durationMinutes ?? null,
@@ -376,6 +374,7 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
     await tx
       .update(tests)
       .set({
+        targetAudience: payload.targetAudience, // <-- Sauvegarde de la valeur structurée
         ageMinMonths: payload.ageMinMonths ?? null,
         ageMaxMonths: payload.ageMaxMonths ?? null,
         durationMinutes: payload.durationMinutes ?? null,
