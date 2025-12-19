@@ -1,3 +1,5 @@
+import type { Locale } from '@/i18n/routing';
+
 export type SearchResultKind = 'test' | 'resource';
 export type SearchCategory = 'assessments' | 'selfReports' | 'resources';
 
@@ -38,4 +40,11 @@ export type SearchHubProps = {
   groups: SearchGroup[];
   domains: string[];
   tags: string[];
+};
+
+export type SearchQueryInput = {
+  locale?: Locale;
+  query?: string | null;
+  limit?: number | string;
+  page?: number | string;
 };
