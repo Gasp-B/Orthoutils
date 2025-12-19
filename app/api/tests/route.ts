@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
-import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
+import { supabaseAdmin, createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createTestWithRelations, updateTestWithRelations } from '@/lib/tests/mutations';
 import { testsResponseSchema, type TestDto } from '@/lib/validation/tests';
 
@@ -60,10 +61,10 @@ function selectTranslation<T extends { locale: string }>(
   return rows.find((row) => row.locale === match.defaultLocale);
 }
 
-async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[]> {
-  // CORRECTION : Ajout de 'await' pour supporter l'asynchronisme des cookies
-  const supabase = await createRouteHandlerSupabaseClient();
-
+async function getTestsWithClient(
+  supabase: SupabaseClient<Record<string, unknown>>,
+  locale: Locale = defaultLocale,
+): Promise<TestDto[]> {
   const { data: testRows, error: testsError } = await supabase
     .from('tests')
     .select(
@@ -257,7 +258,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const requestedLocale = (searchParams.get('locale') as Locale | null) ?? defaultLocale;
     const locale = locales.includes(requestedLocale) ? requestedLocale : defaultLocale;
-    const tests = await getTestsWithRls(locale);
+    const supabase = await createRouteHandlerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client is not configured');
+    }
+
+    const tests = await getTestsWithClient(supabaseAdmin, locale);
 
     return NextResponse.json(
       { tests },
