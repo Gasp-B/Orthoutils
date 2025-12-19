@@ -114,6 +114,30 @@ export default function TaxonomyManagementPanel() {
     });
   }, [items, searchTerm]);
 
+  // Logique de regroupement des thèmes par domaines
+  const themesGroups = useMemo(() => {
+    if (activeType !== 'themes') return { grouped: {}, noDomain: [] };
+
+    const grouped: Record<string, TaxonomyEntry[]> = {};
+    const noDomain: TaxonomyEntry[] = [];
+
+    filteredItems.forEach((item) => {
+      // Cast sécurisé car on a vérifié activeType === 'themes'
+      const theme = item as TaxonomyResponse['themes'][number];
+
+      if (!theme.domains || theme.domains.length === 0) {
+        noDomain.push(item);
+      } else {
+        theme.domains.forEach((d) => {
+          if (!grouped[d.id]) grouped[d.id] = [];
+          grouped[d.id].push(item);
+        });
+      }
+    });
+
+    return { grouped, noDomain };
+  }, [filteredItems, activeType]);
+
   const saveMutation = useMutation({
     mutationFn: async (input: { id?: string; payload: any }) => {
       const body = input.id ? { id: input.id, ...input.payload } : input.payload;
@@ -201,6 +225,30 @@ export default function TaxonomyManagementPanel() {
     await deleteMutation.mutateAsync({ type: typeToApi[activeType], id, locale });
   };
 
+  // Helper pour rendre un item de la liste afin d'éviter la duplication de code
+  const renderItem = (item: TaxonomyEntry) => (
+    <div key={item.id} className={`${styles.listItem} ${selectedId === item.id ? styles.listItemActive : ''}`}>
+      <div className={styles.itemMeta}>
+        <p className={styles.itemLabel}>{item.label}</p>
+        {'synonyms' in item && Array.isArray(item.synonyms) && item.synonyms.length > 0 && (
+          <div className={styles.synonyms}>
+            {item.synonyms.map(s => <span key={s} className={styles.synonym}>{s}</span>)}
+          </div>
+        )}
+        {/* Pour les tags, on peut afficher la couleur */}
+        {'color' in item && typeof item.color === 'string' && item.color && (
+          <span className={`${styles.synonym} ${getColorClass(item.color)}`}>
+            {item.color}
+          </span>
+        )}
+      </div>
+      <div className={styles.actions}>
+        <button className={styles.actionButton} onClick={() => handleSelect(item.id)}>{t('actions.edit')}</button>
+        <button className={styles.deleteButton} onClick={() => handleDelete(item.id)}>{t('actions.delete')}</button>
+      </div>
+    </div>
+  );
+
   return (
     <section className={styles.panel}>
       <aside className={styles.sidebar}>
@@ -239,24 +287,60 @@ export default function TaxonomyManagementPanel() {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t('list.searchPlaceholder', { type: typeDetails[activeType].label })}
             />
+            
             <div className={styles.list}>
-              {filteredItems.map((item) => (
-                <div key={item.id} className={`${styles.listItem} ${selectedId === item.id ? styles.listItemActive : ''}`}>
-                  <div className={styles.itemMeta}>
-                    <p className={styles.itemLabel}>{item.label}</p>
-                    {'synonyms' in item && Array.isArray(item.synonyms) && (
-                      <div className={styles.synonyms}>
-                        {item.synonyms.map(s => <span key={s} className={styles.synonym}>{s}</span>)}
+              {/* Si on est dans les thèmes, on affiche par groupe */}
+              {activeType === 'themes' ? (
+                <>
+                  {/* 1. Afficher les groupes par domaine (en utilisant availableDomains pour l'ordre et le label) */}
+                  {availableDomains.map((domain) => {
+                    const groupItems = themesGroups.grouped[domain.id];
+                    if (!groupItems || groupItems.length === 0) return null;
+
+                    return (
+                      <div key={domain.id} style={{ marginBottom: '1.5rem' }}>
+                        <h4 style={{ 
+                          fontSize: '0.875rem', 
+                          fontWeight: 600, 
+                          color: '#64748b', 
+                          textTransform: 'uppercase', 
+                          letterSpacing: '0.05em',
+                          marginBottom: '0.5rem',
+                          paddingLeft: '0.5rem'
+                        }}>
+                          {domain.label}
+                        </h4>
+                        {groupItems.map(item => renderItem(item))}
                       </div>
-                    )}
-                  </div>
-                  <div className={styles.actions}>
-                    {/* Rétablissement des classes CSS pour les boutons */}
-                    <button className={styles.actionButton} onClick={() => handleSelect(item.id)}>{t('actions.edit')}</button>
-                    <button className={styles.deleteButton} onClick={() => handleDelete(item.id)}>{t('actions.delete')}</button>
-                  </div>
-                </div>
-              ))}
+                    );
+                  })}
+
+                  {/* 2. Afficher les éléments sans domaine */}
+                  {themesGroups.noDomain.length > 0 && (
+                    <div style={{ marginTop: '1.5rem', borderTop: '1px dashed #e2e8f0', paddingTop: '1rem' }}>
+                      <h4 style={{ 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600, 
+                        color: '#94a3b8', 
+                        fontStyle: 'italic',
+                        marginBottom: '0.5rem',
+                        paddingLeft: '0.5rem'
+                      }}>
+                        Non classés / Sans domaine
+                      </h4>
+                      {themesGroups.noDomain.map(item => renderItem(item))}
+                    </div>
+                  )}
+                  
+                  {/* Message vide si rien n'est trouvé */}
+                  {Object.keys(themesGroups.grouped).length === 0 && themesGroups.noDomain.length === 0 && (
+                     <p style={{ padding: '1rem', color: '#64748b', textAlign: 'center' }}>Aucun résultat trouvé.</p>
+                  )}
+                </>
+              ) : (
+                /* Sinon (Tags, Domaines, Types), affichage liste classique */
+                filteredItems.map(item => renderItem(item))
+              )}
             </div>
           </div>
 
@@ -298,36 +382,3 @@ export default function TaxonomyManagementPanel() {
               {(activeType === 'themes' || activeType === 'domains' || activeType === 'tags') && (
                 <div className={styles.field}>
                   <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
-                  <input id="synonyms-input" className={styles.input} value={formState.synonyms} onChange={(e) => setFormState({ ...formState, synonyms: e.target.value })} />
-                </div>
-              )}
-
-              {activeType === 'tags' && (
-                <div className={styles.field}>
-                  <label>{t('form.fields.color')}</label>
-                  <div className={styles.colorSwatches}>
-                    {colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`${styles.colorChip} ${getColorClass(color)} ${formState.color === color ? styles.colorChipActive : ''}`}
-                        onClick={() => setFormState({ ...formState, color })}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className={styles.formActions}>
-                <button className={styles.submitButton} type="submit" disabled={saveMutation.isPending}>
-                  {selectedId ? t('form.actions.update') : t('form.actions.create')}
-                </button>
-                <button type="button" className={styles.secondaryButton} onClick={resetForm}>{t('form.actions.reset')}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
