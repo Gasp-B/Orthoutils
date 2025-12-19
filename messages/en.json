@@ -968,6 +968,11 @@
     "headingTitle": "Federated search across the catalog",
     "headingText": "Filter assessments, self-reports, and external resources instantly with faceted filters inspired by DocSearch and Linear.",
     "helper": "Use the filters on the left to focus on a type or domain. Results update immediately without reloading the page.",
+    "search": {
+      "inputPlaceholder": "Search assessments, self-reports, or resources",
+      "submit": "Search",
+      "ariaLabel": "Search the catalog"
+    },
     "filters": {
       "title": "Filters",
       "lead": "Combine types and domains to narrow results.",
@@ -1011,7 +1016,8 @@
     "actions": {
       "viewSheet": "View sheet",
       "viewResource": "Open resource"
-    },
+    }
+  },
   "Auth": {
     "layout": {
       "pill": "Orthoutil workspace",

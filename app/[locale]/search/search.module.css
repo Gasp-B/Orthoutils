@@ -17,6 +17,40 @@
   padding: 1.25rem;
 }
 
+.searchForm {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.searchField {
+  flex: 1 1 240px;
+  min-width: 0;
+  position: relative;
+}
+
+.searchLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.searchInput {
+  width: 100%;
+}
+
+.searchButton {
+  white-space: nowrap;
+}
+
 .titleRow {
   display: flex;
   align-items: center;
@@ -40,4 +74,15 @@
   margin: 0;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+@media (max-width: 720px) {
+  .searchForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchButton {
+    width: 100%;
+  }
 }
