@@ -487,6 +487,15 @@
           "nonStandardized": "Non standardisé",
           "helper": "Basculer selon le type de protocole."
         },
+        "status": {
+          "label": "Statut",
+          "options": {
+            "draft": "Brouillon",
+            "inReview": "En revue",
+            "published": "Publié",
+            "archived": "Archivé"
+          }
+        },
         "domains": {
           "label": "Domaines",
           "description": "Affinez la fiche en ajoutant un ou plusieurs domaines.",

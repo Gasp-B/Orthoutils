@@ -319,6 +319,7 @@ export async function createTestWithRelations(input: unknown): Promise<TestDto> 
       .insert(tests)
       .values({
         targetAudience: payload.targetAudience, // <-- Sauvegarde de la valeur structurée
+        status: payload.status,
         ageMinMonths: payload.ageMinMonths ?? null,
         ageMaxMonths: payload.ageMaxMonths ?? null,
         durationMinutes: payload.durationMinutes ?? null,
@@ -375,6 +376,7 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
       .update(tests)
       .set({
         targetAudience: payload.targetAudience, // <-- Sauvegarde de la valeur structurée
+        status: payload.status,
         ageMinMonths: payload.ageMinMonths ?? null,
         ageMaxMonths: payload.ageMaxMonths ?? null,
         durationMinutes: payload.durationMinutes ?? null,
