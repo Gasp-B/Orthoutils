@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { type Locale } from '@/i18n/routing';
-import { testsResponseSchema, testSchema, type TestDto, type TaxonomyResponse } from '@/lib/validation/tests';
+import { testsResponseSchema, testSchema, type TestDto, type TaxonomyResponse, targetAudienceSchema } from '@/lib/validation/tests';
 // Import du fichier CSS module
 import styles from './test-form.module.css';
 
@@ -26,7 +26,6 @@ type TestFormProps = {
 
 // --- Schéma Zod ---
 const ageUnitSchema = z.enum(['weeks', 'months', 'years']);
-const agePopulationSchema = z.enum(['child', 'adult']);
 
 const optionalNullableInt = z.preprocess(
   (value) => {
@@ -42,6 +41,8 @@ const formSchemaBase = testSchema
   .omit({ id: true, slug: true, createdAt: true, updatedAt: true })
   .extend({
     id: z.string().uuid().optional(),
+    // On force l'utilisation du schéma défini dans validation/tests.ts
+    targetAudience: targetAudienceSchema.default('child'), 
     shortDescription: z.string().nullable().optional(),
     objective: z.string().nullable().optional(),
     population: z.string().nullable().optional(),
@@ -57,7 +58,7 @@ const formSchemaBase = testSchema
   });
 
 const formSchema = formSchemaBase.extend({
-  agePopulation: agePopulationSchema.default('child'),
+  // agePopulation supprimé au profit de targetAudience qui est déjà dans formSchemaBase
   ageMinValue: optionalNullableInt,
   ageMinUnit: ageUnitSchema.default('months'),
   ageMaxValue: optionalNullableInt,
@@ -67,14 +68,15 @@ const formSchema = formSchemaBase.extend({
 type FormValues = z.infer<typeof formSchema>;
 type SubmitValues = z.infer<typeof formSchemaBase>;
 type ApiResponse = { test?: TestDto; tests?: TestDto[]; error?: string };
+
 const defaultValues: FormValues = {
   id: undefined,
   name: '',
+  targetAudience: 'child', // Valeur par défaut
   shortDescription: null,
   objective: null,
   ageMinMonths: null,
   ageMaxMonths: null,
-  agePopulation: 'child',
   ageMinValue: null,
   ageMinUnit: 'months',
   ageMaxValue: null,
@@ -94,7 +96,7 @@ const defaultValues: FormValues = {
 };
 
 type AgeUnit = z.infer<typeof ageUnitSchema>;
-type AgePopulation = z.infer<typeof agePopulationSchema>;
+type TargetAudience = z.infer<typeof targetAudienceSchema>;
 
 const toMonths = (value: number | null | undefined, unit: AgeUnit): number | null => {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -130,15 +132,6 @@ const fromMonths = (value: number | null | undefined, unit: AgeUnit): number | n
     default:
       return value;
   }
-};
-
-const getPopulationSelection = (population: string | null | undefined): AgePopulation => {
-  const normalized = population?.toLowerCase() ?? '';
-  if (normalized.includes('adult') || normalized.includes('adulte')) {
-    return 'adult';
-  }
-
-  return 'child';
 };
 
 // --- Fonctions API (Fetchers) ---
@@ -229,7 +222,7 @@ function TestForm({ locale }: TestFormProps) {
   const currentTags = watch('tags') ?? [];
   const currentThemes = watch('themes') ?? [];
   const currentBibliography = watch('bibliography');
-  const agePopulation = watch('agePopulation');
+  const targetAudience = watch('targetAudience'); // <-- Utilisation du nouveau champ
   const ageMinValue = watch('ageMinValue');
   const ageMaxValue = watch('ageMaxValue');
   const ageMinUnit = watch('ageMinUnit');
@@ -243,15 +236,15 @@ function TestForm({ locale }: TestFormProps) {
     }
     const test = tests?.find((t) => t.id === selectedTestId);
     if (test) {
-      const populationSelection = getPopulationSelection(test.population);
-      const baseUnit: AgeUnit = populationSelection === 'adult' ? 'years' : 'months';
+      const audience = test.targetAudience ?? 'child';
+      const baseUnit: AgeUnit = audience === 'adult' ? 'years' : 'months';
       reset({
         ...test,
         bibliography: test.bibliography ?? [],
         themes: test.themes ?? [],
         domains: test.domains ?? [],
         tags: test.tags ?? [],
-        agePopulation: populationSelection,
+        targetAudience: audience, // <-- Mapping DB vers Form
         ageMinValue: fromMonths(test.ageMinMonths, baseUnit),
         ageMinUnit: baseUnit,
         ageMaxValue: fromMonths(test.ageMaxMonths, baseUnit),
@@ -273,23 +266,25 @@ function TestForm({ locale }: TestFormProps) {
 
   const onSubmit = (values: FormValues) => {
     const {
-      agePopulation: populationSelection,
+      targetAudience,
       ageMinValue: minValue,
       ageMaxValue: maxValue,
       ageMinUnit: minUnit,
       ageMaxUnit: maxUnit,
       ...baseValues
     } = values;
-    const resolvedUnit: AgeUnit = populationSelection === 'adult' ? 'years' : minUnit;
-    const resolvedMaxUnit: AgeUnit = populationSelection === 'adult' ? 'years' : maxUnit;
+    const resolvedUnit: AgeUnit = targetAudience === 'adult' ? 'years' : minUnit;
+    const resolvedMaxUnit: AgeUnit = targetAudience === 'adult' ? 'years' : maxUnit;
     const populationLabel =
-      populationSelection === 'adult'
+      targetAudience === 'adult'
         ? formT('fields.age.populationOptions.adult')
         : formT('fields.age.populationOptions.child');
+    
     const payload = {
       ...baseValues,
       name: baseValues.name.trim(),
-      population: populationLabel,
+      targetAudience, // <-- Envoi de la donnée structurée
+      population: baseValues.population || populationLabel, // Fallback texte si vide
       ageMinMonths: toMonths(minValue, resolvedUnit),
       ageMaxMonths: toMonths(maxValue, resolvedMaxUnit),
       bibliography: baseValues.bibliography?.filter((b) => b.label && b.url) ?? [],
@@ -325,13 +320,17 @@ function TestForm({ locale }: TestFormProps) {
     dialogHelper: multiSelectT('filterHelper'),
   };
 
-  const populationField = register('agePopulation');
-  const handlePopulationChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    populationField.onChange(event);
-    const nextPopulation = event.currentTarget.value as AgePopulation;
-    const currentMinMonths = toMonths(ageMinValue, agePopulation === 'adult' ? 'years' : ageMinUnit);
-    const currentMaxMonths = toMonths(ageMaxValue, agePopulation === 'adult' ? 'years' : ageMaxUnit);
-    const nextUnit: AgeUnit = nextPopulation === 'adult' ? 'years' : 'months';
+  const targetAudienceField = register('targetAudience'); // <-- Register sur le bon champ
+  const handleAudienceChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    targetAudienceField.onChange(event);
+    const nextAudience = event.currentTarget.value as TargetAudience;
+    
+    // Logique UI : on bascule les unités si on passe Adulte/Enfant
+    const currentMinMonths = toMonths(ageMinValue, targetAudience === 'adult' ? 'years' : ageMinUnit);
+    const currentMaxMonths = toMonths(ageMaxValue, targetAudience === 'adult' ? 'years' : ageMaxUnit);
+    
+    const nextUnit: AgeUnit = nextAudience === 'adult' ? 'years' : 'months';
+    
     setValue('ageMinUnit', nextUnit, { shouldDirty: true });
     setValue('ageMaxUnit', nextUnit, { shouldDirty: true });
     setValue('ageMinValue', fromMonths(currentMinMonths, nextUnit), { shouldDirty: true });
@@ -511,7 +510,7 @@ function TestForm({ locale }: TestFormProps) {
               
               <div className="property-row">
                 <Label>{formT('fields.age.populationLabel')}</Label>
-                <Select {...populationField} onChange={handlePopulationChange}>
+                <Select {...targetAudienceField} onChange={handleAudienceChange}>
                   <option value="child">{formT('fields.age.populationOptions.child')}</option>
                   <option value="adult">{formT('fields.age.populationOptions.adult')}</option>
                 </Select>
@@ -527,7 +526,7 @@ function TestForm({ locale }: TestFormProps) {
                       placeholder={formT('fields.age.minPlaceholder')}
                       aria-label={formT('fields.age.minLabel')}
                     />
-                    {agePopulation === 'adult' ? (
+                    {targetAudience === 'adult' ? (
                       <div className="flex items-center text-sm text-slate-500">
                         {formT('fields.age.units.years')}
                       </div>
@@ -549,7 +548,7 @@ function TestForm({ locale }: TestFormProps) {
                       placeholder={formT('fields.age.maxPlaceholder')}
                       aria-label={formT('fields.age.maxLabel')}
                     />
-                    {agePopulation === 'adult' ? (
+                    {targetAudience === 'adult' ? (
                       <div className="flex items-center text-sm text-slate-500">
                         {formT('fields.age.units.years')}
                       </div>
