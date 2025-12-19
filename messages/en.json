@@ -634,6 +634,15 @@
           "nonStandardized": "Non-standardized",
           "helper": "Toggle according to the protocol type."
         },
+        "status": {
+          "label": "Status",
+          "options": {
+            "draft": "Draft",
+            "inReview": "In review",
+            "published": "Published",
+            "archived": "Archived"
+          }
+        },
         "domains": {
           "label": "Domains",
           "description": "Refine the sheet by adding one or more domains.",
