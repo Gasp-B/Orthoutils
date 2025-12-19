@@ -28,10 +28,8 @@ type FormState = {
   domainIds: string[];
 };
 
-// La palette correspond aux classes CSS définies
 const colors = ['#0EA5E9', '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#EF4444'];
 
-// Helper pour mapper la couleur hex vers la classe CSS
 function getColorClass(hex: string | null | undefined) {
   switch (hex) {
     case '#0EA5E9': return styles['bg-sky-500'];
@@ -75,11 +73,7 @@ export default function TaxonomyManagementPanel() {
     queryKey: ['taxonomy-management', locale],
     queryFn: async () => {
       const response = await fetch(`/api/tests/taxonomy?locale=${locale}`);
-
-      if (!response.ok) {
-        throw new Error(t('messages.loadError'));
-      }
-
+      if (!response.ok) throw new Error(t('messages.loadError'));
       const json = await response.json();
       return taxonomyResponseSchema.parse(json);
     },
@@ -95,113 +89,61 @@ export default function TaxonomyManagementPanel() {
     setSearchTerm('');
   }, [activeType]);
 
-  const typeDetails = useMemo(
-    () => ({
-      themes: {
-        label: t('types.themes'),
-        hint: t('types.hints.themes'),
-        lead: t('descriptions.themes'),
-      },
-      domains: {
-        label: t('types.domains'),
-        hint: t('types.hints.domains'),
-        lead: t('descriptions.domains'),
-      },
-      tags: {
-        label: t('types.tags'),
-        hint: t('types.hints.tags'),
-        lead: t('descriptions.tags'),
-      },
-      resourceTypes: {
-        label: t('types.resourceTypes'),
-        hint: t('types.hints.resourceTypes'),
-        lead: t('descriptions.resourceTypes'),
-      },
-    }),
-    [t],
-  );
+  const typeDetails = useMemo(() => ({
+    themes: { label: t('types.themes'), hint: t('types.hints.themes'), lead: t('descriptions.themes') },
+    domains: { label: t('types.domains'), hint: t('types.hints.domains'), lead: t('descriptions.domains') },
+    tags: { label: t('types.tags'), hint: t('types.hints.tags'), lead: t('descriptions.tags') },
+    resourceTypes: { label: t('types.resourceTypes'), hint: t('types.hints.resourceTypes'), lead: t('descriptions.resourceTypes') },
+  }), [t]);
 
   const items: TaxonomyEntry[] = useMemo(() => {
     if (!taxonomyQuery.data) return [];
-    if (activeType === 'themes') return taxonomyQuery.data.themes;
-    if (activeType === 'domains') return taxonomyQuery.data.domains;
-    if (activeType === 'tags') return taxonomyQuery.data.tags;
-    return taxonomyQuery.data.resourceTypes;
+    return taxonomyQuery.data[activeType] || [];
   }, [taxonomyQuery.data, activeType]);
 
   const availableDomains = taxonomyQuery.data?.domains ?? [];
 
-  const filteredItems: TaxonomyEntry[] = useMemo(() => {
-    const normalizedTerm = searchTerm.trim().toLowerCase();
-    if (!normalizedTerm) return items;
-
+  const filteredItems = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return items;
     return items.filter((item) => {
-      const labelMatch = item.label?.toLowerCase().includes(normalizedTerm);
-      const descriptionMatch =
-        'description' in item && typeof item.description === 'string'
-          ? item.description.toLowerCase().includes(normalizedTerm)
-          : false;
-      const synonymMatch =
-        'synonyms' in item && Array.isArray(item.synonyms)
-          ? item.synonyms.some((synonym) => synonym.toLowerCase().includes(normalizedTerm))
-          : false;
-
-      return labelMatch || descriptionMatch || synonymMatch;
+      const labelMatch = item.label?.toLowerCase().includes(term);
+      const descMatch = 'description' in item && typeof item.description === 'string' ? item.description.toLowerCase().includes(term) : false;
+      const synMatch = 'synonyms' in item && Array.isArray(item.synonyms) ? item.synonyms.some(s => s.toLowerCase().includes(term)) : false;
+      return labelMatch || descMatch || synMatch;
     });
   }, [items, searchTerm]);
 
   const saveMutation = useMutation({
-    mutationFn: async (input: { id?: string; payload: ReturnType<typeof taxonomyMutationSchema.parse> }) => {
+    mutationFn: async (input: { id?: string; payload: any }) => {
       const body = input.id ? { id: input.id, ...input.payload } : input.payload;
       const method = input.id ? 'PUT' : 'POST';
-
-      const response = await fetch('/api/tests/taxonomy', {
+      const res = await fetch('/api/tests/taxonomy', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-
-      if (!response.ok) {
-        const errorPayload = (await response
-          .json()
-          .catch(() => ({ error: t('messages.saveError') }))) as { error?: string };
-        const errorMessage = typeof errorPayload.error === 'string' ? errorPayload.error : t('messages.saveError');
-        throw new Error(errorMessage);
-      }
-
-      return response.json();
+      if (!res.ok) throw new Error(t('messages.saveError'));
+      return res.json();
     },
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['taxonomy-management', locale] });
       setStatusMessage(variables.id ? t('messages.updated') : t('messages.created'));
       setErrorMessage(null);
-      if (!variables.id) {
-        resetForm();
-      }
+      if (!variables.id) resetForm();
     },
-    onError: (error: Error) => {
-      setErrorMessage(error.message);
-      setStatusMessage(null);
-    },
+    onError: (err) => { setErrorMessage(err.message); setStatusMessage(null); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (payload: ReturnType<typeof taxonomyDeletionSchema.parse>) => {
-      const response = await fetch('/api/tests/taxonomy', {
+    mutationFn: async (payload: any) => {
+      const res = await fetch('/api/tests/taxonomy', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        const errorPayload = (await response
-          .json()
-          .catch(() => ({ error: t('messages.deleteError') }))) as { error?: string };
-        const errorMessage = typeof errorPayload.error === 'string' ? errorPayload.error : t('messages.deleteError');
-        throw new Error(errorMessage);
-      }
-
-      return response.json();
+      if (!res.ok) throw new Error(t('messages.deleteError'));
+      return res.json();
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['taxonomy-management', locale] });
@@ -209,57 +151,33 @@ export default function TaxonomyManagementPanel() {
       setErrorMessage(null);
       resetForm();
     },
-    onError: (error: Error) => {
-      setErrorMessage(error.message);
-      setStatusMessage(null);
-    },
+    onError: (err) => { setErrorMessage(err.message); setStatusMessage(null); },
   });
 
   const handleSelect = (id: string) => {
-    const entry = items.find((item) => item.id === id);
+    const entry = items.find((i) => i.id === id);
     if (!entry) return;
-
     setSelectedId(id);
     if (activeType === 'themes') {
-      const theme = entry as TaxonomyResponse['themes'][number];
-
+      const theme = entry as any;
       setFormState({
         label: theme.label ?? '',
         description: theme.description ?? '',
         synonyms: Array.isArray(theme.synonyms) ? theme.synonyms.join(', ') : '',
         color: '',
-        domainIds: theme.domains?.map((domain) => domain.id) ?? [],
+        domainIds: theme.domains?.map((d: any) => d.id) ?? [],
       });
-      return;
+    } else if (activeType === 'tags') {
+      const tag = entry as any;
+      setFormState({ label: tag.label ?? '', description: '', synonyms: Array.isArray(tag.synonyms) ? tag.synonyms.join(', ') : '', color: tag.color ?? '', domainIds: [] });
+    } else {
+      const domain = entry as any;
+      setFormState({ label: domain.label ?? '', description: '', synonyms: Array.isArray(domain.synonyms) ? domain.synonyms.join(', ') : '', color: '', domainIds: [] });
     }
-
-    if (activeType === 'tags') {
-      const tag = entry as TaxonomyResponse['tags'][number];
-
-      setFormState({
-        label: tag.label ?? '',
-        description: '',
-        synonyms: Array.isArray(tag.synonyms) ? tag.synonyms.join(', ') : '',
-        color: tag.color ?? '',
-        domainIds: [],
-      });
-      return;
-    }
-
-    const domain = entry as TaxonomyResponse['domains'][number];
-
-    setFormState({
-      label: domain.label ?? '',
-      description: '',
-      synonyms: Array.isArray(domain.synonyms) ? domain.synonyms.join(', ') : '',
-      color: '',
-      domainIds: [],
-    });
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     const payload = {
       type: typeToApi[activeType],
       locale,
@@ -269,68 +187,44 @@ export default function TaxonomyManagementPanel() {
       color: activeType === 'tags' ? formState.color || null : undefined,
       domainIds: activeType === 'themes' ? formState.domainIds : undefined,
     };
-
     const parsed = taxonomyMutationSchema.safeParse(payload);
-
     if (!parsed.success) {
       setErrorMessage(parsed.error.issues[0]?.message ?? t('messages.validationError'));
-      setStatusMessage(null);
       return;
     }
-
     await saveMutation.mutateAsync({ id: selectedId ?? undefined, payload: parsed.data });
   };
 
   const handleDelete = async (id: string) => {
-    const deletion = {
-      type: typeToApi[activeType],
-      id,
-      locale,
-    };
-
-    const parsed = taxonomyDeletionSchema.safeParse(deletion);
-    if (!parsed.success) {
-      setErrorMessage(t('messages.deleteError'));
-      setStatusMessage(null);
-      return;
-    }
-
     const confirmed = window.confirm(t('messages.deleteConfirm'));
     if (!confirmed) return;
-
-    await deleteMutation.mutateAsync(parsed.data);
+    await deleteMutation.mutateAsync({ type: typeToApi[activeType], id, locale });
   };
 
-  const activeCopy = typeDetails[activeType];
-
   return (
-    <section className={styles.panel} aria-label={t('aria.panel')}>
-      <aside className={styles.sidebar} aria-label={t('aria.sidebar')}>
-        <div>
-          <p className={styles.sidebarTitle}>{t('sidebar.title')}</p>
-          <p className={styles.sidebarLead}>{t('sidebar.lead')}</p>
-        </div>
+    <section className={styles.panel}>
+      <aside className={styles.sidebar}>
+        <p className={styles.sidebarTitle}>{t('sidebar.title')}</p>
+        <p className={styles.sidebarLead}>{t('sidebar.lead')}</p>
         {(Object.keys(typeDetails) as TaxonomyType[]).map((type) => (
           <button
             key={type}
-            type="button"
             className={`${styles.typeButton} ${activeType === type ? styles.typeButtonActive : ''}`}
             onClick={() => setActiveType(type)}
-            aria-pressed={activeType === type}
           >
             <span className={styles.typeLabel}>
               <span className={styles.typeName}>{typeDetails[type].label}</span>
               <span className={styles.typeHint}>{typeDetails[type].hint}</span>
             </span>
-            <span className={styles.count}>{(taxonomyQuery.data?.[type] as unknown[] | undefined)?.length ?? 0}</span>
+            <span className={styles.count}>{(taxonomyQuery.data?.[type] as any)?.length ?? 0}</span>
           </button>
         ))}
       </aside>
 
-      <div className={styles.main} aria-live="polite">
+      <div className={styles.main}>
         <div className={styles.header}>
-          <h2 className={styles.headerTitle}>{activeCopy.label}</h2>
-          <p className={styles.headerLead}>{activeCopy.lead}</p>
+          <h2 className={styles.headerTitle}>{typeDetails[activeType].label}</h2>
+          <p className={styles.headerLead}>{typeDetails[activeType].lead}</p>
         </div>
 
         {statusMessage && <div className={styles.statusBar}>{statusMessage}</div>}
@@ -338,89 +232,27 @@ export default function TaxonomyManagementPanel() {
 
         <div className={styles.content}>
           <div className={styles.listCard}>
-            <h3 className={styles.cardTitle}>{t('list.title', { type: activeCopy.label })}</h3>
-            <div className={styles.listToolbar}>
-              <label className={styles.searchLabel} htmlFor="taxonomy-search">
-                {t('list.searchLabel')}
-              </label>
-              <input
-                id="taxonomy-search"
-                type="search"
-                className={styles.input}
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder={t('list.searchPlaceholder', { type: activeCopy.label })}
-                aria-label={t('list.searchAria')}
-              />
-            </div>
-            {/* List rendering */}
+            <input
+              type="search"
+              className={styles.input}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t('list.searchPlaceholder', { type: typeDetails[activeType].label })}
+            />
             <div className={styles.list}>
               {filteredItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`${styles.listItem} ${selectedId === item.id ? styles.listItemActive : ''}`}
-                >
+                <div key={item.id} className={`${styles.listItem} ${selectedId === item.id ? styles.listItemActive : ''}`}>
                   <div className={styles.itemMeta}>
                     <p className={styles.itemLabel}>{item.label}</p>
-                    
-                    {/* Affichage sécurisé de la couleur via classe CSS */}
-                    {(() => {
-                      const colorValue = 'color' in item && typeof item.color === 'string' ? item.color : '';
-                      if (!colorValue) return null;
-
-                      return (
-                        <span
-                          aria-label={t('labels.colorValue', { value: colorValue })}
-                          className={`${styles.synonym} ${getColorClass(colorValue)}`}
-                        >
-                          {colorValue}
-                        </span>
-                      );
-                    })()}
-                    {'synonyms' in item && Array.isArray(item.synonyms) && item.synonyms.length > 0 && (
-                      <div
-                        className={styles.synonyms}
-                        aria-label={t('labels.synonymsList', { count: item.synonyms.length })}
-                      >
-                        {item.synonyms.map((synonym) => (
-                          <span key={synonym} className={styles.synonym}>
-                            {synonym}
-                          </span>
-                        ))}
+                    {'synonyms' in item && Array.isArray(item.synonyms) && (
+                      <div className={styles.synonyms}>
+                        {item.synonyms.map(s => <span key={s} className={styles.synonym}>{s}</span>)}
                       </div>
                     )}
-                    {activeType === 'themes' &&
-                      'domains' in item &&
-                      Array.isArray(item.domains) &&
-                      item.domains.length > 0 && (
-                        <div
-                          className={styles.synonyms}
-                          aria-label={t('labels.domainsList', { count: item.domains.length })}
-                        >
-                          {item.domains.map((domain) => (
-                            <span key={domain.id} className={styles.synonym}>
-                              {domain.label}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                   </div>
                   <div className={styles.actions}>
-                    <button
-                      type="button"
-                      className={styles.actionButton}
-                      onClick={() => handleSelect(item.id)}
-                    >
-                      {t('actions.edit')}
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.actionButton} ${styles.deleteButton}`}
-                      onClick={() => void handleDelete(item.id)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      {t('actions.delete')}
-                    </button>
+                    <button onClick={() => handleSelect(item.id)}>{t('actions.edit')}</button>
+                    <button className={styles.deleteButton} onClick={() => handleDelete(item.id)}>{t('actions.delete')}</button>
                   </div>
                 </div>
               ))}
@@ -428,123 +260,56 @@ export default function TaxonomyManagementPanel() {
           </div>
 
           <div className={styles.formCard}>
-            <h3 className={styles.cardTitle}>{t('form.title')}</h3>
-            <form className={styles.formGrid} onSubmit={(event) => void handleSubmit(event)}>
-              {/* ... champs label, description, synonymes inchangés ... */}
-              
+            <form className={styles.formGrid} onSubmit={handleSubmit}>
               <div className={styles.field}>
-                <div className={styles.labelRow}>
-                  <label htmlFor="label-input">{t('form.fields.label')}</label>
-                  <span className="text-subtle">{t('form.hints.required')}</span>
-                </div>
-                <input
-                  id="label-input"
-                  name="label"
-                  className={styles.input}
-                  value={formState.label}
-                  onChange={(event) => setFormState({ ...formState, label: event.target.value })}
-                  placeholder={t('form.placeholders.label')}
-                  required
-                />
+                <label htmlFor="label-input">{t('form.fields.label')}</label>
+                <input id="label-input" className={styles.input} value={formState.label} onChange={(e) => setFormState({ ...formState, label: e.target.value })} required />
               </div>
 
               {activeType === 'themes' && (
-                <div className={styles.field}>
-                  <div className={styles.labelRow}>
+                <>
+                  <div className={styles.field}>
                     <label htmlFor="description-input">{t('form.fields.description')}</label>
-                    <span className="text-subtle">{t('form.hints.optional')}</span>
+                    <textarea id="description-input" className={styles.textarea} value={formState.description} onChange={(e) => setFormState({ ...formState, description: e.target.value })} />
                   </div>
-                  <textarea
-                    id="description-input"
-                    name="description"
-                    className={styles.textarea}
-                    value={formState.description}
-                    onChange={(event) => setFormState({ ...formState, description: event.target.value })}
-                    placeholder={t('form.placeholders.description')}
-                  />
-                </div>
+                  <div className={styles.field}>
+                    <label>{t('form.fields.domains')}</label>
+                    <div className={styles.checkboxList}>
+                      {availableDomains.map((domain) => (
+                        <label key={domain.id} className={styles.checkboxItem}>
+                          <input
+                            type="checkbox"
+                            checked={formState.domainIds.includes(domain.id)}
+                            onChange={(e) => {
+                              const next = new Set(formState.domainIds);
+                              if (e.target.checked) next.add(domain.id); else next.delete(domain.id);
+                              setFormState({ ...formState, domainIds: Array.from(next) });
+                            }}
+                          />
+                          <span>{domain.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               {(activeType === 'themes' || activeType === 'domains' || activeType === 'tags') && (
                 <div className={styles.field}>
-                  <div className={styles.labelRow}>
-                    <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
-                    <span className="text-subtle">{t('form.hints.commaSeparated')}</span>
-                  </div>
-                  <input
-                    id="synonyms-input"
-                    name="synonyms"
-                    className={styles.input}
-                    value={formState.synonyms}
-                    onChange={(event) => setFormState({ ...formState, synonyms: event.target.value })}
-                    placeholder={t('form.placeholders.synonyms')}
-                  />
-                </div>
-              )}
-
-              {activeType === 'themes' && (
-                <div className={styles.field}>
-                  <div className={styles.labelRow}>
-                    <span id="theme-domains-label">{t('form.fields.domains')}</span>
-                    <span className="text-subtle">{t('form.hints.domainHelper')}</span>
-                  </div>
-                  {taxonomyQuery.isLoading ? (
-                    <p className="text-subtle">{t('messages.loading')}</p>
-                  ) : availableDomains.length === 0 ? (
-                    <p className="text-subtle">{t('form.emptyDomains')}</p>
-                  ) : (
-                    <div
-                      className={styles.checkboxList}
-                      role="group"
-                      aria-labelledby="theme-domains-label"
-                    >
-                      {availableDomains.map((domain) => {
-                        const isChecked = formState.domainIds.includes(domain.id);
-                        return (
-                          <label key={domain.id} className={styles.checkboxItem}>
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(event) => {
-                                const nextSelection = new Set(formState.domainIds);
-                                if (event.target.checked) {
-                                  nextSelection.add(domain.id);
-                                } else {
-                                  nextSelection.delete(domain.id);
-                                }
-                                setFormState({ ...formState, domainIds: Array.from(nextSelection) });
-                              }}
-                            />
-                            <span>{domain.label}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
+                  <input id="synonyms-input" className={styles.input} value={formState.synonyms} onChange={(e) => setFormState({ ...formState, synonyms: e.target.value })} />
                 </div>
               )}
 
               {activeType === 'tags' && (
                 <div className={styles.field}>
-                  <div className={styles.labelRow}>
-                    <label htmlFor="color-input">{t('form.fields.color')}</label>
-                    <span className="text-subtle">{t('form.hints.optional')}</span>
-                  </div>
-                  <input
-                    id="color-input"
-                    name="color"
-                    className={styles.input}
-                    value={formState.color}
-                    onChange={(event) => setFormState({ ...formState, color: event.target.value })}
-                    placeholder={t('form.placeholders.color')}
-                  />
+                  <label>{t('form.fields.color')}</label>
                   <div className={styles.colorSwatches}>
                     {colors.map((color) => (
                       <button
                         key={color}
                         type="button"
                         className={`${styles.colorChip} ${getColorClass(color)} ${formState.color === color ? styles.colorChipActive : ''}`}
-                        aria-label={t('labels.colorValue', { value: color })}
                         onClick={() => setFormState({ ...formState, color })}
                       />
                     ))}
@@ -556,9 +321,7 @@ export default function TaxonomyManagementPanel() {
                 <button className={styles.submitButton} type="submit" disabled={saveMutation.isPending}>
                   {selectedId ? t('form.actions.update') : t('form.actions.create')}
                 </button>
-                <button type="button" className={styles.secondaryButton} onClick={resetForm}>
-                  {t('form.actions.reset')}
-                </button>
+                <button type="button" className={styles.secondaryButton} onClick={resetForm}>{t('form.actions.reset')}</button>
               </div>
             </form>
           </div>
