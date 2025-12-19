@@ -6,6 +6,8 @@ import { testsResponseSchema, type TestDto } from '@/lib/validation/tests';
 
 type TestsBaseRow = {
   id: string;
+  target_audience: 'child' | 'adult' | null;
+  status: 'draft' | 'in_review' | 'published' | 'archived' | null;
   age_min_months: number | null;
   age_max_months: number | null;
   duration_minutes: number | null;
@@ -65,7 +67,7 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
   const { data: testRows, error: testsError } = await supabase
     .from('tests')
     .select(
-      'id, age_min_months, age_max_months, duration_minutes, is_standardized, buy_link, bibliography, created_at, updated_at',
+      'id, target_audience, status, age_min_months, age_max_months, duration_minutes, is_standardized, buy_link, bibliography, created_at, updated_at',
     );
 
   if (testsError) {
@@ -207,6 +209,8 @@ async function getTestsWithRls(locale: Locale = defaultLocale): Promise<TestDto[
         id: test.id,
         name: selectedTranslation?.name ?? '',
         slug: selectedTranslation?.slug ?? '',
+        targetAudience: test.target_audience ?? 'child',
+        status: test.status ?? 'draft',
         shortDescription: selectedTranslation?.short_description ?? null,
         objective: selectedTranslation?.objective ?? null,
         ageMinMonths: test.age_min_months,

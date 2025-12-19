@@ -5,6 +5,7 @@ const localeEnum = z.enum(locales);
 
 // Définition du schéma pour l'audience cible
 export const targetAudienceSchema = z.enum(['child', 'adult']);
+export const validationStatusSchema = z.enum(['draft', 'in_review', 'published', 'archived']);
 
 const bibliographySchema = z
   .array(
@@ -21,6 +22,7 @@ export const testSchema = z.object({
   slug: z.string(),
   // Ajout du champ dans l'objet lu depuis la BDD
   targetAudience: targetAudienceSchema,
+  status: validationStatusSchema,
   shortDescription: z.string().nullable(),
   objective: z.string().nullable(),
   ageMinMonths: z.number().int().nullable(),
@@ -57,6 +59,7 @@ export const testInputSchema = z.object({
   name: z.string().min(1),
   // Ajout du champ dans l'objet envoyé au formulaire (avec défaut 'child')
   targetAudience: targetAudienceSchema.default('child'),
+  status: validationStatusSchema.default('draft'),
   shortDescription: z.string().nullable().optional(),
   objective: z.string().nullable().optional(),
   ageMinMonths: z.number().int().nullable().optional(),

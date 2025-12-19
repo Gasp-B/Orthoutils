@@ -73,6 +73,7 @@ const defaultValues: FormValues = {
   id: undefined,
   name: '',
   targetAudience: 'child', // Valeur par défaut
+  status: 'draft',
   shortDescription: null,
   objective: null,
   ageMinMonths: null,
@@ -284,6 +285,7 @@ function TestForm({ locale }: TestFormProps) {
       ...baseValues,
       name: baseValues.name.trim(),
       targetAudience, // <-- Envoi de la donnée structurée
+      status: baseValues.status,
       population: baseValues.population || populationLabel, // Fallback texte si vide
       ageMinMonths: toMonths(minValue, resolvedUnit),
       ageMaxMonths: toMonths(maxValue, resolvedMaxUnit),
@@ -579,6 +581,16 @@ function TestForm({ locale }: TestFormProps) {
                     {watch('isStandardized') ? formT('fields.standardization.standardized') : formT('fields.standardization.nonStandardized')}
                   </Label>
                 </div>
+              </div>
+
+              <div className="property-row">
+                <Label>{formT('fields.status.label')}</Label>
+                <Select {...register('status')}>
+                  <option value="draft">{formT('fields.status.options.draft')}</option>
+                  <option value="in_review">{formT('fields.status.options.inReview')}</option>
+                  <option value="published">{formT('fields.status.options.published')}</option>
+                  <option value="archived">{formT('fields.status.options.archived')}</option>
+                </Select>
               </div>
 
               <div className="property-value pt-2">
