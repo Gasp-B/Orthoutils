@@ -235,7 +235,6 @@ export default function TaxonomyManagementPanel() {
             {item.synonyms.map(s => <span key={s} className={styles.synonym}>{s}</span>)}
           </div>
         )}
-        {/* Pour les tags, on peut afficher la couleur */}
         {'color' in item && typeof item.color === 'string' && item.color && (
           <span className={`${styles.synonym} ${getColorClass(item.color)}`}>
             {item.color}
@@ -289,10 +288,9 @@ export default function TaxonomyManagementPanel() {
             />
             
             <div className={styles.list}>
-              {/* Si on est dans les thèmes, on affiche par groupe */}
               {activeType === 'themes' ? (
                 <>
-                  {/* 1. Afficher les groupes par domaine (en utilisant availableDomains pour l'ordre et le label) */}
+                  {/* Afficher les groupes par domaine */}
                   {availableDomains.map((domain) => {
                     const groupItems = themesGroups.grouped[domain.id];
                     if (!groupItems || groupItems.length === 0) return null;
@@ -315,7 +313,7 @@ export default function TaxonomyManagementPanel() {
                     );
                   })}
 
-                  {/* 2. Afficher les éléments sans domaine */}
+                  {/* Afficher les éléments sans domaine */}
                   {themesGroups.noDomain.length > 0 && (
                     <div style={{ marginTop: '1.5rem', borderTop: '1px dashed #e2e8f0', paddingTop: '1rem' }}>
                       <h4 style={{ 
@@ -332,13 +330,12 @@ export default function TaxonomyManagementPanel() {
                     </div>
                   )}
                   
-                  {/* Message vide si rien n'est trouvé */}
+                  {/* Message si vide */}
                   {Object.keys(themesGroups.grouped).length === 0 && themesGroups.noDomain.length === 0 && (
                      <p style={{ padding: '1rem', color: '#64748b', textAlign: 'center' }}>Aucun résultat trouvé.</p>
                   )}
                 </>
               ) : (
-                /* Sinon (Tags, Domaines, Types), affichage liste classique */
                 filteredItems.map(item => renderItem(item))
               )}
             </div>
@@ -382,3 +379,36 @@ export default function TaxonomyManagementPanel() {
               {(activeType === 'themes' || activeType === 'domains' || activeType === 'tags') && (
                 <div className={styles.field}>
                   <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
+                  <input id="synonyms-input" className={styles.input} value={formState.synonyms} onChange={(e) => setFormState({ ...formState, synonyms: e.target.value })} />
+                </div>
+              )}
+
+              {activeType === 'tags' && (
+                <div className={styles.field}>
+                  <label>{t('form.fields.color')}</label>
+                  <div className={styles.colorSwatches}>
+                    {colors.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`${styles.colorChip} ${getColorClass(color)} ${formState.color === color ? styles.colorChipActive : ''}`}
+                        onClick={() => setFormState({ ...formState, color })}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.formActions}>
+                <button className={styles.submitButton} type="submit" disabled={saveMutation.isPending}>
+                  {selectedId ? t('form.actions.update') : t('form.actions.create')}
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={resetForm}>{t('form.actions.reset')}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
