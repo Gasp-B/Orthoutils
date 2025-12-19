@@ -3,25 +3,18 @@ import {
   customType,
   integer,
   jsonb,
+  pgEnum,
   pgSchema,
   pgTable,
   primaryKey,
   text,
   timestamp,
-  tsvector,
   uniqueIndex,
   uuid,
-  pgEnum,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 const auth = pgSchema('auth');
-const tsvector = customType<{ data: string; driverData: string }>({
-  dataType: () => 'tsvector',
-});
-
-export const validationStatusEnum = pgEnum('validation_status', ['draft', 'in_review', 'published', 'archived']);
-
 const tsvector = customType<{ data: string }>({
   dataType() {
     return 'tsvector';
@@ -29,20 +22,6 @@ const tsvector = customType<{ data: string }>({
 });
 
 export const validationStatusEnum = pgEnum('validation_status', ['draft', 'in_review', 'published', 'archived']);
-
-const tsvector = customType<{ data: string }>({
-  dataType() {
-    return 'tsvector';
-  },
-});
-
-export const validationStatusEnum = pgEnum('validation_status', ['draft', 'in_review', 'published', 'archived']);
-
-const tsvector = customType<{ data: string }>({
-  dataType() {
-    return 'tsvector';
-  },
-});
 
 export const authUsers = auth.table('users', {
   id: uuid('id').primaryKey(),
@@ -97,7 +76,6 @@ export const tests = pgTable(
     createdBy: uuid('created_by').references(() => authUsers.id),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-    ftsVector: tsvector('fts_vector'),
   },
 );
 

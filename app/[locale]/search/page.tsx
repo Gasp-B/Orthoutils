@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 type LocalePageProps = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ q?: string; page?: string; limit?: string }>;
 };
 
 export async function generateMetadata({ params }: LocalePageProps): Promise<Metadata> {
@@ -28,15 +29,21 @@ export async function generateMetadata({ params }: LocalePageProps): Promise<Met
   };
 }
 
-export default async function SearchPage({ params }: LocalePageProps) {
+export default async function SearchPage({ params, searchParams }: LocalePageProps) {
   const { locale } = await params;
+  const { q, page, limit } = await searchParams;
 
   if (!locales.includes(locale as Locale)) {
     notFound();
   }
 
   const t = await getTranslations({ locale, namespace: 'SearchHub' });
-  const searchHubData = await getSearchHubData(locale as Locale);
+  const searchHubData = await getSearchHubData({
+    locale: locale as Locale,
+    query: q ?? undefined,
+    page,
+    limit,
+  });
 
   return (
     <main className={`container section-shell ${styles.page}`}>
