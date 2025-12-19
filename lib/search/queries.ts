@@ -89,14 +89,15 @@ export async function getSearchHubData(input: SearchQueryInput): Promise<SearchH
   ];
 
   if (normalizedQuery) {
-    testFilters.push(
-      or(
-        sql`${tests.ftsVector} @@ plainto_tsquery('french', ${normalizedQuery})`,
-        ilike(testsTranslations.name, `%${normalizedQuery}%`),
-        ilike(testsTranslations.shortDescription, `%${normalizedQuery}%`),
-        ilike(testsTranslations.objective, `%${normalizedQuery}%`),
-      ),
+    const testSearchFilter = or(
+      sql`${tests.ftsVector} @@ plainto_tsquery('french', ${normalizedQuery})`,
+      ilike(testsTranslations.name, `%${normalizedQuery}%`),
+      ilike(testsTranslations.shortDescription, `%${normalizedQuery}%`),
+      ilike(testsTranslations.objective, `%${normalizedQuery}%`),
     );
+    if (testSearchFilter) {
+      testFilters.push(testSearchFilter);
+    }
   }
 
   const testsRows = await db
