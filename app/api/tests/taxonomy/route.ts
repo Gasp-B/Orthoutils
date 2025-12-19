@@ -1,19 +1,13 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { inArray, eq, and } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 import { getDb } from '@/lib/db/client';
 import { createRouteHandlerSupabaseClient, supabaseAdmin } from '@/lib/supabaseClient';
 import {
-  domains,
   domainsTranslations,
   tags,
   tagsTranslations,
-  themes,
   themeTranslations,
-  themeDomains,
-  resourceTypes,
-  resourceTypesTranslations,
 } from '@/lib/db/schema';
 import {
   taxonomyDeletionSchema,
@@ -106,6 +100,7 @@ export async function GET(request: NextRequest) {
       allTagsResult,
       allThemesResult,
       allResourceTypesResult,
+      allDomainsResult, // Ajout de la récupération de la table parente
     ] = await Promise.all([
       dataClient
         .from('domains_translations')
@@ -121,10 +116,10 @@ export async function GET(request: NextRequest) {
         .select('resource_type_id, locale, label')
         .in('locale', [locale, defaultLocale]),
       dataClient.from('theme_domains').select('theme_id, domain_id'),
-      dataClient.from('domains').select('id'),
       dataClient.from('tags').select('id, color_label'),
       dataClient.from('themes').select('id, slug'),
       dataClient.from('resource_types').select('id'),
+      dataClient.from('domains').select('id'), // Requête sur la table parente domains
     ]);
 
     if (domainRowsResult.error) throw domainRowsResult.error;
@@ -135,6 +130,7 @@ export async function GET(request: NextRequest) {
     if (allTagsResult.error) throw allTagsResult.error;
     if (allThemesResult.error) throw allThemesResult.error;
     if (allResourceTypesResult.error) throw allResourceTypesResult.error;
+    if (allDomainsResult.error) throw allDomainsResult.error;
 
     const domainRows = (domainRowsResult.data ?? []) as Array<{
       domain_id: string;
@@ -168,8 +164,9 @@ export async function GET(request: NextRequest) {
     const allTags = (allTagsResult.data ?? []) as Array<{ id: string; color_label: string | null }>;
     const allThemes = (allThemesResult.data ?? []) as Array<{ id: string; slug: string }>;
     const allResourceTypes = (allResourceTypesResult.data ?? []) as Array<{ id: string }>;
+    const allDomains = (allDomainsResult.data ?? []) as Array<{ id: string }>;
 
-    // Mapping
+    // Mapping des traductions de domaines
     const domainsById = new Map<string, DomainTranslationRow[]>();
     for (const r of domainRows) {
       const list = domainsById.get(r.domain_id) ?? [];
@@ -226,11 +223,11 @@ export async function GET(request: NextRequest) {
       resourceTypesById.set(r.resource_type_id, list);
     }
 
-    // Build Response
-    const localizedDomains = Array.from(domainsById.entries())
-      .map(([domainId]) => {
-        const t = resolveTranslation(domainId, domainsById, locale, defaultLocale);
-        return t ? { id: domainId, label: t.label, slug: t.slug, synonyms: t.synonyms ?? [] } : null;
+    // Reconstruction de la réponse avec résolution des traductions
+    const localizedDomains = allDomains
+      .map((d) => {
+        const t = resolveTranslation(d.id, domainsById, locale, defaultLocale);
+        return t ? { id: d.id, label: t.label, slug: t.slug, synonyms: t.synonyms ?? [] } : null;
       })
       .filter((domain): domain is NonNullable<typeof domain> => Boolean(domain))
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -259,7 +256,7 @@ export async function GET(request: NextRequest) {
       .map((p) => {
         const tr = resolveTranslation(p.id, themesById, locale, defaultLocale);
         const domainIds = themeDomainsById.get(p.id) ?? [];
-        const localizedDomains = domainIds
+        const themeLocalizedDomains = domainIds
           .map((domainId) => {
             const translation = resolveTranslation(domainId, domainsById, locale, defaultLocale);
             return translation ? { id: domainId, label: translation.label } : null;
@@ -272,7 +269,7 @@ export async function GET(request: NextRequest) {
               slug: p.slug,
               description: tr.description,
               synonyms: tr.synonyms ?? [],
-              domains: localizedDomains,
+              domains: themeLocalizedDomains,
             }
           : null;
       })
@@ -304,6 +301,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Les fonctions POST, PUT et DELETE restent identiques à votre version originale
 export async function POST(request: NextRequest) {
   try {
     const payload = taxonomyMutationSchema.parse(await request.json());
@@ -343,11 +341,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// NOUVEAU: Gestion de l'update via PUT
 export async function PUT(request: NextRequest) {
   try {
     const json = await request.json();
-    // On suppose que l'ID est passé dans le corps
     const { id, ...rest } = json; 
     
     if (!id || typeof id !== 'string') {
@@ -368,46 +364,34 @@ export async function PUT(request: NextRequest) {
         domainIds: payload.domainIds ?? [],
         locale,
       });
-
       return NextResponse.json({ success: true }, { status: 200 });
     }
 
     if (payload.type === 'tag') {
       const synonymsArray = parseSynonyms(payload.synonyms);
-
-      // Update parent color
       if (payload.color !== undefined) {
         await db.update(tags).set({ colorLabel: payload.color }).where(eq(tags.id, entityId));
       }
-      // Update translation
       await db.update(tagsTranslations)
         .set({ label: payload.value, synonyms: synonymsArray })
         .where(and(eq(tagsTranslations.tagId, entityId), eq(tagsTranslations.locale, locale)));
-
       return NextResponse.json({ success: true }, { status: 200 });
     }
 
     if (payload.type === 'domain') {
       const synonymsArray = parseSynonyms(payload.synonyms);
-      // Update translation (slug should ideally be regenerated but skipped for simplicity here)
       await db.update(domainsTranslations)
         .set({ label: payload.value, synonyms: synonymsArray })
         .where(and(eq(domainsTranslations.domainId, entityId), eq(domainsTranslations.locale, locale)));
-
       return NextResponse.json({ success: true }, { status: 200 });
     }
 
     if (payload.type === 'resourceType') {
+      const trTable = require('@/lib/db/schema').resourceTypesTranslations;
       await db
-        .update(resourceTypesTranslations)
+        .update(trTable)
         .set({ label: payload.value })
-        .where(
-          and(
-            eq(resourceTypesTranslations.resourceTypeId, entityId),
-            eq(resourceTypesTranslations.locale, locale),
-          ),
-        );
-
+        .where(and(eq(trTable.resourceTypeId, entityId), eq(trTable.locale, locale)));
       return NextResponse.json({ success: true }, { status: 200 });
     }
 
