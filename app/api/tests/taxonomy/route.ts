@@ -121,6 +121,7 @@ export async function GET(request: NextRequest) {
         .select('resource_type_id, locale, label')
         .in('locale', [locale, defaultLocale]),
       dataClient.from('theme_domains').select('theme_id, domain_id'),
+      dataClient.from('domains').select('id'),
       dataClient.from('tags').select('id, color_label'),
       dataClient.from('themes').select('id, slug'),
       dataClient.from('resource_types').select('id'),
