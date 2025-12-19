@@ -251,7 +251,8 @@ export default function TaxonomyManagementPanel() {
                     )}
                   </div>
                   <div className={styles.actions}>
-                    <button onClick={() => handleSelect(item.id)}>{t('actions.edit')}</button>
+                    {/* Rétablissement des classes CSS pour les boutons */}
+                    <button className={styles.actionButton} onClick={() => handleSelect(item.id)}>{t('actions.edit')}</button>
                     <button className={styles.deleteButton} onClick={() => handleDelete(item.id)}>{t('actions.delete')}</button>
                   </div>
                 </div>
