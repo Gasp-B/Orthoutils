@@ -103,7 +103,6 @@ export async function GET(request: NextRequest) {
       themeRowsResult,
       resourceTypeRowsResult,
       themeDomainRowsResult,
-      allDomainsResult,
       allTagsResult,
       allThemesResult,
       allResourceTypesResult,
@@ -133,7 +132,6 @@ export async function GET(request: NextRequest) {
     if (themeRowsResult.error) throw themeRowsResult.error;
     if (resourceTypeRowsResult.error) throw resourceTypeRowsResult.error;
     if (themeDomainRowsResult.error) throw themeDomainRowsResult.error;
-    if (allDomainsResult.error) throw allDomainsResult.error;
     if (allTagsResult.error) throw allTagsResult.error;
     if (allThemesResult.error) throw allThemesResult.error;
     if (allResourceTypesResult.error) throw allResourceTypesResult.error;
@@ -167,7 +165,6 @@ export async function GET(request: NextRequest) {
       theme_id: string;
       domain_id: string;
     }>;
-    const allDomains = (allDomainsResult.data ?? []) as Array<{ id: string }>;
     const allTags = (allTagsResult.data ?? []) as Array<{ id: string; color_label: string | null }>;
     const allThemes = (allThemesResult.data ?? []) as Array<{ id: string; slug: string }>;
     const allResourceTypes = (allResourceTypesResult.data ?? []) as Array<{ id: string }>;
@@ -230,27 +227,32 @@ export async function GET(request: NextRequest) {
     }
 
     // Build Response
-    const localizedDomains = allDomains
-      .map((d) => {
-        const t = resolveTranslation(d.id, domainsById, locale, defaultLocale);
-        return t ? { id: d.id, label: t.label, slug: t.slug, synonyms: t.synonyms ?? [] } : null;
+    const localizedDomains = Array.from(domainsById.entries())
+      .map(([domainId]) => {
+        const t = resolveTranslation(domainId, domainsById, locale, defaultLocale);
+        return t ? { id: domainId, label: t.label, slug: t.slug, synonyms: t.synonyms ?? [] } : null;
       })
-      .filter((d): d is NonNullable<typeof d> => Boolean(d))
+      .filter((domain): domain is NonNullable<typeof domain> => Boolean(domain))
       .sort((a, b) => a.label.localeCompare(b.label));
 
+    const tagColorsById = new Map(allTags.map((tag) => [tag.id, tag.color_label]));
+
     const localizedTags = allTags
-      .map((t) => {
-        const tr = resolveTranslation(t.id, tagsById, locale, defaultLocale);
+      .map((t) => t.id)
+      .concat(Array.from(tagsById.keys()))
+      .filter((id, index, ids) => ids.indexOf(id) === index)
+      .map((tagId) => {
+        const tr = resolveTranslation(tagId, tagsById, locale, defaultLocale);
         return tr
           ? {
-              id: t.id,
+              id: tagId,
               label: tr.label,
               synonyms: tr.synonyms ?? [],
-              color: t.color_label,
+              color: tagColorsById.get(tagId) ?? null,
             }
           : null;
       })
-      .filter((t): t is NonNullable<typeof t> => Boolean(t))
+      .filter((tag): tag is NonNullable<typeof tag> => Boolean(tag))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     const localizedThemes = allThemes
