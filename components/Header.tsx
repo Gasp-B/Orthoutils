@@ -19,6 +19,7 @@ function Header() {
   
   const [user, setUser] = useState<User | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [isNavigating, startTransition] = useTransition();
@@ -47,6 +48,38 @@ function Header() {
       subscription.unsubscribe();
     };
   }, [supabase]);
+
+  // 1b. Chargement du rôle admin une fois l'utilisateur disponible
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const { data, error: roleError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (roleError) {
+        console.error('[Header] Failed to load user role:', roleError);
+        if (!cancelled) setIsAdmin(false);
+        return;
+      }
+
+      if (!cancelled) setIsAdmin(data?.role === 'admin');
+    };
+
+    void loadRole();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, user]);
 
   // 2. Chargement du catalogue
   useEffect(() => {
@@ -128,17 +161,19 @@ function Header() {
           {!loadingCatalogue && !error && <CatalogueMegaMenu domains={catalogueDomains} />}
           
 
-          <div className="ph-header__menu">
-            <button className="ph-header__link ph-header__menu-toggle" type="button">
-              {t('admin')} <span aria-hidden>▾</span>
-            </button>
-            <div className="ph-header__submenu" aria-label={t('adminMenuLabel')}>
-              <Link className="ph-header__submenu-link" href="/administration">{t('dashboard')}</Link>
-              <Link className="ph-header__submenu-link" href="/tests/manage">{t('addTest')}</Link>
-              <Link className="ph-header__submenu-link" href="/administration/TaxonomyManagement">{t('taxonomy')}</Link>
-              <Link className="ph-header__submenu-link" href="/administration/resources">{t('resources')}</Link>
+          {isAdmin && (
+            <div className="ph-header__menu">
+              <button className="ph-header__link ph-header__menu-toggle" type="button">
+                {t('admin')} <span aria-hidden>▾</span>
+              </button>
+              <div className="ph-header__submenu" aria-label={t('adminMenuLabel')}>
+                <Link className="ph-header__submenu-link" href="/administration">{t('dashboard')}</Link>
+                <Link className="ph-header__submenu-link" href="/tests/manage">{t('addTest')}</Link>
+                <Link className="ph-header__submenu-link" href="/administration/TaxonomyManagement">{t('taxonomy')}</Link>
+                <Link className="ph-header__submenu-link" href="/administration/resources">{t('resources')}</Link>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="u-separator-vertical" />
 
