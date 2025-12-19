@@ -146,6 +146,67 @@ export const testThemes = pgTable('test_themes', {
   pk: primaryKey({ columns: [table.testId, table.themeId] }),
 }));
 
+// --- RESOURCES ---
+
+export const resources = pgTable('resources', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  type: text('type').notNull(),
+  url: text('url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const resourcesTranslations = pgTable('resources_translations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  resourceId: uuid('resource_id').notNull().references(() => resources.id, { onDelete: 'cascade' }),
+  locale: text('locale').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+}, (table) => ({
+  localeConstraint: uniqueIndex('resources_translations_resource_locale_key').on(table.resourceId, table.locale),
+}));
+
+export const resourceDomains = pgTable('resource_domains', {
+  resourceId: uuid('resource_id').notNull().references(() => resources.id, { onDelete: 'cascade' }),
+  domainId: uuid('domain_id').notNull().references(() => domains.id, { onDelete: 'cascade' }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.resourceId, table.domainId] }),
+}));
+
+export const resourceTags = pgTable('resource_tags', {
+  resourceId: uuid('resource_id').notNull().references(() => resources.id, { onDelete: 'cascade' }),
+  tagId: uuid('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.resourceId, table.tagId] }),
+}));
+
+export const resourceThemes = pgTable('resource_themes', {
+  resourceId: uuid('resource_id').notNull().references(() => resources.id, { onDelete: 'cascade' }),
+  themeId: uuid('theme_id').notNull().references(() => themes.id, { onDelete: 'cascade' }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.resourceId, table.themeId] }),
+}));
+
+// --- RESOURCE TYPES ---
+
+export const resourceTypes = pgTable('resource_types', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const resourceTypesTranslations = pgTable('resource_type_translations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  resourceTypeId: uuid('resource_type_id')
+    .notNull()
+    .references(() => resourceTypes.id, { onDelete: 'cascade' }),
+  locale: text('locale').notNull(),
+  label: text('label').notNull(),
+}, (table) => ({
+  localeConstraint: uniqueIndex('resource_type_translations_resource_type_id_locale_key').on(
+    table.resourceTypeId,
+    table.locale,
+  ),
+}));
+
 // Export des types utiles
 export type TestRecord = typeof tests.$inferSelect;
 export type TestTranslationRecord = typeof testsTranslations.$inferSelect;
