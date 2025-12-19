@@ -146,6 +146,13 @@ export const testThemes = pgTable('test_themes', {
   pk: primaryKey({ columns: [table.testId, table.themeId] }),
 }));
 
+export const themeDomains = pgTable('theme_domains', {
+  themeId: uuid('theme_id').notNull().references(() => themes.id, { onDelete: 'cascade' }),
+  domainId: uuid('domain_id').notNull().references(() => domains.id, { onDelete: 'cascade' }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.themeId, table.domainId] }),
+}));
+
 // --- RESOURCES ---
 
 export const resources = pgTable('resources', {
