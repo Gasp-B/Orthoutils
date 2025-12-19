@@ -58,7 +58,7 @@ function mapTestToResult(test: TestSearchRow): TestSearchResult {
     population: test.population,
     materials: test.materials,
     durationMinutes: test.durationMinutes,
-    isStandardized: test.isStandardized,
+    isStandardized: test.isStandardized ?? false,
     objective: test.objective,
   };
 }
@@ -109,7 +109,7 @@ type TestSearchRow = {
   population: string | null;
   durationMinutes: number | null;
   materials: string | null;
-  isStandardized: boolean;
+  isStandardized: boolean | null;
   domains: string[];
   themes: string[];
   tags: string[];
