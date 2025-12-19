@@ -9,6 +9,7 @@
     "tagline": "Ressources cliniques vérifiées par des orthophonistes",
     "searchPlaceholder": "Rechercher un outil, une thématique...",
     "searchAria": "Rechercher un outil, une thématique",
+    "searchSubmit": "Rechercher",
     "navAria": "Navigation principale",
     "navLoading": "Chargement du catalogue…",
     "navError": "Impossible de charger le catalogue",
@@ -901,6 +902,11 @@
     "headingTitle": "Recherche fédérée dans le catalogue",
     "headingText": "Filtrez immédiatement les évaluations, auto-questionnaires et ressources externes avec des filtres inspirés de DocSearch et Linear.",
     "helper": "Utilisez les filtres à gauche pour cibler un type ou un domaine. Les résultats se mettent à jour sans recharger la page.",
+    "search": {
+      "inputPlaceholder": "Rechercher des évaluations, auto-questionnaires ou ressources",
+      "submit": "Rechercher",
+      "ariaLabel": "Rechercher dans le catalogue"
+    },
     "filters": {
       "title": "Filtres",
       "lead": "Combinez type et domaines pour affiner.",

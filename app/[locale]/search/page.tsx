@@ -62,6 +62,27 @@ export default async function SearchPage({ params, searchParams }: LocalePagePro
           </div>
           <p className={styles.helper}>{t('helper')}</p>
         </div>
+
+        <form className={`glass panel ${styles.searchForm}`} method="get">
+          <div className={styles.searchField}>
+            <label className={styles.searchLabel} htmlFor="search-query">
+              {t('search.ariaLabel')}
+            </label>
+            <input
+              className={`ui-input ${styles.searchInput}`}
+              defaultValue={q ?? ''}
+              id="search-query"
+              name="q"
+              placeholder={t('search.inputPlaceholder')}
+              type="search"
+            />
+          </div>
+          {limit ? <input name="limit" type="hidden" value={limit} /> : null}
+          <input name="page" type="hidden" value="1" />
+          <button className={`ui-button ui-button-sm ${styles.searchButton}`} type="submit">
+            {t('search.submit')}
+          </button>
+        </form>
       </header>
 
       <SearchHub groups={searchHubData.groups} domains={searchHubData.domains} tags={searchHubData.tags} />
