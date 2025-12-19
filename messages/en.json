@@ -9,6 +9,7 @@
     "tagline": "Clinically vetted resources by speech-language pathologists",
     "searchPlaceholder": "Search a tool or topic...",
     "searchAria": "Search a tool or topic",
+    "searchSubmit": "Search",
     "navAria": "Primary navigation",
     "navLoading": "Loading catalog…",
     "navError": "Unable to load the catalog",

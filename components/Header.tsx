@@ -106,14 +106,18 @@ function Header() {
         </Link>
 
         {/* Barre de recherche */}
-        <div className="ph-header__search" role="search">
+        <form className="ph-header__search" role="search" action={`/${locale}/search`} method="get">
           <input
             type="search"
-            name="search"
+            name="q"
             placeholder={t('searchPlaceholder')}
             aria-label={t('searchAria')}
           />
-        </div>
+          <input type="hidden" name="page" value="1" />
+          <button className="ph-header__search-button" type="submit">
+            {t('searchSubmit')}
+          </button>
+        </form>
 
         {/* Navigation Droite */}
         <nav className="ph-header__nav" aria-label={t('navAria')}>
