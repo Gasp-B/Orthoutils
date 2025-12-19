@@ -1,33 +1,49 @@
-import { db } from '@/lib/db/client';
-import { tests, testsTranslations, testThemes, themes, themeTranslations } from '@/lib/db/schema';
-import { eq, and, sql, or, ilike } from 'drizzle-orm';
+import { defaultLocale, type Locale } from '@/i18n/routing';
+import { getDb } from '@/lib/db/client';
+import {
+  domains,
+  domainsTranslations,
+  tags,
+  tagsTranslations,
+  testDomains,
+  testTags,
+  testThemes,
+  tests,
+  testsTranslations,
+  themeTranslations,
+  themes,
+  resources,
+  resourcesTranslations
+} from '@/lib/db/schema';
+import { searchQuerySchema } from '@/lib/validation/search';
+import { and, eq, ilike, or, sql } from 'drizzle-orm';
 
-export async function searchTests(query: string, locale: string) {
-  const searchTerm = query.trim();
-
-  return await db
+export async function searchAll(query: string, locale: Locale) {
+  const db = await getDb();
+  
+  // Recherche dans les Tests (Anciennement Tools)
+  const testsResults = await db
     .select({
       id: tests.id,
       name: testsTranslations.name,
       slug: testsTranslations.slug,
-      shortDescription: testsTranslations.shortDescription,
-      status: tests.status,
+      description: testsTranslations.shortDescription,
     })
     .from(tests)
     .innerJoin(testsTranslations, eq(tests.id, testsTranslations.testId))
     .where(
       and(
         eq(testsTranslations.locale, locale),
-        eq(tests.status, 'published'), // On ne cherche que dans le validé
-        searchTerm !== '' 
-          ? or(
-              // Utilisation du FTS vectorisé si disponible
-              sql`${tests.ftsVector} @@ to_tsquery('french', ${searchTerm})`,
-              ilike(testsTranslations.name, `%${searchTerm}%`),
-              ilike(testsTranslations.shortDescription, `%${searchTerm}%`)
-            )
-          : undefined
+        eq(tests.status, 'published'),
+        or(
+          ilike(testsTranslations.name, `%${query}%`),
+          ilike(testsTranslations.shortDescription, `%${query}%`),
+          // Utilisation du vecteur FTS pour la performance
+          sql`${tests.ftsVector} @@ to_tsquery('french', ${query})`
+        )
       )
     )
-    .limit(20);
+    .limit(10);
+
+  return { tests: testsResults };
 }
