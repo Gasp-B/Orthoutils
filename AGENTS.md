@@ -18,15 +18,21 @@ CRITICAL TECHNICAL RULES (STRICT ENFORCEMENT):
 
         ALWAYS use await when fetching params in Next.js 16 Page Props (e.g., const { locale } = await params;).
 
-    DATABASE SCHEMA & DRIZZLE:
+   # Instructions pour le développement de la base de données
 
-        Source of Truth: lib/db/schema.ts.
+## Règle d'or : Source de Vérité
+La structure réelle de l'application est définie par les fichiers SQL dans `supabase/migrations/`. Le fichier `lib/db/schema.ts` (Drizzle) DOIT être le reflet exact de ces migrations.
 
-        Taxonomy Fields: Tables domains and tags use column label, NOT name.
+## Processus de modification
+Avant toute modification du code ou du schéma TypeScript :
+1. **Analyser l'historique SQL** : Parcourir le dossier `supabase/migrations/` dans l'ordre chronologique pour comprendre l'état actuel (ex: suppression de tables, renommages).
+2. **Priorité aux migrations** : Si une table est présente dans le code mais supprimée par un fichier `.sql` (ex: `drop_tools_tables.sql`), elle DOIT être supprimée immédiatement du fichier `schema.ts`.
+3. **Vérifier les types natifs** : S'assurer que les types complexes comme `tsvector` ou les `enums` sont déclarés dans Drizzle pour correspondre aux index et colonnes de recherche SQL.
 
-        Tests Field: Table tests uses column name.
-
-        Migration: Always propose SQL migrations, never Drizzle.
+## Vigilance spécifique
+- **Traductions** : Chaque table principale (ex: `tests`, `themes`) possède souvent une table `_translations` associée. Ne pas oublier de les synchroniser.
+- **Thèmes vs Pathologies** : Ne plus utiliser le terme "pathologies". Tout a été migré vers "themes".
+- **Recherche** : Utiliser les colonnes `fts_vector` pour les requêtes de recherche plutôt que des simples `LIKE` pour garantir les performances prévues en base.
 
     NEXT.JS 16 & ARCHITECTURE:
 
