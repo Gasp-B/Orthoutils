@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { defaultLocale, type Locale } from '@/i18n/routing';
@@ -82,8 +82,8 @@ async function upsertDomains(db: DbClient, domainLabels: string[], locale: Local
 
     await db
       .insert(domainsTranslations)
-      // Correction: Ajout explicite de synonyms: []
-      .values({ domainId: targetDomainId, label, slug, locale, synonyms: [] })
+      // Utilisation de sql`'{}'::text[]` pour forcer le type tableau vide Postgres
+      .values({ domainId: targetDomainId, label, slug, locale, synonyms: sql`'{}'::text[]` })
       .onConflictDoUpdate({
         target: [domainsTranslations.domainId, domainsTranslations.locale],
         set: { label, slug },
@@ -130,8 +130,8 @@ async function upsertTags(db: DbClient, tagLabels: string[], locale: Locale) {
 
     await db
       .insert(tagsTranslations)
-      // Correction: Ajout explicite de synonyms: [] pour éviter l'erreur de valeur par défaut
-      .values({ tagId: targetTagId, label, locale, synonyms: [] })
+      // Utilisation de sql`'{}'::text[]` pour éviter les erreurs de driver sur les tableaux vides
+      .values({ tagId: targetTagId, label, locale, synonyms: sql`'{}'::text[]` })
       .onConflictDoUpdate({
         target: [tagsTranslations.tagId, tagsTranslations.locale],
         set: { label },
@@ -193,8 +193,8 @@ async function upsertThemes(db: DbClient, themeLabels: string[], locale: Locale)
 
     await db
       .insert(themeTranslations)
-      // Correction: Ajout explicite de synonyms: []
-      .values({ themeId: targetThemeId, label, locale, synonyms: [] })
+      // Utilisation de sql`'{}'::text[]`
+      .values({ themeId: targetThemeId, label, locale, synonyms: sql`'{}'::text[]` })
       .onConflictDoUpdate({
         target: [themeTranslations.themeId, themeTranslations.locale],
         set: { label },
