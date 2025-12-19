@@ -169,13 +169,14 @@ export async function getSearchHubData(input: SearchQueryInput): Promise<SearchH
 
   const resourceFilters = [eq(resourcesTranslations.locale, locale)];
   if (normalizedQuery) {
-    resourceFilters.push(
-      or(
-        ilike(resourcesTranslations.title, `%${normalizedQuery}%`),
-        ilike(resourcesTranslations.description, `%${normalizedQuery}%`),
-        ilike(resources.type, `%${normalizedQuery}%`),
-      ),
+    const queryFilter = or(
+      ilike(resourcesTranslations.title, `%${normalizedQuery}%`),
+      ilike(resourcesTranslations.description, `%${normalizedQuery}%`),
+      ilike(resources.type, `%${normalizedQuery}%`),
     );
+    if (queryFilter) {
+      resourceFilters.push(queryFilter);
+    }
   }
 
   const resourcesRows = await db

@@ -19,6 +19,10 @@ import {
 import { generateUniqueSlug } from '@/lib/utils/slug';
 
 type DbClient = ReturnType<typeof getDb>;
+type DbTransaction = Parameters<DbClient['transaction']>[0] extends (tx: infer Tx) => Promise<unknown>
+  ? Tx
+  : never;
+type DbExecutor = DbClient | DbTransaction;
 
 function normalizeValue(value: string) {
   const normalized = value.trim();
@@ -54,7 +58,7 @@ async function resolveDomainIds(db: DbClient, domainIds: string[]) {
   return foundIds;
 }
 
-async function syncThemeDomains(db: DbClient, themeId: string, domainIds: string[]) {
+async function syncThemeDomains(db: DbExecutor, themeId: string, domainIds: string[]) {
   await db.delete(themeDomains).where(eq(themeDomains.themeId, themeId));
 
   if (domainIds.length === 0) {
@@ -253,7 +257,7 @@ export async function createTheme(
       })
       .returning({ id: themeTranslations.themeId, label: themeTranslations.label });
 
-    await syncThemeDomains(tx as DbClient, themeId, validDomainIds);
+    await syncThemeDomains(tx, themeId, validDomainIds);
 
     return created;
   });
@@ -315,7 +319,7 @@ export async function updateTheme(params: {
         },
       });
 
-    await syncThemeDomains(tx as DbClient, params.id, validDomainIds);
+    await syncThemeDomains(tx, params.id, validDomainIds);
   });
 
   return { id: params.id, label: normalized };
