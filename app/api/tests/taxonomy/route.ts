@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { inArray, eq, and } from 'drizzle-orm';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 import { getDb } from '@/lib/db/client';
+import { createRouteHandlerSupabaseClient, supabaseAdmin } from '@/lib/supabaseClient';
 import {
   domains,
   domainsTranslations,
@@ -32,10 +33,34 @@ import {
 } from '@/lib/tests/taxonomy';
 
 // Types helpers
-type DomainTranslationRow = typeof domainsTranslations.$inferSelect;
-type TagTranslationRow = typeof tagsTranslations.$inferSelect;
-type ThemeTranslationRow = typeof themeTranslations.$inferSelect;
-type ResourceTypeTranslationRow = typeof resourceTypesTranslations.$inferSelect;
+type DomainTranslationRow = {
+  domainId: string;
+  locale: string;
+  label: string;
+  slug: string;
+  synonyms: string[];
+};
+
+type TagTranslationRow = {
+  tagId: string;
+  locale: string;
+  label: string;
+  synonyms: string[];
+};
+
+type ThemeTranslationRow = {
+  themeId: string;
+  locale: string;
+  label: string;
+  description: string | null;
+  synonyms: string[];
+};
+
+type ResourceTypeTranslationRow = {
+  resourceTypeId: string;
+  locale: string;
+  label: string;
+};
 
 function resolveTranslation<T extends { locale: string }>(
   id: string,
@@ -61,89 +86,172 @@ export async function GET(request: NextRequest) {
     const requestedLocale = (searchParams.get('locale') as Locale | null) ?? defaultLocale;
     const locale = locales.includes(requestedLocale) ? requestedLocale : defaultLocale;
 
-    const db = getDb();
+    const supabase = await createRouteHandlerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dataClient = supabaseAdmin ?? supabase;
 
     const [
-      domainRows,
-      tagRows,
-      themeRows,
-      resourceTypeRows,
-      themeDomainRows,
-      allDomains,
-      allTags,
-      allThemes,
-      allResourceTypes,
-    ] =
-      await Promise.all([
-        db.select().from(domainsTranslations).where(inArray(domainsTranslations.locale, [locale, defaultLocale])),
-        db.select().from(tagsTranslations).where(inArray(tagsTranslations.locale, [locale, defaultLocale])),
-        db.select().from(themeTranslations).where(inArray(themeTranslations.locale, [locale, defaultLocale])),
-        db.select().from(resourceTypesTranslations).where(inArray(resourceTypesTranslations.locale, [locale, defaultLocale])),
-        db.select().from(themeDomains),
-        db.select().from(domains),
-        db.select().from(tags),
-        db.select().from(themes),
-        db.select().from(resourceTypes),
-      ]);
+      domainRowsResult,
+      tagRowsResult,
+      themeRowsResult,
+      resourceTypeRowsResult,
+      themeDomainRowsResult,
+      allTagsResult,
+      allThemesResult,
+      allResourceTypesResult,
+    ] = await Promise.all([
+      dataClient
+        .from('domains_translations')
+        .select('domain_id, locale, label, slug, synonyms')
+        .in('locale', [locale, defaultLocale]),
+      dataClient.from('tags_translations').select('tag_id, locale, label, synonyms').in('locale', [locale, defaultLocale]),
+      dataClient
+        .from('theme_translations')
+        .select('theme_id, locale, label, description, synonyms')
+        .in('locale', [locale, defaultLocale]),
+      dataClient
+        .from('resource_type_translations')
+        .select('resource_type_id, locale, label')
+        .in('locale', [locale, defaultLocale]),
+      dataClient.from('theme_domains').select('theme_id, domain_id'),
+      dataClient.from('tags').select('id, color_label'),
+      dataClient.from('themes').select('id, slug'),
+      dataClient.from('resource_types').select('id'),
+    ]);
+
+    if (domainRowsResult.error) throw domainRowsResult.error;
+    if (tagRowsResult.error) throw tagRowsResult.error;
+    if (themeRowsResult.error) throw themeRowsResult.error;
+    if (resourceTypeRowsResult.error) throw resourceTypeRowsResult.error;
+    if (themeDomainRowsResult.error) throw themeDomainRowsResult.error;
+    if (allTagsResult.error) throw allTagsResult.error;
+    if (allThemesResult.error) throw allThemesResult.error;
+    if (allResourceTypesResult.error) throw allResourceTypesResult.error;
+
+    const domainRows = (domainRowsResult.data ?? []) as Array<{
+      domain_id: string;
+      locale: string;
+      label: string;
+      slug: string;
+      synonyms: string[] | null;
+    }>;
+    const tagRows = (tagRowsResult.data ?? []) as Array<{
+      tag_id: string;
+      locale: string;
+      label: string;
+      synonyms: string[] | null;
+    }>;
+    const themeRows = (themeRowsResult.data ?? []) as Array<{
+      theme_id: string;
+      locale: string;
+      label: string;
+      description: string | null;
+      synonyms: string[] | null;
+    }>;
+    const resourceTypeRows = (resourceTypeRowsResult.data ?? []) as Array<{
+      resource_type_id: string;
+      locale: string;
+      label: string;
+    }>;
+    const themeDomainRows = (themeDomainRowsResult.data ?? []) as Array<{
+      theme_id: string;
+      domain_id: string;
+    }>;
+    const allTags = (allTagsResult.data ?? []) as Array<{ id: string; color_label: string | null }>;
+    const allThemes = (allThemesResult.data ?? []) as Array<{ id: string; slug: string }>;
+    const allResourceTypes = (allResourceTypesResult.data ?? []) as Array<{ id: string }>;
 
     // Mapping
     const domainsById = new Map<string, DomainTranslationRow[]>();
     for (const r of domainRows) {
-      const list = domainsById.get(r.domainId) ?? [];
-      list.push(r);
-      domainsById.set(r.domainId, list);
+      const list = domainsById.get(r.domain_id) ?? [];
+      list.push({
+        domainId: r.domain_id,
+        locale: r.locale,
+        label: r.label,
+        slug: r.slug,
+        synonyms: r.synonyms ?? [],
+      });
+      domainsById.set(r.domain_id, list);
     }
 
     const tagsById = new Map<string, TagTranslationRow[]>();
     for (const r of tagRows) {
-      const list = tagsById.get(r.tagId) ?? [];
-      list.push(r);
-      tagsById.set(r.tagId, list);
+      const list = tagsById.get(r.tag_id) ?? [];
+      list.push({
+        tagId: r.tag_id,
+        locale: r.locale,
+        label: r.label,
+        synonyms: r.synonyms ?? [],
+      });
+      tagsById.set(r.tag_id, list);
     }
 
     const themesById = new Map<string, ThemeTranslationRow[]>();
     for (const r of themeRows) {
-      const list = themesById.get(r.themeId) ?? [];
-      list.push(r);
-      themesById.set(r.themeId, list);
+      const list = themesById.get(r.theme_id) ?? [];
+      list.push({
+        themeId: r.theme_id,
+        locale: r.locale,
+        label: r.label,
+        description: r.description,
+        synonyms: r.synonyms ?? [],
+      });
+      themesById.set(r.theme_id, list);
     }
 
     const themeDomainsById = new Map<string, string[]>();
     for (const relation of themeDomainRows) {
-      const existing = themeDomainsById.get(relation.themeId) ?? [];
-      existing.push(relation.domainId);
-      themeDomainsById.set(relation.themeId, existing);
+      const existing = themeDomainsById.get(relation.theme_id) ?? [];
+      existing.push(relation.domain_id);
+      themeDomainsById.set(relation.theme_id, existing);
     }
 
     const resourceTypesById = new Map<string, ResourceTypeTranslationRow[]>();
     for (const r of resourceTypeRows) {
-      const list = resourceTypesById.get(r.resourceTypeId) ?? [];
-      list.push(r);
-      resourceTypesById.set(r.resourceTypeId, list);
+      const list = resourceTypesById.get(r.resource_type_id) ?? [];
+      list.push({
+        resourceTypeId: r.resource_type_id,
+        locale: r.locale,
+        label: r.label,
+      });
+      resourceTypesById.set(r.resource_type_id, list);
     }
 
     // Build Response
-    const localizedDomains = allDomains
-      .map((d) => {
-        const t = resolveTranslation(d.id, domainsById, locale, defaultLocale);
-        return t ? { id: d.id, label: t.label, slug: t.slug, synonyms: t.synonyms ?? [] } : null;
+    const localizedDomains = Array.from(domainsById.entries())
+      .map(([domainId]) => {
+        const t = resolveTranslation(domainId, domainsById, locale, defaultLocale);
+        return t ? { id: domainId, label: t.label, slug: t.slug, synonyms: t.synonyms ?? [] } : null;
       })
-      .filter((d): d is NonNullable<typeof d> => Boolean(d))
+      .filter((domain): domain is NonNullable<typeof domain> => Boolean(domain))
       .sort((a, b) => a.label.localeCompare(b.label));
 
+    const tagColorsById = new Map(allTags.map((tag) => [tag.id, tag.color_label]));
+
     const localizedTags = allTags
-      .map((t) => {
-        const tr = resolveTranslation(t.id, tagsById, locale, defaultLocale);
+      .map((t) => t.id)
+      .concat(Array.from(tagsById.keys()))
+      .filter((id, index, ids) => ids.indexOf(id) === index)
+      .map((tagId) => {
+        const tr = resolveTranslation(tagId, tagsById, locale, defaultLocale);
         return tr
           ? {
-              id: t.id,
+              id: tagId,
               label: tr.label,
               synonyms: tr.synonyms ?? [],
-              color: t.colorLabel,
+              color: tagColorsById.get(tagId) ?? null,
             }
           : null;
       })
-      .filter((t): t is NonNullable<typeof t> => Boolean(t))
+      .filter((tag): tag is NonNullable<typeof tag> => Boolean(tag))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     const localizedThemes = allThemes
