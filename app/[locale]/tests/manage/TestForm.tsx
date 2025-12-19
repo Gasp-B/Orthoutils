@@ -155,7 +155,7 @@ async function fetchTaxonomy(locale: Locale) {
   return (await response.json()) as TaxonomyResponse;
 }
 
-async function saveTest(payload: FormValues, locale: Locale, method: 'POST' | 'PATCH') {
+async function saveTest(payload: SubmitValues, locale: Locale, method: 'POST' | 'PATCH') {
   const response = await fetch('/api/tests', {
     method,
     headers: { 'Content-Type': 'application/json' },
