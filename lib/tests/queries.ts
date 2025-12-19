@@ -59,6 +59,8 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
       slug: slugExpression,
       shortDescription: shortDescriptionExpression,
       objective: objectiveExpression,
+      targetAudience: tests.targetAudience,
+      status: tests.status,
       ageMinMonths: tests.ageMinMonths,
       ageMaxMonths: tests.ageMaxMonths,
       population: populationExpression,
@@ -99,6 +101,8 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
     .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
     .groupBy(
       tests.id,
+      tests.targetAudience,
+      tests.status,
       tests.ageMinMonths,
       tests.ageMaxMonths,
       tests.durationMinutes,
@@ -158,6 +162,8 @@ export async function getTestWithMetadata(
       slug: slugExpression,
       shortDescription: shortDescriptionExpression,
       objective: objectiveExpression,
+      targetAudience: tests.targetAudience,
+      status: tests.status,
       ageMinMonths: tests.ageMinMonths,
       ageMaxMonths: tests.ageMaxMonths,
       population: populationExpression,
@@ -199,6 +205,8 @@ export async function getTestWithMetadata(
     .where(eq(tests.id, id))
     .groupBy(
       tests.id,
+      tests.targetAudience,
+      tests.status,
       tests.ageMinMonths,
       tests.ageMaxMonths,
       tests.durationMinutes,
