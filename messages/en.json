@@ -586,7 +586,20 @@
           "placeholder": "List the precise materials, grids, or supporting documents required."
         },
         "age": {
-          "label": "Age (months)",
+          "label": "Age",
+          "populationLabel": "Audience",
+          "populationOptions": {
+            "child": "Child",
+            "adult": "Adult"
+          },
+          "minLabel": "Minimum age",
+          "maxLabel": "Maximum age",
+          "unitLabel": "Age unit",
+          "units": {
+            "weeks": "Weeks",
+            "months": "Months",
+            "years": "Years"
+          },
           "minPlaceholder": "36",
           "maxPlaceholder": "120"
         },

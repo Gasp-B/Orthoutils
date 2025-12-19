@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +25,9 @@ type TestFormProps = {
 };
 
 // --- Schéma Zod ---
+const ageUnitSchema = z.enum(['weeks', 'months', 'years']);
+const agePopulationSchema = z.enum(['child', 'adult']);
+
 const optionalNullableInt = z.preprocess(
   (value) => {
     if (typeof value === 'number' && Number.isNaN(value)) {
@@ -53,7 +56,16 @@ const formSchemaBase = testSchema
     bibliography: z.array(z.object({ label: z.string().min(1), url: z.string().url() })).default([]).optional(),
   });
 
-type FormValues = z.infer<typeof formSchemaBase>;
+const formSchema = formSchemaBase.extend({
+  agePopulation: agePopulationSchema.default('child'),
+  ageMinValue: optionalNullableInt,
+  ageMinUnit: ageUnitSchema.default('months'),
+  ageMaxValue: optionalNullableInt,
+  ageMaxUnit: ageUnitSchema.default('months'),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+type SubmitValues = z.infer<typeof formSchemaBase>;
 type ApiResponse = { test?: TestDto; tests?: TestDto[]; error?: string };
 const defaultValues: FormValues = {
   id: undefined,
@@ -62,6 +74,11 @@ const defaultValues: FormValues = {
   objective: null,
   ageMinMonths: null,
   ageMaxMonths: null,
+  agePopulation: 'child',
+  ageMinValue: null,
+  ageMinUnit: 'months',
+  ageMaxValue: null,
+  ageMaxUnit: 'months',
   population: null,
   durationMinutes: null,
   materials: null,
@@ -74,6 +91,54 @@ const defaultValues: FormValues = {
   domains: [],
   tags: [],
   bibliography: [],
+};
+
+type AgeUnit = z.infer<typeof ageUnitSchema>;
+type AgePopulation = z.infer<typeof agePopulationSchema>;
+
+const toMonths = (value: number | null | undefined, unit: AgeUnit): number | null => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return null;
+  }
+
+  const normalized = Math.round(value);
+
+  switch (unit) {
+    case 'weeks':
+      return Math.round(normalized / 4);
+    case 'months':
+      return normalized;
+    case 'years':
+      return normalized * 12;
+    default:
+      return normalized;
+  }
+};
+
+const fromMonths = (value: number | null | undefined, unit: AgeUnit): number | null => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return null;
+  }
+
+  switch (unit) {
+    case 'weeks':
+      return Math.round(value * 4);
+    case 'months':
+      return value;
+    case 'years':
+      return Math.round(value / 12);
+    default:
+      return value;
+  }
+};
+
+const getPopulationSelection = (population: string | null | undefined): AgePopulation => {
+  const normalized = population?.toLowerCase() ?? '';
+  if (normalized.includes('adult') || normalized.includes('adulte')) {
+    return 'adult';
+  }
+
+  return 'child';
 };
 
 // --- Fonctions API (Fetchers) ---
@@ -90,7 +155,7 @@ async function fetchTaxonomy(locale: Locale) {
   return (await response.json()) as TaxonomyResponse;
 }
 
-async function saveTest(payload: FormValues, locale: Locale, method: 'POST' | 'PATCH') {
+async function saveTest(payload: SubmitValues, locale: Locale, method: 'POST' | 'PATCH') {
   const response = await fetch('/api/tests', {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -156,7 +221,7 @@ function TestForm({ locale }: TestFormProps) {
     watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchemaBase),
+    resolver: zodResolver(formSchema),
     defaultValues,
   });
 
@@ -164,6 +229,11 @@ function TestForm({ locale }: TestFormProps) {
   const currentTags = watch('tags') ?? [];
   const currentThemes = watch('themes') ?? [];
   const currentBibliography = watch('bibliography');
+  const agePopulation = watch('agePopulation');
+  const ageMinValue = watch('ageMinValue');
+  const ageMaxValue = watch('ageMaxValue');
+  const ageMinUnit = watch('ageMinUnit');
+  const ageMaxUnit = watch('ageMaxUnit');
 
   // Chargement des données lors de la sélection d'un test
   useEffect(() => {
@@ -173,18 +243,25 @@ function TestForm({ locale }: TestFormProps) {
     }
     const test = tests?.find((t) => t.id === selectedTestId);
     if (test) {
+      const populationSelection = getPopulationSelection(test.population);
+      const baseUnit: AgeUnit = populationSelection === 'adult' ? 'years' : 'months';
       reset({
         ...test,
         bibliography: test.bibliography ?? [],
         themes: test.themes ?? [],
         domains: test.domains ?? [],
         tags: test.tags ?? [],
+        agePopulation: populationSelection,
+        ageMinValue: fromMonths(test.ageMinMonths, baseUnit),
+        ageMinUnit: baseUnit,
+        ageMaxValue: fromMonths(test.ageMaxMonths, baseUnit),
+        ageMaxUnit: baseUnit,
       });
     }
   }, [selectedTestId, tests, reset]);
 
   const mutation = useMutation({
-    mutationFn: (payload: FormValues) => 
+    mutationFn: (payload: SubmitValues) => 
       saveTest(payload, locale, payload.id ? 'PATCH' : 'POST'),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tests', locale] });
@@ -195,13 +272,30 @@ function TestForm({ locale }: TestFormProps) {
   });
 
   const onSubmit = (values: FormValues) => {
+    const {
+      agePopulation: populationSelection,
+      ageMinValue: minValue,
+      ageMaxValue: maxValue,
+      ageMinUnit: minUnit,
+      ageMaxUnit: maxUnit,
+      ...baseValues
+    } = values;
+    const resolvedUnit: AgeUnit = populationSelection === 'adult' ? 'years' : minUnit;
+    const resolvedMaxUnit: AgeUnit = populationSelection === 'adult' ? 'years' : maxUnit;
+    const populationLabel =
+      populationSelection === 'adult'
+        ? formT('fields.age.populationOptions.adult')
+        : formT('fields.age.populationOptions.child');
     const payload = {
-      ...values,
-      name: values.name.trim(),
-      bibliography: values.bibliography?.filter(b => b.label && b.url) ?? [],
-      domains: values.domains ?? [],
-      tags: values.tags ?? [],
-      themes: values.themes ?? [],
+      ...baseValues,
+      name: baseValues.name.trim(),
+      population: populationLabel,
+      ageMinMonths: toMonths(minValue, resolvedUnit),
+      ageMaxMonths: toMonths(maxValue, resolvedMaxUnit),
+      bibliography: baseValues.bibliography?.filter((b) => b.label && b.url) ?? [],
+      domains: baseValues.domains ?? [],
+      tags: baseValues.tags ?? [],
+      themes: baseValues.themes ?? [],
     };
     mutation.mutate(payload);
   };
@@ -229,6 +323,19 @@ function TestForm({ locale }: TestFormProps) {
     searchPlaceholder: multiSelectT('searchPlaceholder'),
     dialogTitle: multiSelectT('dialogTitle', { label: '' }),
     dialogHelper: multiSelectT('filterHelper'),
+  };
+
+  const populationField = register('agePopulation');
+  const handlePopulationChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    populationField.onChange(event);
+    const nextPopulation = event.currentTarget.value as AgePopulation;
+    const currentMinMonths = toMonths(ageMinValue, agePopulation === 'adult' ? 'years' : ageMinUnit);
+    const currentMaxMonths = toMonths(ageMaxValue, agePopulation === 'adult' ? 'years' : ageMaxUnit);
+    const nextUnit: AgeUnit = nextPopulation === 'adult' ? 'years' : 'months';
+    setValue('ageMinUnit', nextUnit, { shouldDirty: true });
+    setValue('ageMaxUnit', nextUnit, { shouldDirty: true });
+    setValue('ageMinValue', fromMonths(currentMinMonths, nextUnit), { shouldDirty: true });
+    setValue('ageMaxValue', fromMonths(currentMaxMonths, nextUnit), { shouldDirty: true });
   };
 
   return (
@@ -403,11 +510,60 @@ function TestForm({ locale }: TestFormProps) {
             <CardContent className="space-y-4">
               
               <div className="property-row">
+                <Label>{formT('fields.age.populationLabel')}</Label>
+                <Select {...populationField} onChange={handlePopulationChange}>
+                  <option value="child">{formT('fields.age.populationOptions.child')}</option>
+                  <option value="adult">{formT('fields.age.populationOptions.adult')}</option>
+                </Select>
+              </div>
+
+              <div className="property-row">
                 <Label>{formT('fields.age.label')}</Label>
-                {/* Utilisation de flexRow pour mettre min/max sur la même ligne */}
-                <div className={styles.flexRow}>
-                  <Input type="number" {...register('ageMinMonths', { valueAsNumber: true })} placeholder="Min" />
-                  <Input type="number" {...register('ageMaxMonths', { valueAsNumber: true })} placeholder="Max" />
+                <div className="space-y-2">
+                  <div className={styles.flexRow}>
+                    <Input
+                      type="number"
+                      {...register('ageMinValue', { valueAsNumber: true })}
+                      placeholder={formT('fields.age.minPlaceholder')}
+                      aria-label={formT('fields.age.minLabel')}
+                    />
+                    {agePopulation === 'adult' ? (
+                      <div className="flex items-center text-sm text-slate-500">
+                        {formT('fields.age.units.years')}
+                      </div>
+                    ) : (
+                      <Select
+                        {...register('ageMinUnit')}
+                        aria-label={formT('fields.age.unitLabel')}
+                      >
+                        <option value="weeks">{formT('fields.age.units.weeks')}</option>
+                        <option value="months">{formT('fields.age.units.months')}</option>
+                        <option value="years">{formT('fields.age.units.years')}</option>
+                      </Select>
+                    )}
+                  </div>
+                  <div className={styles.flexRow}>
+                    <Input
+                      type="number"
+                      {...register('ageMaxValue', { valueAsNumber: true })}
+                      placeholder={formT('fields.age.maxPlaceholder')}
+                      aria-label={formT('fields.age.maxLabel')}
+                    />
+                    {agePopulation === 'adult' ? (
+                      <div className="flex items-center text-sm text-slate-500">
+                        {formT('fields.age.units.years')}
+                      </div>
+                    ) : (
+                      <Select
+                        {...register('ageMaxUnit')}
+                        aria-label={formT('fields.age.unitLabel')}
+                      >
+                        <option value="weeks">{formT('fields.age.units.weeks')}</option>
+                        <option value="months">{formT('fields.age.units.months')}</option>
+                        <option value="years">{formT('fields.age.units.years')}</option>
+                      </Select>
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -439,7 +439,20 @@
           "placeholder": "Listez le matériel précis, les grilles ou supports nécessaires."
         },
         "age": {
-          "label": "Âge (mois)",
+          "label": "Âge",
+          "populationLabel": "Public",
+          "populationOptions": {
+            "child": "Enfant",
+            "adult": "Adulte"
+          },
+          "minLabel": "Âge minimum",
+          "maxLabel": "Âge maximum",
+          "unitLabel": "Unité d'âge",
+          "units": {
+            "weeks": "Semaines",
+            "months": "Mois",
+            "years": "Années"
+          },
           "minPlaceholder": "36",
           "maxPlaceholder": "120"
         },
