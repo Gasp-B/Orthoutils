@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
-import { supabaseAdmin, createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
+import { createSupabaseAdminClient, createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createTestWithRelations, updateTestWithRelations } from '@/lib/tests/mutations';
 import { testsResponseSchema, type TestDto } from '@/lib/validation/tests';
@@ -267,11 +267,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!supabaseAdmin) {
-      throw new Error('Supabase admin client is not configured');
-    }
-
-    const tests = await getTestsWithClient(supabaseAdmin, locale);
+    const adminClient = createSupabaseAdminClient();
+    const tests = await getTestsWithClient(adminClient, locale);
 
     return NextResponse.json(
       { tests },

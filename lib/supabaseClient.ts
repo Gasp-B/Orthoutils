@@ -70,3 +70,16 @@ export async function createRouteHandlerSupabaseClient(): Promise<GenericSupabas
 
   return client as GenericSupabaseClient;
 }
+
+export function createSupabaseAdminClient(): GenericSupabaseClient {
+  return createClient(
+    assertValue(supabaseUrl, 'NEXT_PUBLIC_SUPABASE_URL est requis'),
+    assertValue(supabaseServiceKey, 'SUPABASE_SERVICE_ROLE_KEY est requis'),
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    },
+  ) as GenericSupabaseClient;
+}
