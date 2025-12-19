@@ -117,6 +117,8 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
   const parsed = testsResponseSchema.parse({
     tests: rows.map((row) => ({
       ...row,
+      targetAudience: row.targetAudience ?? 'child',
+      status: row.status ?? 'draft',
       createdAt: toIsoString((row.createdAt as Date | string | null) ?? null),
       updatedAt: toIsoString((row.updatedAt as Date | string | null) ?? null),
       domains: row.domains ?? [],
@@ -221,6 +223,8 @@ export async function getTestWithMetadata(
   const parsed = testsResponseSchema.parse({
     tests: rows.map((row) => ({
       ...row,
+      targetAudience: row.targetAudience ?? 'child',
+      status: row.status ?? 'draft',
       createdAt: toIsoString((row.createdAt as Date | string | null) ?? null),
       updatedAt: toIsoString((row.updatedAt as Date | string | null) ?? null),
       domains: row.domains ?? [],
