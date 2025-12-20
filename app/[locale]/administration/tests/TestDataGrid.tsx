@@ -780,8 +780,9 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           throw new Error(json.error || toastT('duplicateError'));
         }
 
-        setTests((prev) => [json.test, ...prev]);
-        setToastMsg(toastT('duplicateSuccess', { name: json.test.name }));
+        const createdTest = json.test;
+        setTests((prev) => [createdTest, ...prev]);
+        setToastMsg(toastT('duplicateSuccess', { name: createdTest.name }));
       } catch (error) {
         const message = error instanceof Error ? error.message : toastT('duplicateError');
         setToastMsg(message);
