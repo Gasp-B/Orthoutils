@@ -54,6 +54,12 @@ import {
   type TestDto,
 } from '@/lib/validation/tests';
 
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    label?: string;
+  }
+}
+
 type EditingColumnId = 'name' | 'status' | 'tags' | 'domainTheme';
 
 type EditingCell = { rowId: string; columnId: EditingColumnId } | null;
