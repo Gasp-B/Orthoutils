@@ -999,7 +999,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </div>
       )}
 
-      <div className="rounded-md border border-slate-200/80 overflow-hidden">
+      <div className="rounded-md border border-slate-300 bg-white/95 shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
