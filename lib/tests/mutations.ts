@@ -16,7 +16,15 @@ import {
   themeTranslations,
   themes,
 } from '@/lib/db/schema';
-import { testInputSchema, testSchema, updateTestInputSchema, type TestDto } from '@/lib/validation/tests';
+import {
+  bulkTestsArchiveSchema,
+  bulkTestsStatusSchema,
+  bulkTestsTagsSchema,
+  testInputSchema,
+  testSchema,
+  updateTestInputSchema,
+  type TestDto,
+} from '@/lib/validation/tests';
 import { generateUniqueSlug } from '@/lib/utils/slug';
 import { getTestWithMetadata } from './queries';
 
@@ -415,4 +423,76 @@ export async function updateTestWithRelations(input: unknown): Promise<TestDto> 
   }
 
   return testSchema.parse(test);
+}
+
+export async function bulkUpdateTestsStatus(input: unknown) {
+  const payload = bulkTestsStatusSchema.parse(input);
+
+  await getDb().update(tests).set({ status: payload.status }).where(inArray(tests.id, payload.ids));
+
+  return { ids: payload.ids, status: payload.status };
+}
+
+export async function bulkAddTagsToTests(input: unknown) {
+  const payload = bulkTestsTagsSchema.parse(input);
+  const locale = payload.locale ?? defaultLocale;
+
+  await getDb().transaction(async (tx) => {
+    const tagRecords = await upsertTags(tx as unknown as DbClient, payload.tags, locale);
+    const tagIds = tagRecords.map((tag) => tag.id);
+
+    if (tagIds.length === 0) {
+      return;
+    }
+
+    const values = payload.ids.flatMap((testId) =>
+      tagIds.map((tagId) => ({
+        testId,
+        tagId,
+      })),
+    );
+
+    if (values.length > 0) {
+      await tx.insert(testTags).values(values).onConflictDoNothing();
+    }
+  });
+
+  return { ids: payload.ids };
+}
+
+export async function bulkRemoveTagsFromTests(input: unknown) {
+  const payload = bulkTestsTagsSchema.parse(input);
+  const locale = payload.locale ?? defaultLocale;
+  const normalizedTags = normalizeList(payload.tags);
+
+  if (normalizedTags.length === 0) {
+    return { ids: payload.ids };
+  }
+
+  await getDb().transaction(async (tx) => {
+    const tagRows = await tx
+      .select({ tagId: tagsTranslations.tagId })
+      .from(tagsTranslations)
+      .where(and(eq(tagsTranslations.locale, locale), inArray(tagsTranslations.label, normalizedTags)));
+
+    const tagIds = Array.from(new Set(tagRows.map((row) => row.tagId)));
+
+    if (tagIds.length === 0) {
+      return;
+    }
+
+    await tx
+      .delete(testTags)
+      .where(and(inArray(testTags.testId, payload.ids), inArray(testTags.tagId, tagIds)));
+  });
+
+  return { ids: payload.ids };
+}
+
+export async function archiveTests(input: unknown) {
+  const payload = bulkTestsArchiveSchema.parse(input);
+
+  await getDb().update(tests).set({ status: 'archived' }).where(inArray(tests.id, payload.ids));
+
+  return { ids: payload.ids };
 }

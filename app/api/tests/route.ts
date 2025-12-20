@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 import { createSupabaseAdminClient, createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { createTestWithRelations, updateTestWithRelations } from '@/lib/tests/mutations';
+import { archiveTests, createTestWithRelations, updateTestWithRelations } from '@/lib/tests/mutations';
 import { testsDeletionSchema, testsResponseSchema, type TestDto } from '@/lib/validation/tests';
 
 type TestsBaseRow = {
@@ -40,6 +40,8 @@ type TestDomainRow = { test_id: string; domain_id: string };
 type TestThemeRow = { test_id: string; theme_id: string };
 type TestTagRow = { test_id: string; tag_id: string };
 
+const PATIENT_ASSESSMENT_TESTS_TABLE = 'patient_assessments_tests';
+
 function toIsoString(value: string | null): string {
   if (!value) {
     return new Date().toISOString();
@@ -69,7 +71,8 @@ async function getTestsWithClient(
     .from('tests')
     .select(
       'id, target_audience, status, age_min_months, age_max_months, duration_minutes, is_standardized, buy_link, bibliography, created_at, updated_at',
-    );
+    )
+    .order('updated_at', { ascending: false });
 
   if (testsError) {
     throw testsError;
@@ -343,13 +346,35 @@ export async function DELETE(request: NextRequest) {
 
     const payload = testsDeletionSchema.parse(await request.json());
     const adminClient = createSupabaseAdminClient();
-    const { error } = await adminClient.from('tests').delete().in('id', payload.ids);
+    const { data: usageRows, error: usageError } = await adminClient
+      .from(PATIENT_ASSESSMENT_TESTS_TABLE)
+      .select('test_id')
+      .in('test_id', payload.ids);
 
-    if (error) {
-      throw error;
+    if (usageError) {
+      throw usageError;
     }
 
-    return NextResponse.json({ deleted: payload.ids }, { status: 200 });
+    const usedTestIds = new Set((usageRows ?? []).map((row) => row.test_id));
+    const idsToArchive = payload.ids.filter((id) => usedTestIds.has(id));
+    const idsToDelete = payload.ids.filter((id) => !usedTestIds.has(id));
+
+    if (idsToArchive.length > 0) {
+      await archiveTests({ ids: idsToArchive });
+    }
+
+    if (idsToDelete.length > 0) {
+      const { error } = await adminClient.from('tests').delete().in('id', idsToDelete);
+
+      if (error) {
+        throw error;
+      }
+    }
+
+    return NextResponse.json(
+      { archived: idsToArchive, deleted: idsToDelete },
+      { status: 200 },
+    );
   } catch (error) {
     console.error('Failed to delete tests', error);
     const message = error instanceof Error ? error.message : 'Impossible de supprimer les tests';

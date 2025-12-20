@@ -86,6 +86,30 @@ export const testsDeletionSchema = z.object({
   ids: z.array(z.string().uuid()).min(1),
 });
 
+const bulkTestsSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1),
+});
+
+export const bulkTestsStatusSchema = bulkTestsSchema.extend({
+  status: validationStatusSchema,
+});
+
+export const bulkTestsTagsSchema = bulkTestsSchema.extend({
+  locale: localeEnum.default(defaultLocale),
+  tags: z.array(z.string().min(1)).min(1),
+});
+
+export const bulkTestsArchiveSchema = bulkTestsSchema;
+export const bulkTestsDeleteSchema = bulkTestsSchema;
+
+export const bulkTestsActionSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('status') }).merge(bulkTestsStatusSchema),
+  z.object({ action: z.literal('tags:add') }).merge(bulkTestsTagsSchema),
+  z.object({ action: z.literal('tags:remove') }).merge(bulkTestsTagsSchema),
+  z.object({ action: z.literal('archive') }).merge(bulkTestsArchiveSchema),
+  z.object({ action: z.literal('delete') }).merge(bulkTestsDeleteSchema),
+]);
+
 export const taxonomyResponseSchema = z.object({
   domains: z.array(
     z.object({
