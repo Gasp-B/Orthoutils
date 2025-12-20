@@ -236,7 +236,6 @@ function Header() {
             >
               FR
             </button>
-            <span className="u-opacity-30">|</span>
             <button
               type="button"
               className="ph-header__locale-button"
