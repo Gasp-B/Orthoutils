@@ -181,6 +181,7 @@
       "loading": "Loading tests…",
       "emptyState": "No tests match the current filters.",
       "dateFallback": "Unknown date",
+      "tagFallback": "No tag",
       "empty": "None",
       "labels": {
         "domains": "Domains",
