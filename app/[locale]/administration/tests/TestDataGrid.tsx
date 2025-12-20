@@ -629,7 +629,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <p className="text-sm text-slate-500">{t('subtitle')}</p>
         </div>
         <Link
-          className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+          className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           href="/administration/tests/create"
         >
           {t('actions.newTest')}
@@ -637,66 +637,83 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
       </div>
 
       <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+        <div className="flex flex-wrap items-end gap-4">
+          <label className="flex flex-1 flex-col gap-2 text-sm font-medium text-slate-700">
             {t('filters.search')}
-            <input
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              placeholder={t('filters.searchPlaceholder')}
-              value={(table.getState().globalFilter as string) ?? ''}
-              onChange={(event) => table.setGlobalFilter(event.target.value)}
-            />
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-4 w-4"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35" />
+                  <circle cx="11" cy="11" r="7" />
+                </svg>
+              </span>
+              <input
+                className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm"
+                placeholder={t('filters.searchPlaceholder')}
+                value={(table.getState().globalFilter as string) ?? ''}
+                onChange={(event) => table.setGlobalFilter(event.target.value)}
+              />
+            </div>
           </label>
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            {t('filters.status')}
-            <select
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
-              onChange={(event) =>
-                table.getColumn('status')?.setFilterValue(event.target.value || undefined)
-              }
-            >
-              <option value="">{t('filters.statusAll')}</option>
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {statusT(status)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+            <label className="flex min-w-[160px] flex-col gap-2 text-sm font-medium text-slate-700">
+              {t('filters.status')}
+              <select
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
+                onChange={(event) =>
+                  table.getColumn('status')?.setFilterValue(event.target.value || undefined)
+                }
+              >
+                <option value="">{t('filters.statusAll')}</option>
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {statusT(status)}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            {t('filters.domainTheme')}
-            <select
-              multiple
-              className="min-h-[120px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={currentDomainFilters}
-              onChange={handleDomainFilterChange}
-            >
-              {domainsFilterOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label className="flex min-w-[200px] flex-col gap-2 text-sm font-medium text-slate-700">
+              {t('filters.domainTheme')}
+              <select
+                multiple
+                className="min-h-[88px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={currentDomainFilters}
+                onChange={handleDomainFilterChange}
+              >
+                {domainsFilterOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-            {t('filters.tags')}
-            <select
-              multiple
-              className="min-h-[120px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-              value={currentTagFilters}
-              onChange={handleTagsFilterChange}
-            >
-              {tagsFilterOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label className="flex min-w-[200px] flex-col gap-2 text-sm font-medium text-slate-700">
+              {t('filters.tags')}
+              <select
+                multiple
+                className="min-h-[88px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={currentTagFilters}
+                onChange={handleTagsFilterChange}
+              >
+                {tagsFilterOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
