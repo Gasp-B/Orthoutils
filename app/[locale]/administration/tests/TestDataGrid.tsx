@@ -208,9 +208,6 @@ function buildColumns({
             onClick={() => onBeginEdit(test, 'name')}
             onDoubleClick={() => onBeginEdit(test, 'name')}
           >
-            <Badge variant="outline" className="w-fit text-[10px] uppercase tracking-wide">
-              {test.tags[0] ?? t('tagFallback')}
-            </Badge>
             <Link
               className="text-sm font-medium text-slate-100 hover:underline"
               href={{ pathname: '/administration/tests/edit/[id]', params: { id: test.id } }}
