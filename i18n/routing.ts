@@ -37,6 +37,18 @@ export const pathnames = {
     en: '/administration/resources',
     fr: '/administration/resources',
   },
+  '/administration/tests': {
+    en: '/administration/tests',
+    fr: '/administration/tests',
+  },
+  '/administration/tests/create': {
+    en: '/administration/tests/create',
+    fr: '/administration/tests/create',
+  },
+  '/administration/tests/edit/[id]': {
+    en: '/administration/tests/edit/[id]',
+    fr: '/administration/tests/edit/[id]',
+  },
   '/tests/manage': '/tests/manage',
 } satisfies Pathnames<typeof locales>;
 
