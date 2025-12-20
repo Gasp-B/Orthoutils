@@ -618,8 +618,8 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     table.getColumn('tags')?.setFilterValue(values);
   };
 
-  const currentDomainFilters = (table.getColumn('domainTheme')?.getFilterValue() as string[]) ?? [];
-  const currentTagFilters = (table.getColumn('tags')?.getFilterValue() as string[]) ?? [];
+  const currentDomainFilters = (table.getColumn('domainTheme')?.getFilterValue() || []) as unknown[];
+  const currentTagFilters = (table.getColumn('tags')?.getFilterValue() || []) as unknown[];
 
   return (
     <section className="mt-10 space-y-6">
@@ -657,7 +657,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               <input
                 className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm"
                 placeholder={t('filters.searchPlaceholder')}
-                value={(table.getState().globalFilter as string) ?? ''}
+                value={(table.getState().globalFilter as string | undefined) ?? ''}
                 onChange={(event) => table.setGlobalFilter(event.target.value)}
               />
             </div>
@@ -668,7 +668,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               {t('filters.status')}
               <select
                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
+                value={(table.getColumn('status')?.getFilterValue() as string | undefined) ?? ''}
                 onChange={(event) =>
                   table.getColumn('status')?.setFilterValue(event.target.value || undefined)
                 }
@@ -687,7 +687,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               <select
                 multiple
                 className="min-h-[88px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                value={currentDomainFilters}
+                value={currentDomainFilters as string[]}
                 onChange={handleDomainFilterChange}
               >
                 {domainsFilterOptions.map((option) => (
@@ -703,7 +703,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               <select
                 multiple
                 className="min-h-[88px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                value={currentTagFilters}
+                value={currentTagFilters as string[]}
                 onChange={handleTagsFilterChange}
               >
                 {tagsFilterOptions.map((option) => (

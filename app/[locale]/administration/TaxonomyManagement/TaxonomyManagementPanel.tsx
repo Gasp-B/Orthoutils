@@ -6,7 +6,6 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import styles from './taxonomy-management.module.css';
 import {
-  taxonomyDeletionSchema,
   taxonomyMutationSchema,
   taxonomyResponseSchema,
   type TaxonomyResponse,
@@ -139,6 +138,7 @@ export default function TaxonomyManagementPanel() {
   }, [filteredItems, activeType]);
 
   const saveMutation = useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mutationFn: async (input: { id?: string; payload: any }) => {
       const body = input.id ? { id: input.id, ...input.payload } : input.payload;
       const method = input.id ? 'PUT' : 'POST';
@@ -160,7 +160,7 @@ export default function TaxonomyManagementPanel() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: { type: string; id: string; locale: string }) => {
       const res = await fetch('/api/tests/taxonomy', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -183,46 +183,61 @@ export default function TaxonomyManagementPanel() {
     if (!entry) return;
     setSelectedId(id);
     if (activeType === 'themes') {
-      const theme = entry as any;
+      const theme = entry as TaxonomyResponse['themes'][number];
       setFormState({
         label: theme.label ?? '',
         description: theme.description ?? '',
         synonyms: Array.isArray(theme.synonyms) ? theme.synonyms.join(', ') : '',
         color: '',
-        domainIds: theme.domains?.map((d: any) => d.id) ?? [],
+        domainIds: theme.domains?.map((d) => d.id) ?? [],
       });
     } else if (activeType === 'tags') {
-      const tag = entry as any;
-      setFormState({ label: tag.label ?? '', description: '', synonyms: Array.isArray(tag.synonyms) ? tag.synonyms.join(', ') : '', color: tag.color ?? '', domainIds: [] });
+      const tag = entry as TaxonomyResponse['tags'][number];
+      setFormState({
+        label: tag.label ?? '',
+        description: '',
+        synonyms: Array.isArray(tag.synonyms) ? tag.synonyms.join(', ') : '',
+        color: tag.color ?? '',
+        domainIds: [],
+      });
     } else {
-      const domain = entry as any;
-      setFormState({ label: domain.label ?? '', description: '', synonyms: Array.isArray(domain.synonyms) ? domain.synonyms.join(', ') : '', color: '', domainIds: [] });
+      // Domains or ResourceTypes
+      const domain = entry as TaxonomyResponse['domains'][number]; // Structure compatible
+      setFormState({
+        label: domain.label ?? '',
+        description: '',
+        synonyms: 'synonyms' in domain && Array.isArray(domain.synonyms) ? domain.synonyms.join(', ') : '',
+        color: '',
+        domainIds: [],
+      });
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const payload = {
-      type: typeToApi[activeType],
-      locale,
-      value: formState.label.trim(),
-      description: activeType === 'themes' ? formState.description.trim() || null : undefined,
-      synonyms: activeType !== 'resourceTypes' ? formState.synonyms.trim() : undefined,
-      color: activeType === 'tags' ? formState.color || null : undefined,
-      domainIds: activeType === 'themes' ? formState.domainIds : undefined,
-    };
-    const parsed = taxonomyMutationSchema.safeParse(payload);
-    if (!parsed.success) {
-      setErrorMessage(parsed.error.issues[0]?.message ?? t('messages.validationError'));
-      return;
-    }
-    await saveMutation.mutateAsync({ id: selectedId ?? undefined, payload: parsed.data });
+    void (async () => {
+      const payload = {
+        type: typeToApi[activeType],
+        locale,
+        value: formState.label.trim(),
+        description: activeType === 'themes' ? formState.description.trim() || null : undefined,
+        synonyms: activeType !== 'resourceTypes' ? formState.synonyms.trim() : undefined,
+        color: activeType === 'tags' ? formState.color || null : undefined,
+        domainIds: activeType === 'themes' ? formState.domainIds : undefined,
+      };
+      const parsed = taxonomyMutationSchema.safeParse(payload);
+      if (!parsed.success) {
+        setErrorMessage(parsed.error.issues[0]?.message ?? t('messages.validationError'));
+        return;
+      }
+      await saveMutation.mutateAsync({ id: selectedId ?? undefined, payload: parsed.data });
+    })();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const confirmed = window.confirm(t('messages.deleteConfirm'));
     if (!confirmed) return;
-    await deleteMutation.mutateAsync({ type: typeToApi[activeType], id, locale });
+    void deleteMutation.mutateAsync({ type: typeToApi[activeType], id, locale });
   };
 
   // Helper pour rendre un item de la liste afin d'éviter la duplication de code
@@ -263,7 +278,8 @@ export default function TaxonomyManagementPanel() {
               <span className={styles.typeName}>{typeDetails[type].label}</span>
               <span className={styles.typeHint}>{typeDetails[type].hint}</span>
             </span>
-            <span className={styles.count}>{(taxonomyQuery.data?.[type] as any)?.length ?? 0}</span>
+            {/* Correction ici : utilisation de unknown[] au lieu de any[] */}
+            <span className={styles.count}>{(taxonomyQuery.data?.[type] as unknown[])?.length ?? 0}</span>
           </button>
         ))}
       </aside>

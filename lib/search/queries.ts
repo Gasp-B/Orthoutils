@@ -20,7 +20,8 @@ import { searchLocaleSchema, searchPaginationSchema, searchQuerySchema } from '@
 import { and, asc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 
 export async function searchAll(query: string, locale: Locale) {
-  const db = await getDb();
+  // Correction: Suppression de await
+  const db = getDb();
   const normalizedQuery = searchQuerySchema.parse(query.trim());
   
   // Recherche dans les Tests (Anciennement Tools)
@@ -80,7 +81,8 @@ export async function getSearchHubData(input: SearchQueryInput): Promise<SearchH
   const normalizedQuery = input.query?.trim()
     ? searchQuerySchema.parse(input.query.trim())
     : undefined;
-  const db = await getDb();
+  // Correction: Suppression de await
+  const db = getDb();
   const offset = (page - 1) * limit;
 
   const testFilters = [

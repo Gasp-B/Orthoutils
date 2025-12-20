@@ -1,32 +1,48 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import React, { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
+import { 
+  Save, 
+  Tag, 
+  Info,
+  ChevronLeft,
+  X,
+  BookOpen,
+  Settings,
+  Link as LinkIcon
+} from "lucide-react";
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Select } from '@/components/ui/select';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { MultiSelect } from '@/components/ui/multi-select';
+
 import { type Locale } from '@/i18n/routing';
 import { testsResponseSchema, testSchema, type TestDto, type TaxonomyResponse, targetAudienceSchema } from '@/lib/validation/tests';
-// Import du fichier CSS module
-import styles from './test-form.module.css';
 
 type TestFormProps = {
   locale: Locale;
   testId?: string | null;
 };
 
-// --- Schéma Zod ---
 const ageUnitSchema = z.enum(['weeks', 'months', 'years']);
 
 const optionalNullableInt = z.preprocess(
@@ -43,7 +59,6 @@ const formSchemaBase = testSchema
   .omit({ id: true, slug: true, createdAt: true, updatedAt: true })
   .extend({
     id: z.string().uuid().optional(),
-    // On force l'utilisation du schéma défini dans validation/tests.ts
     targetAudience: targetAudienceSchema.default('child'), 
     shortDescription: z.string().nullable().optional(),
     objective: z.string().nullable().optional(),
@@ -60,7 +75,6 @@ const formSchemaBase = testSchema
   });
 
 const formSchema = formSchemaBase.extend({
-  // agePopulation supprimé au profit de targetAudience qui est déjà dans formSchemaBase
   ageMinValue: optionalNullableInt,
   ageMinUnit: ageUnitSchema.default('months'),
   ageMaxValue: optionalNullableInt,
@@ -70,11 +84,13 @@ const formSchema = formSchemaBase.extend({
 type FormValues = z.infer<typeof formSchema>;
 type SubmitValues = z.infer<typeof formSchemaBase>;
 type ApiResponse = { test?: TestDto; tests?: TestDto[]; error?: string };
+type AgeUnit = z.infer<typeof ageUnitSchema>;
+type TargetAudience = z.infer<typeof targetAudienceSchema>;
 
 const defaultValues: FormValues = {
   id: undefined,
   name: '',
-  targetAudience: 'child', // Valeur par défaut
+  targetAudience: 'child',
   status: 'draft',
   shortDescription: null,
   objective: null,
@@ -98,46 +114,27 @@ const defaultValues: FormValues = {
   bibliography: [],
 };
 
-type AgeUnit = z.infer<typeof ageUnitSchema>;
-type TargetAudience = z.infer<typeof targetAudienceSchema>;
-
 const toMonths = (value: number | null | undefined, unit: AgeUnit): number | null => {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return null;
-  }
-
+  if (value === null || value === undefined || Number.isNaN(value)) return null;
   const normalized = Math.round(value);
-
   switch (unit) {
-    case 'weeks':
-      return Math.round(normalized / 4);
-    case 'months':
-      return normalized;
-    case 'years':
-      return normalized * 12;
-    default:
-      return normalized;
+    case 'weeks': return Math.round(normalized / 4);
+    case 'months': return normalized;
+    case 'years': return normalized * 12;
+    default: return normalized;
   }
 };
 
 const fromMonths = (value: number | null | undefined, unit: AgeUnit): number | null => {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return null;
-  }
-
+  if (value === null || value === undefined || Number.isNaN(value)) return null;
   switch (unit) {
-    case 'weeks':
-      return Math.round(value * 4);
-    case 'months':
-      return value;
-    case 'years':
-      return Math.round(value / 12);
-    default:
-      return value;
+    case 'weeks': return Math.round(value * 4);
+    case 'months': return value;
+    case 'years': return Math.round(value / 12);
+    default: return value;
   }
 };
 
-// --- Fonctions API (Fetchers) ---
 async function fetchTests(locale: Locale) {
   const response = await fetch(`/api/tests?locale=${locale}`, { credentials: 'include' });
   if (!response.ok) throw new Error('Impossible de récupérer les tests');
@@ -158,19 +155,15 @@ async function saveTest(payload: SubmitValues, locale: Locale, method: 'POST' | 
     credentials: 'include',
     body: JSON.stringify({ ...payload, locale }),
   });
-
   const json = (await response.json().catch(() => ({}))) as { error?: string };
-
   if (!response.ok) {
     const error = new Error(json.error || 'saveError');
     (error as Error & { status?: number }).status = response.status;
     throw error;
   }
-
   return json as ApiResponse;
 }
 
-// --- Composant Toast Local ---
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 4000);
@@ -178,17 +171,14 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed top-4 right-4 z-50 bg-white border border-green-200 text-green-800 px-4 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 fade-in duration-300">
-      <div className="flex items-center gap-2">
-        <span className="text-xl">✓</span>
-        <p className="font-semibold text-sm">{message}</p>
-      </div>
+    <div className="fixed top-4 right-4 z-50 bg-white border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 fade-in duration-300 flex items-center gap-2">
+      <span className="text-xl">✓</span>
+      <p className="font-semibold text-sm">{message}</p>
     </div>
   );
 }
 
-// --- Composant Principal ---
-function TestForm({ locale, testId = null }: TestFormProps) {
+export default function TestForm({ locale, testId = null }: TestFormProps) {
   const formT = useTranslations('ManageTests.form');
   const feedbackT = useTranslations('ManageTests.feedback');
   const multiSelectT = useTranslations('ManageTests.form.multiSelect');
@@ -227,11 +217,12 @@ function TestForm({ locale, testId = null }: TestFormProps) {
   const currentBibliography = watch('bibliography');
   const watchedTestId = watch('id');
   const selectedTestId = testId ?? watchedTestId ?? null;
-  const targetAudience = watch('targetAudience'); // <-- Utilisation du nouveau champ
+  const targetAudience = watch('targetAudience');
   const ageMinValue = watch('ageMinValue');
   const ageMaxValue = watch('ageMaxValue');
   const ageMinUnit = watch('ageMinUnit');
   const ageMaxUnit = watch('ageMaxUnit');
+  const currentStatus = watch('status');
 
   const applyTestValues = useCallback((test: TestDto) => {
     const audience = test.targetAudience ?? 'child';
@@ -242,7 +233,7 @@ function TestForm({ locale, testId = null }: TestFormProps) {
       themes: test.themes ?? [],
       domains: test.domains ?? [],
       tags: test.tags ?? [],
-      targetAudience: audience, // <-- Mapping DB vers Form
+      targetAudience: audience,
       ageMinValue: fromMonths(test.ageMinMonths, baseUnit),
       ageMinUnit: baseUnit,
       ageMaxValue: fromMonths(test.ageMaxMonths, baseUnit),
@@ -250,26 +241,25 @@ function TestForm({ locale, testId = null }: TestFormProps) {
     });
   }, [reset]);
 
-  // Chargement des données lors de la sélection d'un test
   useEffect(() => {
     if (!selectedTestId) {
       reset(defaultValues);
       return;
     }
     const test = tests?.find((t) => t.id === selectedTestId);
-    if (test) {
-      applyTestValues(test);
-    }
+    if (test) applyTestValues(test);
   }, [selectedTestId, tests, applyTestValues, reset]);
 
   const mutation = useMutation({
     mutationFn: (payload: SubmitValues) => 
       saveTest(payload, locale, payload.id ? 'PATCH' : 'POST'),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['tests', locale] });
-      void queryClient.invalidateQueries({ queryKey: ['test-taxonomy', locale] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['tests', locale] });
+      await queryClient.invalidateQueries({ queryKey: ['test-taxonomy', locale] });
       setToastMsg(feedbackT('success.saved'));
-      if (!selectedTestId) reset(defaultValues);
+      if (!testId && !selectedTestId) {
+         reset(defaultValues);
+      }
     },
   });
 
@@ -282,19 +272,19 @@ function TestForm({ locale, testId = null }: TestFormProps) {
       ageMaxUnit: maxUnit,
       ...baseValues
     } = values;
+    
     const resolvedUnit: AgeUnit = targetAudience === 'adult' ? 'years' : minUnit;
     const resolvedMaxUnit: AgeUnit = targetAudience === 'adult' ? 'years' : maxUnit;
-    const populationLabel =
-      targetAudience === 'adult'
+    const populationLabel = targetAudience === 'adult'
         ? formT('fields.age.populationOptions.adult')
         : formT('fields.age.populationOptions.child');
     
     const payload = {
       ...baseValues,
       name: baseValues.name.trim(),
-      targetAudience, // <-- Envoi de la donnée structurée
+      targetAudience,
       status: baseValues.status,
-      population: baseValues.population || populationLabel, // Fallback texte si vide
+      population: baseValues.population || populationLabel,
       ageMinMonths: toMonths(minValue, resolvedUnit),
       ageMaxMonths: toMonths(maxValue, resolvedMaxUnit),
       bibliography: baseValues.bibliography?.filter((b) => b.label && b.url) ?? [],
@@ -317,28 +307,13 @@ function TestForm({ locale, testId = null }: TestFormProps) {
     setValue('bibliography', next, { shouldDirty: true });
   };
 
-  const commonMultiSelectTrans = {
-    add: multiSelectT('add'),
-    remove: multiSelectT('remove'),
-    clear: multiSelectT('clear'),
-    close: multiSelectT('close'),
-    emptySelection: multiSelectT('emptySelection'),
-    emptyResults: multiSelectT('emptyResults'),
-    loading: multiSelectT('loading'),
-    searchPlaceholder: multiSelectT('searchPlaceholder'),
-    dialogTitle: multiSelectT('dialogTitle', { label: '' }),
-    dialogHelper: multiSelectT('filterHelper'),
-  };
-
-  const targetAudienceField = register('targetAudience'); // <-- Register sur le bon champ
+  const targetAudienceField = register('targetAudience');
   const handleAudienceChange = (event: ChangeEvent<HTMLSelectElement>) => {
     targetAudienceField.onChange(event);
     const nextAudience = event.currentTarget.value as TargetAudience;
     
-    // Logique UI : on bascule les unités si on passe Adulte/Enfant
     const currentMinMonths = toMonths(ageMinValue, targetAudience === 'adult' ? 'years' : ageMinUnit);
     const currentMaxMonths = toMonths(ageMaxValue, targetAudience === 'adult' ? 'years' : ageMaxUnit);
-    
     const nextUnit: AgeUnit = nextAudience === 'adult' ? 'years' : 'months';
     
     setValue('ageMinUnit', nextUnit, { shouldDirty: true });
@@ -347,280 +322,324 @@ function TestForm({ locale, testId = null }: TestFormProps) {
     setValue('ageMaxValue', fromMonths(currentMaxMonths, nextUnit), { shouldDirty: true });
   };
 
-  const handleTestSelection = (event: ChangeEvent<HTMLSelectElement>) => {
-    const nextId = event.currentTarget.value || null;
-    if (!nextId) {
-      reset(defaultValues);
-      return;
-    }
-    setValue('id', nextId, { shouldDirty: true });
+  const handleFormSubmit = (e: React.FormEvent) => {
+    void handleSubmit(onSubmit)(e);
   };
 
-  const handleReset = () => {
-    if (selectedTestId) {
-      const test = tests?.find((current) => current.id === selectedTestId);
-      if (test) {
-        applyTestValues(test);
-      }
-      return;
-    }
-    reset(defaultValues);
+  const getStatusLabel = (status: string) => {
+    // Cast sécurisé car nous savons que les clés existent dans le type de traduction
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return formT(`fields.status.options.${status}` as any);
   };
 
   return (
-    <form className="notion-form" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
+    <form onSubmit={handleFormSubmit} className="space-y-8 pb-10 max-w-7xl mx-auto">
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
 
-      <div className="notion-toolbar sticky top-4 z-40 shadow-sm">
-        {!testId && (
-          <div className="notion-toolbar__group flex-1 max-w-md">
-            <div className="flex flex-col gap-1 w-full">
-              <Label htmlFor="test-selector" className="text-xs uppercase tracking-wider text-slate-500">
-                {formT('toolbar.sheetLabel')}
-              </Label>
-                <Select
-                  id="test-selector"
-                  value={selectedTestId ?? ''}
-                  onChange={handleTestSelection}
-                  className="font-semibold bg-white/50"
-                >
-                <option value="">✨ {formT('toolbar.newTest')}</option>
-                {tests?.map((test) => (
-                  <option key={test.id} value={test.id}>
-                    📝 {test.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          </div>
-        )}
-
-        <div className="notion-toolbar__group">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push(`/${locale}/administration/tests`)}
-          >
-            {formT('toolbar.back')}
-          </Button>
-          <Button type="button" variant="ghost" onClick={handleReset}>
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b pb-4 pt-2 -mx-4 px-4 sm:-mx-8 sm:px-8 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+           <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            className="text-muted-foreground hover:text-foreground hidden sm:flex"
+            onClick={() => router.back()}
+           >
+             <ChevronLeft className="h-4 w-4 mr-1" />
+             {formT('toolbar.back')}
+           </Button>
+           <div>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                {selectedTestId ? formT('actions.update') : formT('actions.create')}
+                <Badge variant={currentStatus === 'published' ? 'default' : 'outline'} className="ml-2 text-xs font-normal">
+                  {getStatusLabel(currentStatus)}
+                </Badge>
+              </h2>
+              {!testId && (
+                <div className="mt-1">
+                  <select 
+                    className="text-xs bg-transparent border-none text-muted-foreground focus:ring-0 cursor-pointer hover:text-foreground"
+                    value={selectedTestId ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value || null;
+                      if (!val) reset(defaultValues);
+                      setValue('id', val || undefined, { shouldDirty: true });
+                    }}
+                  >
+                    <option value="">{formT('toolbar.newTest')}</option>
+                    {tests?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+              )}
+           </div>
+        </div>
+        
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button type="button" variant="outline" onClick={() => reset(defaultValues)} className="flex-1 sm:flex-none">
             {formT('toolbar.reset')}
           </Button>
-          <Button type="submit" disabled={mutation.isPending} className="min-w-[140px]">
-            {mutation.isPending ? formT('actions.pending') : (selectedTestId ? formT('actions.update') : formT('actions.create'))}
+          <Button type="submit" disabled={mutation.isPending} className="flex-1 sm:flex-none min-w-[140px]">
+            {mutation.isPending ? (
+              <span>{formT('actions.pending')}...</span>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                {formT('actions.save')}
+              </>
+            )}
           </Button>
         </div>
       </div>
 
       {mutation.isError && (
         <div className="p-4 rounded-lg bg-red-50 text-red-700 border border-red-200">
-          <strong>{feedbackT('errors.title')} </strong>
-          {(() => {
-            const typedError = mutation.error as Error & { status?: number };
-            const isUnauthorized =
-              typedError?.message === 'Unauthorized' || typedError?.status === 401;
-
-            if (isUnauthorized) {
-              return feedbackT('errors.unauthorized');
-            }
-
-            const reason =
-              typedError?.message && typedError.message !== 'saveError'
-                ? typedError.message
-                : '';
-
-            return reason
-              ? feedbackT('errors.genericWithReason', { reason })
-              : feedbackT('errors.generic');
-          })()}
+          <p className="font-semibold">{feedbackT('errors.title')}</p>
+          <p className="text-sm">{(mutation.error as Error).message}</p>
         </div>
       )}
 
-      <Input
-        id="name"
-        className="notion-title-input mt-4"
-        placeholder={formT('fields.name.placeholder')}
-        {...register('name')}
-      />
-      {errors.name && <p className="text-red-500 text-sm ml-2">{errors.name.message}</p>}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="details"> <Info className="w-4 h-4 mr-2"/> Détails</TabsTrigger>
+              <TabsTrigger value="taxonomy"> <Tag className="w-4 h-4 mr-2"/> Classification</TabsTrigger>
+              <TabsTrigger value="content"> <BookOpen className="w-4 h-4 mr-2"/> Contenu</TabsTrigger>
+            </TabsList>
 
-      <div className="content-grid">
-        {/* COLONNE GAUCHE */}
-        <div className={styles.columnStack}>
-          <Card>
-            <CardHeader><CardTitle>{formT('sections.detailedSummary.title')}</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="property-value">
-                <Label>{formT('fields.shortDescription.label')}</Label>
-                <Textarea {...register('shortDescription')} placeholder={formT('fields.shortDescription.placeholder')} />
-              </div>
-              <Separator />
-              <div className="property-value">
-                <Label>{formT('fields.objective.label')}</Label>
-                <Textarea {...register('objective')} placeholder={formT('fields.objective.placeholder')} />
-              </div>
-              <Separator />
-              <div className="property-value">
-                <Label>{formT('fields.notes.label')}</Label>
-                <Textarea {...register('notes')} placeholder={formT('fields.notes.placeholder')} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{formT('sections.bibliography.title')}</CardTitle>
-              <p className="helper-text">{formT('sections.bibliography.helper')}</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {currentBibliography?.map((entry, idx) => (
-                <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-md border border-slate-100">
-                  <div className="flex-1 grid gap-1">
-                    <span className="font-semibold text-sm">{entry.label}</span>
-                    <a href={entry.url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 truncate">{entry.url}</a>
+            <TabsContent value="details" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{formT('sections.detailedSummary.title')}</CardTitle>
+                  <CardDescription>Informations générales sur le test.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">{formT('fields.name.placeholder')} <span className="text-red-500">*</span></Label>
+                    <Input id="name" {...register('name')} className="text-base font-medium" />
+                    {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
                   </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => removeBibliographyItem(idx)}>×</Button>
-                </div>
-              ))}
-              
-              <div className="grid gap-3 p-3 border rounded-lg bg-slate-50/50">
-                <Input 
-                  placeholder={formT('bibliography.addPlaceholder')} 
-                  value={newBibliography.label}
-                  onChange={(e) => setNewBibliography(prev => ({ ...prev, label: e.target.value }))}
-                />
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder={formT('bibliography.addUrlPlaceholder')} 
-                    value={newBibliography.url}
-                    onChange={(e) => setNewBibliography(prev => ({ ...prev, url: e.target.value }))}
-                  />
-                  <Button type="button" variant="outline" onClick={addBibliographyItem}>{formT('bibliography.addButton')}</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
+                  <div className="space-y-2">
+                    <Label>{formT('fields.shortDescription.label')}</Label>
+                    <Textarea {...register('shortDescription')} placeholder={formT('fields.shortDescription.placeholder')} className="min-h-[100px]" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{formT('fields.objective.label')}</Label>
+                    <Textarea {...register('objective')} placeholder={formT('fields.objective.placeholder')} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{formT('fields.publisher.label')}</Label>
+                      <Input {...register('publisher')} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{formT('fields.duration.label')}</Label>
+                      <div className="flex items-center gap-2">
+                        <Input type="number" {...register('durationMinutes', { valueAsNumber: true })} />
+                        <span className="text-sm text-muted-foreground">min</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Ciblage</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 border rounded bg-slate-50">
+                    <Label>{formT('fields.age.populationLabel')}</Label>
+                    <Select {...targetAudienceField} onChange={handleAudienceChange}>
+                        <option value="child">{formT('fields.age.populationOptions.child')}</option>
+                        <option value="adult">{formT('fields.age.populationOptions.adult')}</option>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{formT('fields.age.minLabel')}</Label>
+                      <div className="flex gap-2">
+                        <Input type="number" {...register('ageMinValue', { valueAsNumber: true })} />
+                        {targetAudience !== 'adult' && (
+                          <Select {...register('ageMinUnit')}>
+                            <option value="weeks">{formT('fields.age.units.weeks')}</option>
+                            <option value="months">{formT('fields.age.units.months')}</option>
+                            <option value="years">{formT('fields.age.units.years')}</option>
+                          </Select>
+                        )}
+                        {targetAudience === 'adult' && <span className="flex items-center text-sm">ans</span>}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{formT('fields.age.maxLabel')}</Label>
+                      <div className="flex gap-2">
+                        <Input type="number" {...register('ageMaxValue', { valueAsNumber: true })} />
+                        {targetAudience !== 'adult' && (
+                          <Select {...register('ageMaxUnit')}>
+                            <option value="weeks">{formT('fields.age.units.weeks')}</option>
+                            <option value="months">{formT('fields.age.units.months')}</option>
+                            <option value="years">{formT('fields.age.units.years')}</option>
+                          </Select>
+                        )}
+                        {targetAudience === 'adult' && <span className="flex items-center text-sm">ans</span>}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="taxonomy" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{formT('sections.taxonomy.title')}</CardTitle>
+                  <CardDescription>{formT('sections.taxonomy.helper')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label>{formT('sections.taxonomy.domainsLabel')}</Label>
+                    <MultiSelect
+                      label={formT('sections.taxonomy.domainsLabel')}
+                      options={taxonomy?.domains.map(d => ({ id: d.id, label: d.label })) ?? []}
+                      selectedValues={currentDomains}
+                      onChange={(vals: string[]) => setValue('domains', vals, { shouldDirty: true })}
+                      allowCreate={true}
+                      translations={{ 
+                        add: multiSelectT('add'),
+                        remove: multiSelectT('remove'),
+                        clear: multiSelectT('clear'),
+                        close: multiSelectT('close'),
+                        emptySelection: multiSelectT('emptySelection'),
+                        emptyResults: multiSelectT('emptyResults'),
+                        loading: multiSelectT('loading'),
+                        searchPlaceholder: multiSelectT('searchPlaceholder'),
+                        dialogTitle: formT('sections.taxonomy.domainsLabel'),
+                        dialogHelper: multiSelectT('filterHelper')
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>{formT('sections.taxonomy.themesLabel')}</Label>
+                    <MultiSelect
+                      label={formT('sections.taxonomy.themesLabel')}
+                      options={taxonomy?.themes.map((p) => ({ id: p.id, label: p.label })) ?? []}
+                      selectedValues={currentThemes}
+                      onChange={(vals: string[]) => setValue('themes', vals, { shouldDirty: true })}
+                      allowCreate={false}
+                      translations={{
+                        add: multiSelectT('add'),
+                        remove: multiSelectT('remove'),
+                        clear: multiSelectT('clear'),
+                        close: multiSelectT('close'),
+                        emptySelection: multiSelectT('emptySelection'),
+                        emptyResults: multiSelectT('emptyResults'),
+                        loading: multiSelectT('loading'),
+                        searchPlaceholder: multiSelectT('searchPlaceholder'),
+                        dialogTitle: formT('sections.taxonomy.themesLabel'),
+                        dialogHelper: multiSelectT('filterHelper')
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{formT('sections.taxonomy.tagsLabel')}</Label>
+                    <MultiSelect
+                      label={formT('sections.taxonomy.tagsLabel')}
+                      options={taxonomy?.tags.map(t => ({ id: t.id, label: t.label })) ?? []}
+                      selectedValues={currentTags}
+                      onChange={(vals: string[]) => setValue('tags', vals, { shouldDirty: true })}
+                      allowCreate={true}
+                      translations={{
+                        add: multiSelectT('add'),
+                        remove: multiSelectT('remove'),
+                        clear: multiSelectT('clear'),
+                        close: multiSelectT('close'),
+                        emptySelection: multiSelectT('emptySelection'),
+                        emptyResults: multiSelectT('emptyResults'),
+                        loading: multiSelectT('loading'),
+                        searchPlaceholder: multiSelectT('searchPlaceholder'),
+                        dialogTitle: formT('sections.taxonomy.tagsLabel'),
+                        dialogHelper: multiSelectT('filterHelper')
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="content" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{formT('sections.bibliography.title')}</CardTitle>
+                  <CardDescription>{formT('sections.bibliography.helper')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {currentBibliography?.map((entry, idx) => (
+                    <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-md border border-slate-100 group">
+                      <div className="p-2 bg-white rounded border shadow-sm">
+                        <LinkIcon className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <div className="flex-1 grid gap-1">
+                        <span className="font-medium text-sm">{entry.label}</span>
+                        <a href={entry.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground truncate hover:underline">{entry.url}</a>
+                      </div>
+                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeBibliographyItem(idx)}>
+                        <X className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                  
+                  <div className="p-4 border rounded-lg bg-slate-50/50 space-y-3">
+                    <Label className="text-xs uppercase text-slate-500">Ajouter une référence</Label>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <Input 
+                        placeholder={formT('bibliography.addPlaceholder')} 
+                        value={newBibliography.label}
+                        onChange={(e) => setNewBibliography(prev => ({ ...prev, label: e.target.value }))}
+                        className="bg-white"
+                      />
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder={formT('bibliography.addUrlPlaceholder')} 
+                          value={newBibliography.url}
+                          onChange={(e) => setNewBibliography(prev => ({ ...prev, url: e.target.value }))}
+                          className="bg-white"
+                        />
+                        <Button type="button" size="sm" variant="outline" className="h-10 w-10 p-0" onClick={addBibliographyItem}>
+                          <Save className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>{formT('fields.materials.placeholder')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                   <Textarea {...register('materials')} placeholder="Liste du matériel requis..." className="min-h-[80px]" />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
 
-        {/* COLONNE DROITE */}
-        <div className={styles.columnStack}>
-          <Card className="property-panel">
-            <CardHeader>
-              <div className="space-y-1">
-                <CardTitle>{formT('sections.taxonomy.title')}</CardTitle>
-                <p className="text-sm text-slate-500">{formT('sections.taxonomy.helper')}</p>
-              </div>
+        <div className="space-y-6">
+          <Card className="border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+               <CardTitle className="text-base flex items-center gap-2">
+                 <Settings className="h-4 w-4"/> Paramètres
+               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className={styles.columnStack}>
-                <MultiSelect
-                  label={formT('sections.taxonomy.domainsLabel')}
-                  options={taxonomy?.domains.map(d => ({ id: d.id, label: d.label })) ?? []}
-                  selectedValues={currentDomains}
-                  onChange={(vals: string[]) => setValue('domains', vals, { shouldDirty: true })}
-                  allowCreate={true}
-                  translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.domainsLabel') }}
-                />
-
-                <MultiSelect
-                  label={formT('sections.taxonomy.themesLabel')}
-                  options={taxonomy?.themes.map((p) => ({ id: p.id, label: p.label })) ?? []}
-                  selectedValues={currentThemes}
-                  onChange={(vals: string[]) => setValue('themes', vals, { shouldDirty: true })}
-                  allowCreate={false}
-                  translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.themesLabel') }}
-                />
-
-                <MultiSelect
-                  label={formT('sections.taxonomy.tagsLabel')}
-                  options={taxonomy?.tags.map(t => ({ id: t.id, label: t.label })) ?? []}
-                  selectedValues={currentTags}
-                  onChange={(vals: string[]) => setValue('tags', vals, { shouldDirty: true })}
-                  allowCreate={true}
-                  translations={{ ...commonMultiSelectTrans, dialogTitle: formT('sections.taxonomy.tagsLabel') }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>{formT('sections.properties.title')}</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              
-              <div className="property-row">
-                <Label>{formT('fields.age.populationLabel')}</Label>
-                <Select {...targetAudienceField} onChange={handleAudienceChange}>
-                  <option value="child">{formT('fields.age.populationOptions.child')}</option>
-                  <option value="adult">{formT('fields.age.populationOptions.adult')}</option>
-                </Select>
-              </div>
-
-              <div className="property-row">
-                <Label>{formT('fields.age.label')}</Label>
-                <div className="space-y-2">
-                  <div className={styles.flexRow}>
-                    <Input
-                      type="number"
-                      {...register('ageMinValue', { valueAsNumber: true })}
-                      placeholder={formT('fields.age.minPlaceholder')}
-                      aria-label={formT('fields.age.minLabel')}
-                    />
-                    {targetAudience === 'adult' ? (
-                      <div className="flex items-center text-sm text-slate-500">
-                        {formT('fields.age.units.years')}
-                      </div>
-                    ) : (
-                      <Select
-                        {...register('ageMinUnit')}
-                        aria-label={formT('fields.age.unitLabel')}
-                      >
-                        <option value="weeks">{formT('fields.age.units.weeks')}</option>
-                        <option value="months">{formT('fields.age.units.months')}</option>
-                        <option value="years">{formT('fields.age.units.years')}</option>
-                      </Select>
-                    )}
-                  </div>
-                  <div className={styles.flexRow}>
-                    <Input
-                      type="number"
-                      {...register('ageMaxValue', { valueAsNumber: true })}
-                      placeholder={formT('fields.age.maxPlaceholder')}
-                      aria-label={formT('fields.age.maxLabel')}
-                    />
-                    {targetAudience === 'adult' ? (
-                      <div className="flex items-center text-sm text-slate-500">
-                        {formT('fields.age.units.years')}
-                      </div>
-                    ) : (
-                      <Select
-                        {...register('ageMaxUnit')}
-                        aria-label={formT('fields.age.unitLabel')}
-                      >
-                        <option value="weeks">{formT('fields.age.units.weeks')}</option>
-                        <option value="months">{formT('fields.age.units.months')}</option>
-                        <option value="years">{formT('fields.age.units.years')}</option>
-                      </Select>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="property-row">
-                <Label>{formT('fields.duration.label')}</Label>
-                <Input type="number" {...register('durationMinutes', { valueAsNumber: true })} placeholder="Min" />
-              </div>
-
-              <div className="property-row">
-                <Label>{formT('fields.standardization.label')}</Label>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="isStandardized" {...register('isStandardized')} className="w-4 h-4" />
-                  <Label htmlFor="isStandardized" className="font-normal cursor-pointer">
-                    {watch('isStandardized') ? formT('fields.standardization.standardized') : formT('fields.standardization.nonStandardized')}
-                  </Label>
-                </div>
-              </div>
-
-              <div className="property-row">
+              <div className="space-y-2">
                 <Label>{formT('fields.status.label')}</Label>
                 <Select {...register('status')}>
                   <option value="draft">{formT('fields.status.options.draft')}</option>
@@ -630,21 +649,33 @@ function TestForm({ locale, testId = null }: TestFormProps) {
                 </Select>
               </div>
 
-              <div className="property-value pt-2">
-                <Label>{formT('fields.materials.placeholder')}</Label>
-                <Input {...register('materials')} />
-              </div>
-              
-              <div className="property-value">
-                <Label>{formT('fields.publisher.label')}</Label>
-                <Input {...register('publisher')} />
-              </div>
-
-              <div className="property-value">
+              <div className="space-y-2">
                 <Label>{formT('fields.buyLink.placeholder')}</Label>
                 <Input {...register('buyLink')} placeholder="https://..." />
               </div>
 
+              <div className="space-y-2">
+                <Label>{formT('fields.priceRange') || "Prix approx."}</Label>
+                <Input {...register('priceRange')} placeholder="ex: 50-100€" />
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="isStandardized" {...register('isStandardized')} className="w-4 h-4 accent-blue-600" />
+                <Label htmlFor="isStandardized" className="font-normal cursor-pointer text-sm">
+                  {watch('isStandardized') ? formT('fields.standardization.standardized') : formT('fields.standardization.nonStandardized')}
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Notes Internes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea {...register('notes')} placeholder={formT('fields.notes.placeholder')} className="min-h-[150px] resize-y text-sm" />
             </CardContent>
           </Card>
         </div>
@@ -652,5 +683,3 @@ function TestForm({ locale, testId = null }: TestFormProps) {
     </form>
   );
 }
-
-export default TestForm;

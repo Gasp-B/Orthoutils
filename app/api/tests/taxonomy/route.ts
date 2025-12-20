@@ -7,7 +7,8 @@ import {
   domainsTranslations,
   tags,
   tagsTranslations,
-  themeTranslations,
+  // Ajout de l'import manquant ici
+  resourceTypesTranslations, 
 } from '@/lib/db/schema';
 import {
   taxonomyDeletionSchema,
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest) {
       allTagsResult,
       allThemesResult,
       allResourceTypesResult,
-      allDomainsResult, // Ajout de la récupération de la table parente
+      allDomainsResult,
     ] = await Promise.all([
       dataClient
         .from('domains_translations')
@@ -119,7 +120,7 @@ export async function GET(request: NextRequest) {
       dataClient.from('tags').select('id, color_label'),
       dataClient.from('themes').select('id, slug'),
       dataClient.from('resource_types').select('id'),
-      dataClient.from('domains').select('id'), // Requête sur la table parente domains
+      dataClient.from('domains').select('id'),
     ]);
 
     if (domainRowsResult.error) throw domainRowsResult.error;
@@ -166,7 +167,6 @@ export async function GET(request: NextRequest) {
     const allResourceTypes = (allResourceTypesResult.data ?? []) as Array<{ id: string }>;
     const allDomains = (allDomainsResult.data ?? []) as Array<{ id: string }>;
 
-    // Mapping des traductions de domaines
     const domainsById = new Map<string, DomainTranslationRow[]>();
     for (const r of domainRows) {
       const list = domainsById.get(r.domain_id) ?? [];
@@ -223,7 +223,6 @@ export async function GET(request: NextRequest) {
       resourceTypesById.set(r.resource_type_id, list);
     }
 
-    // Reconstruction de la réponse avec résolution des traductions
     const localizedDomains = allDomains
       .map((d) => {
         const t = resolveTranslation(d.id, domainsById, locale, defaultLocale);
@@ -301,7 +300,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Les fonctions POST, PUT et DELETE restent identiques à votre version originale
 export async function POST(request: NextRequest) {
   try {
     const payload = taxonomyMutationSchema.parse(await request.json());
@@ -387,7 +385,8 @@ export async function PUT(request: NextRequest) {
     }
 
     if (payload.type === 'resourceType') {
-      const trTable = require('@/lib/db/schema').resourceTypesTranslations;
+      // Correction ici: utilisation de l'import au lieu de require
+      const trTable = resourceTypesTranslations;
       await db
         .update(trTable)
         .set({ label: payload.value })

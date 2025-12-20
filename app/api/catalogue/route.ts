@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   try {
     const domains = await getCatalogueTaxonomy(locale);
     return NextResponse.json({ domains });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch catalogue" }, { status: 500 });
   }
 }
