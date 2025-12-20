@@ -208,6 +208,8 @@
         "statusAll": "All statuses",
         "domainTheme": "Domain / Theme",
         "tags": "Tags",
+        "all": "All",
+        "selectedCount": "({count} selected)",
         "clear": "Clear filters",
         "pageSize": "Rows per page"
       },

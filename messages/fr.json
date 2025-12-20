@@ -208,6 +208,8 @@
         "statusAll": "Tous les statuts",
         "domainTheme": "Domaine / Thème",
         "tags": "Tags",
+        "all": "Tous",
+        "selectedCount": "({count} sélectionné(s))",
         "clear": "Réinitialiser les filtres",
         "pageSize": "Lignes par page"
       },
