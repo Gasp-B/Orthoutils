@@ -985,6 +985,8 @@
       },
       "domainsLabel": "Domains",
       "emptyDomains": "No domains available yet.",
+      "themesLabel": "Themes",
+      "emptyThemes": "No themes available yet.",
       "tagsLabel": "Tags",
       "emptyTags": "No tags available yet.",
       "reset": "Reset filters"

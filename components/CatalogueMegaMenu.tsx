@@ -146,8 +146,8 @@ function CatalogueMegaMenu({ domains }: Props) {
                 <li key={domain.id}>
                   <Link
                     href={{
-                      pathname: '/catalogue/[slug]',
-                      params: { slug: domain.slug },
+                      pathname: '/search',
+                      query: { domain: domain.label },
                     }}
                     className={`ph-header__mega-domain ${
                       domain.id === activeDomain?.id ? 'is-active' : ''
@@ -183,10 +183,10 @@ function CatalogueMegaMenu({ domains }: Props) {
                   <Link
                     key={`${activeDomain.id}-${theme.id}`}
                     href={{
-                      pathname: '/catalogue/[slug]/[theme]',
-                      params: {
-                        slug: activeDomain.slug,
-                        theme: theme.slug,
+                      pathname: '/search',
+                      query: {
+                        domain: activeDomain.label,
+                        theme: theme.label,
                       },
                     }}
                     className="ph-header__mega-tag"

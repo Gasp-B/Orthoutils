@@ -40,6 +40,8 @@ export type SearchHubProps = {
   groups: SearchGroup[];
   domains: string[];
   tags: string[];
+  themes: string[];
+  initialFilters?: SearchHubFilters;
 };
 
 export type SearchQueryInput = {
@@ -47,4 +49,11 @@ export type SearchQueryInput = {
   query?: string | null;
   limit?: number | string;
   page?: number | string;
+};
+
+export type SearchHubFilters = {
+  types?: SearchResultKind[];
+  domains?: string[];
+  tags?: string[];
+  themes?: string[];
 };
