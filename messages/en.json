@@ -212,7 +212,8 @@
         "all": "All",
         "selectedCount": "({count} selected)",
         "clear": "Clear filters",
-        "pageSize": "Rows per page"
+        "pageSize": "Rows per page",
+        "filterButton": "Filters"
       },
       "actions": {
         "edit": "Edit",
@@ -226,6 +227,11 @@
         "summary": "Page {page} of {total}",
         "previous": "Previous",
         "next": "Next"
+      },
+      "columnHeader": {
+        "sortAsc": "Sort ascending",
+        "sortDesc": "Sort descending",
+        "hide": "Hide column"
       }
     },
     "bulk": {
