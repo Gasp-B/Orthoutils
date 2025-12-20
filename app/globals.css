@@ -29,6 +29,7 @@ body {
     linear-gradient(180deg, #fafdff 0%, #edf5fb 52%, #f6f8fb 100%);
   min-height: 100vh;
   color: var(--muted);
+  background-attachment: fixed;
 }
 
 
