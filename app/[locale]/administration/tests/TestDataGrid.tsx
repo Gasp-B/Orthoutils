@@ -476,10 +476,10 @@ function DataTableToolbar({
 
   return (
     <div className="flex flex-col gap-3 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-1 flex-wrap items-center gap-2">
+      <div className="flex flex-nowrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto">
           <Input
-            className="h-8 w-[120px] md:w-[180px] lg:w-[220px]"
+            className="h-8 w-[140px] md:w-[180px] lg:w-[220px] shrink-0"
             placeholder={t('filters.searchPlaceholder')}
             value={(table.getState().globalFilter as string) ?? ''}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
@@ -510,7 +510,7 @@ function DataTableToolbar({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 gap-2">
