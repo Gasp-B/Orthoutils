@@ -168,6 +168,78 @@
     "sectionLabel": "Test management",
     "pageTitle": "Manage tests",
     "pageLead": "Create new tests or update existing entries from the administration dashboard.",
+    "status": {
+      "draft": "Draft",
+      "in_review": "In review",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "grid": {
+      "title": "Test catalog",
+      "subtitle": "Filter, update, and curate the test catalog.",
+      "loading": "Loading tests…",
+      "emptyState": "No tests match the current filters.",
+      "dateFallback": "Unknown date",
+      "empty": "None",
+      "labels": {
+        "domains": "Domains",
+        "themes": "Themes"
+      },
+      "placeholders": {
+        "domains": "Domain labels, separated by commas",
+        "themes": "Theme labels, separated by commas",
+        "tags": "Tag labels, separated by commas"
+      },
+      "columns": {
+        "select": "Select all",
+        "selectRow": "Select row",
+        "title": "Title",
+        "status": "Status",
+        "domainTheme": "Domain / Theme",
+        "tags": "Tags",
+        "updatedAt": "Last updated",
+        "actions": "Actions"
+      },
+      "filters": {
+        "search": "Global search",
+        "searchPlaceholder": "Search by title, status, tags…",
+        "status": "Status",
+        "statusAll": "All statuses",
+        "domainTheme": "Domain / Theme",
+        "tags": "Tags",
+        "clear": "Clear filters",
+        "pageSize": "Rows per page"
+      },
+      "actions": {
+        "edit": "Edit",
+        "newTest": "New test"
+      },
+      "pagination": {
+        "summary": "Page {page} of {total}",
+        "previous": "Previous",
+        "next": "Next"
+      }
+    },
+    "bulk": {
+      "selected": "{count} selected",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "tags": "Update tags",
+      "delete": "Delete",
+      "deleteConfirm": "Delete {count} tests?",
+      "tagsPrompt": "Enter tags separated by commas"
+    },
+    "toast": {
+      "loadError": "Unable to load tests.",
+      "updateSuccess": "Test updated.",
+      "updateError": "Unable to update the test.",
+      "bulkUpdateSuccess": "{count} tests updated.",
+      "bulkUpdateError": "Unable to update the selected tests.",
+      "deleteSuccess": "{count} tests deleted.",
+      "deleteError": "Unable to delete the selected tests.",
+      "tagsEmpty": "Please enter at least one tag.",
+      "nameRequired": "A title is required."
+    },
     "create": {
       "metadata": {
         "title": "Create a test | Othoutils",

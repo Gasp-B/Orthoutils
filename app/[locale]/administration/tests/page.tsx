@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import TestForm from '../../tests/manage/TestForm';
+import TestDataGrid from './TestDataGrid';
 import styles from '../../tests/manage/manage-page.module.css';
 import { locales, type Locale } from '@/i18n/routing';
 
@@ -46,7 +46,7 @@ export default async function AdministrationTestsPage({ params }: Administration
         <p className={`text-subtle ${styles.pageLead}`}>{t('pageLead')}</p>
       </div>
 
-      <TestForm locale={locale as Locale} />
+      <TestDataGrid locale={locale as Locale} />
     </main>
   );
 }
