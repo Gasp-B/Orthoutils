@@ -784,7 +784,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-md">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -801,20 +801,20 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
+              <tr className="hover:bg-gray-50">
                 <td className="px-4 py-6 text-sm text-slate-500" colSpan={columns.length}>
                   {t('loading')}
                 </td>
               </tr>
             ) : table.getRowModel().rows.length === 0 ? (
-              <tr>
+              <tr className="hover:bg-gray-50">
                 <td className="px-4 py-6 text-sm text-slate-500" colSpan={columns.length}>
                   {t('emptyState')}
                 </td>
               </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-t border-slate-100">
+                <tr key={row.id} className="border-t border-slate-100 hover:bg-gray-50">
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 align-top">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
