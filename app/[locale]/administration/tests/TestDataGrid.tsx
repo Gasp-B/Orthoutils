@@ -1,23 +1,64 @@
 'use client';
 
-import { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  type Dispatch,
+  type KeyboardEvent,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useTranslations } from 'next-intl';
 import {
   type ColumnDef,
+  type SortingState,
+  type Table as TableInstance,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { ArrowUpDown, MoreHorizontal, Search, SlidersHorizontal } from 'lucide-react';
 import { type Locale } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  testInputSchema,
   updateTestInputSchema,
   validationStatusSchema,
   type TaxonomyResponse,
   type TestDto,
 } from '@/lib/validation/tests';
+
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    label?: string;
+  }
+}
 
 type EditingColumnId = 'name' | 'status' | 'tags' | 'domainTheme';
 
@@ -38,20 +79,35 @@ type UpdateOverrides = Partial<
   Pick<TestDto, 'name' | 'status' | 'tags' | 'domains' | 'themes'>
 >;
 
+type ColumnBuilderParams = {
+  locale: Locale;
+  t: ReturnType<typeof useTranslations>;
+  statusT: ReturnType<typeof useTranslations>;
+  onBeginEdit: (test: TestDto, columnId: EditingColumnId) => void;
+  onSaveEdit: (test: TestDto, columnId: EditingColumnId) => void;
+  onKeyDown: (
+    event: KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
+    test: TestDto,
+    columnId: EditingColumnId,
+  ) => void;
+  draftValue: string;
+  draftDomainTheme: DraftDomainTheme;
+  setDraftValue: (value: string) => void;
+  setDraftDomainTheme: Dispatch<SetStateAction<DraftDomainTheme>>;
+  editingCell: EditingCell;
+  statusOptions: TestDto['status'][];
+  onDuplicate: (test: TestDto) => void;
+  onDelete: (test: TestDto) => void;
+};
+
 const pageSizeOptions = [20, 50];
 const statusOptions = validationStatusSchema.options;
-const statusBadgeStyles: Record<TestDto['status'], string> = {
-  draft: 'border-white/10 bg-white/5 text-slate-200',
-  in_review: 'border-amber-400/40 bg-amber-500/10 text-amber-200',
-  published: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200',
-  archived: 'border-white/10 bg-slate-900 text-slate-300',
-};
-const statusDotStyles: Record<TestDto['status'], string> = {
-  draft: 'bg-slate-400',
-  in_review: 'bg-amber-400',
-  published: 'bg-emerald-400',
-  archived: 'bg-slate-500',
-};
+const statusBadgeVariants = {
+  draft: 'secondary',
+  in_review: 'warning',
+  published: 'success',
+  archived: 'outline',
+} as const;
 
 function buildCsv(values: string[]) {
   return values.join(', ');
@@ -71,10 +127,515 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed top-4 right-4 z-50 rounded-xl border border-emerald-400/40 bg-slate-950 px-4 py-3 text-emerald-100 shadow-lg shadow-black/40 animate-in slide-in-from-top-2 fade-in duration-300">
+    <div className="fixed right-4 top-4 z-50 animate-in slide-in-from-top-2 rounded-xl border border-emerald-400/40 bg-slate-950 px-4 py-3 text-emerald-100 shadow-lg shadow-black/40 fade-in duration-300">
       <div className="flex items-center gap-2">
         <span className="text-xl">✓</span>
         <p className="text-sm font-semibold">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+function buildColumns({
+  locale,
+  t,
+  statusT,
+  onBeginEdit,
+  onSaveEdit,
+  onKeyDown,
+  draftValue,
+  draftDomainTheme,
+  setDraftValue,
+  setDraftDomainTheme,
+  editingCell,
+  statusOptions,
+  onDuplicate,
+  onDelete,
+}: ColumnBuilderParams): ColumnDef<TestDto>[] {
+  return [
+    {
+      id: 'select',
+      enableHiding: false,
+      header: ({ table }) => (
+        <input
+          aria-label={t('columns.select')}
+          type="checkbox"
+          className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
+          checked={table.getIsAllPageRowsSelected()}
+          onChange={table.getToggleAllPageRowsSelectedHandler()}
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          aria-label={t('columns.selectRow')}
+          type="checkbox"
+          className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
+          checked={row.getIsSelected()}
+          disabled={!row.getCanSelect()}
+          onChange={row.getToggleSelectedHandler()}
+        />
+      ),
+    },
+    {
+      accessorKey: 'name',
+      enableSorting: true,
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          className="h-8 px-2 text-xs font-medium"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          {t('columns.title')}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      meta: { label: t('columns.title') },
+      enableGlobalFilter: true,
+      cell: ({ row }) => {
+        const test = row.original;
+        const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'name';
+
+        if (isEditing) {
+          return (
+            <Input
+              autoFocus
+              className="h-8 w-full"
+              value={draftValue}
+              onChange={(event) => setDraftValue(event.target.value)}
+              onBlur={() => onSaveEdit(test, 'name')}
+              onKeyDown={(event) => onKeyDown(event, test, 'name')}
+            />
+          );
+        }
+
+        return (
+          <div
+            className="flex flex-col gap-1"
+            onClick={() => onBeginEdit(test, 'name')}
+            onDoubleClick={() => onBeginEdit(test, 'name')}
+          >
+            <Badge variant="outline" className="w-fit text-[10px] uppercase tracking-wide">
+              {test.tags[0] ?? t('tagFallback')}
+            </Badge>
+            <Link
+              className="text-sm font-medium text-slate-100 hover:underline"
+              href={{ pathname: '/administration/tests/edit/[id]', params: { id: test.id } }}
+            >
+              {test.name}
+            </Link>
+            <span className="text-xs text-muted-foreground">{test.slug}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'status',
+      header: t('columns.status'),
+      meta: { label: t('columns.status') },
+      filterFn: 'equalsString',
+      enableGlobalFilter: true,
+      cell: ({ row }) => {
+        const test = row.original;
+        const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'status';
+
+        if (isEditing) {
+          return (
+            <Select
+              autoFocus
+              className="h-8 w-full"
+              value={draftValue}
+              onChange={(event) => setDraftValue(event.target.value)}
+              onBlur={() => onSaveEdit(test, 'status')}
+              onKeyDown={(event) => onKeyDown(event, test, 'status')}
+            >
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {statusT(status)}
+                </option>
+              ))}
+            </Select>
+          );
+        }
+
+        return (
+          <button
+            type="button"
+            className="inline-flex items-center"
+            onClick={() => onBeginEdit(test, 'status')}
+            onDoubleClick={() => onBeginEdit(test, 'status')}
+          >
+            <Badge variant={statusBadgeVariants[test.status]}>{statusT(test.status)}</Badge>
+          </button>
+        );
+      },
+    },
+    {
+      accessorFn: (row) => [...row.domains, ...row.themes],
+      id: 'domainTheme',
+      header: t('columns.domainTheme'),
+      meta: { label: t('columns.domainTheme') },
+      filterFn: (row, columnId, filterValue) => {
+        if (!Array.isArray(filterValue) || filterValue.length === 0) {
+          return true;
+        }
+        const raw = row.getValue(columnId) as string[] | undefined;
+        return (raw ?? []).some((value) => filterValue.includes(value));
+      },
+      enableGlobalFilter: true,
+      cell: ({ row }) => {
+        const test = row.original;
+        const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'domainTheme';
+
+        if (isEditing) {
+          return (
+            <div
+              className="flex flex-col gap-2"
+              onBlur={(event) => {
+                const nextTarget = event.relatedTarget as Node | null;
+                if (nextTarget && event.currentTarget.contains(nextTarget)) {
+                  return;
+                }
+                onSaveEdit(test, 'domainTheme');
+              }}
+            >
+              <Input
+                autoFocus
+                className="h-8"
+                value={draftDomainTheme.domains}
+                placeholder={t('placeholders.domains')}
+                onChange={(event) =>
+                  setDraftDomainTheme((prev) => ({ ...prev, domains: event.target.value }))
+                }
+                onKeyDown={(event) => onKeyDown(event, test, 'domainTheme')}
+              />
+              <Input
+                className="h-8"
+                value={draftDomainTheme.themes}
+                placeholder={t('placeholders.themes')}
+                onChange={(event) =>
+                  setDraftDomainTheme((prev) => ({ ...prev, themes: event.target.value }))
+                }
+                onKeyDown={(event) => onKeyDown(event, test, 'domainTheme')}
+              />
+            </div>
+          );
+        }
+
+        return (
+          <div
+            className="text-sm"
+            onClick={() => onBeginEdit(test, 'domainTheme')}
+            onDoubleClick={() => onBeginEdit(test, 'domainTheme')}
+          >
+            <div className="text-muted-foreground">
+              <span className="font-medium text-slate-200">{t('labels.domains')}:</span>{' '}
+              {test.domains.length > 0 ? test.domains.join(', ') : t('empty')}
+            </div>
+            <div className="text-muted-foreground">
+              <span className="font-medium text-slate-200">{t('labels.themes')}:</span>{' '}
+              {test.themes.length > 0 ? test.themes.join(', ') : t('empty')}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'tags',
+      header: t('columns.tags'),
+      meta: { label: t('columns.tags') },
+      filterFn: (row, columnId, filterValue) => {
+        if (!Array.isArray(filterValue) || filterValue.length === 0) {
+          return true;
+        }
+        const raw = row.getValue(columnId) as string[] | undefined;
+        return (raw ?? []).some((value) => filterValue.includes(value));
+      },
+      enableGlobalFilter: true,
+      cell: ({ row }) => {
+        const test = row.original;
+        const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'tags';
+
+        if (isEditing) {
+          return (
+            <Input
+              autoFocus
+              className="h-8 w-full"
+              value={draftValue}
+              placeholder={t('placeholders.tags')}
+              onChange={(event) => setDraftValue(event.target.value)}
+              onBlur={() => onSaveEdit(test, 'tags')}
+              onKeyDown={(event) => onKeyDown(event, test, 'tags')}
+            />
+          );
+        }
+
+        return (
+          <div
+            className="flex flex-wrap gap-1"
+            onClick={() => onBeginEdit(test, 'tags')}
+            onDoubleClick={() => onBeginEdit(test, 'tags')}
+          >
+            {test.tags.length > 0 ? (
+              test.tags.map((tag) => (
+                <Badge key={tag} variant="outline" className="text-xs font-medium">
+                  {tag}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-sm text-muted-foreground">{t('empty')}</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'updatedAt',
+      header: t('columns.updatedAt'),
+      meta: { label: t('columns.updatedAt') },
+      cell: ({ row }) => {
+        const date = new Date(row.original.updatedAt);
+        return (
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {Number.isNaN(date.getTime())
+              ? t('dateFallback')
+              : new Intl.DateTimeFormat(locale, {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                }).format(date)}
+          </span>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      enableHiding: false,
+      header: t('columns.actions'),
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              aria-label={t('columns.actions')}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{t('columns.actions')}</DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link
+                href={{
+                  pathname: '/administration/tests/edit/[id]',
+                  params: { id: row.original.id },
+                }}
+              >
+                {t('actions.edit')}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onDuplicate(row.original)}>
+              {t('actions.duplicate')}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-red-400 focus:text-red-400"
+              onSelect={() => onDelete(row.original)}
+            >
+              {t('actions.delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+}
+
+function DataTableToolbar({
+  table,
+  t,
+  statusT,
+  domainsFilterOptions,
+  tagsFilterOptions,
+}: {
+  table: TableInstance<TestDto>;
+  t: ReturnType<typeof useTranslations>;
+  statusT: ReturnType<typeof useTranslations>;
+  domainsFilterOptions: string[];
+  tagsFilterOptions: string[];
+}) {
+  const statusFilter = (table.getColumn('status')?.getFilterValue() as string) ?? '';
+  const currentDomainFilters =
+    (table.getColumn('domainTheme')?.getFilterValue() as string[]) ?? [];
+  const currentTagFilters = (table.getColumn('tags')?.getFilterValue() as string[]) ?? [];
+
+  const toggleFilterValue = (columnId: 'domainTheme' | 'tags', value: string) => {
+    const current = new Set(
+      ((table.getColumn(columnId)?.getFilterValue() as string[]) ?? []).map((item) =>
+        item.trim(),
+      ),
+    );
+    if (current.has(value)) {
+      current.delete(value);
+    } else {
+      current.add(value);
+    }
+    table.getColumn(columnId)?.setFilterValue(Array.from(current));
+  };
+
+  const clearFilters = () => {
+    table.setGlobalFilter('');
+    table.getColumn('status')?.setFilterValue(undefined);
+    table.getColumn('domainTheme')?.setFilterValue([]);
+    table.getColumn('tags')?.setFilterValue([]);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex w-full flex-1 items-center gap-2">
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="h-8 w-full pl-8"
+              placeholder={t('filters.searchPlaceholder')}
+              value={(table.getState().globalFilter as string) ?? ''}
+              onChange={(event) => table.setGlobalFilter(event.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            className="h-8 min-w-[160px]"
+            value={statusFilter}
+            onChange={(event) =>
+              table.getColumn('status')?.setFilterValue(event.target.value || undefined)
+            }
+          >
+            <option value="">{t('filters.statusAll')}</option>
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {statusT(status)}
+              </option>
+            ))}
+          </Select>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-8 gap-2">
+                {t('filters.domainTheme')}
+                {currentDomainFilters.length > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[11px] tabular-nums">
+                    {currentDomainFilters.length}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-64 overflow-auto">
+              {domainsFilterOptions.map((option) => (
+                <DropdownMenuCheckboxItem
+                  key={option}
+                  checked={currentDomainFilters.includes(option)}
+                  onCheckedChange={() => toggleFilterValue('domainTheme', option)}
+                >
+                  {option}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-8 gap-2">
+                {t('filters.tags')}
+                {currentTagFilters.length > 0 && (
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[11px] tabular-nums">
+                    {currentTagFilters.length}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-64 overflow-auto">
+              {tagsFilterOptions.map((option) => (
+                <DropdownMenuCheckboxItem
+                  key={option}
+                  checked={currentTagFilters.includes(option)}
+                  onCheckedChange={() => toggleFilterValue('tags', option)}
+                >
+                  {option}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {(statusFilter || currentDomainFilters.length > 0 || currentTagFilters.length > 0) && (
+            <Button variant="ghost" className="h-8" onClick={clearFilters}>
+              {t('filters.clear')}
+            </Button>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-8 gap-2">
+                <SlidersHorizontal className="h-4 w-4" />
+                {t('actions.viewOptions')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
+                  >
+                    {column.columnDef.meta?.label ?? column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {statusFilter && (
+            <Badge variant="outline" className="text-xs font-medium">
+              {t('filters.status')} {statusT(statusFilter as TestDto['status'])}
+            </Badge>
+          )}
+          {currentDomainFilters.map((item) => (
+            <Badge key={`domain-${item}`} variant="outline" className="text-xs font-medium">
+              {item}
+            </Badge>
+          ))}
+          {currentTagFilters.map((item) => (
+            <Badge key={`tag-${item}`} variant="outline" className="text-xs font-medium">
+              {item}
+            </Badge>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">{t('filters.pageSize')}</span>
+          <Select
+            className="h-8 w-[110px]"
+            value={table.getState().pagination.pageSize}
+            onChange={(event) => table.setPageSize(Number(event.target.value))}
+          >
+            {pageSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
     </div>
   );
@@ -96,6 +657,9 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     domains: '',
     themes: '',
   });
+  const [rowSelection, setRowSelection] = useState({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -172,6 +736,89 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
       return json.test;
     },
     [locale, toastT],
+  );
+
+  const duplicateTest = useCallback(
+    async (test: TestDto) => {
+      try {
+        const payload = testInputSchema.parse({
+          locale,
+          name: t('actions.duplicateName', { name: test.name }),
+          targetAudience: test.targetAudience,
+          status: test.status,
+          shortDescription: test.shortDescription,
+          objective: test.objective,
+          ageMinMonths: test.ageMinMonths,
+          ageMaxMonths: test.ageMaxMonths,
+          population: test.population,
+          durationMinutes: test.durationMinutes,
+          materials: test.materials,
+          isStandardized: test.isStandardized,
+          publisher: test.publisher,
+          priceRange: test.priceRange,
+          buyLink: test.buyLink,
+          notes: test.notes,
+          domains: test.domains,
+          tags: test.tags,
+          themes: test.themes,
+          bibliography: test.bibliography,
+        });
+
+        const response = await fetch('/api/tests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload),
+        });
+
+        const json = (await response.json().catch(() => ({}))) as {
+          error?: string;
+          test?: TestDto;
+        };
+
+        if (!response.ok || !json.test) {
+          throw new Error(json.error || toastT('duplicateError'));
+        }
+
+        const createdTest = json.test;
+        setTests((prev) => [createdTest, ...prev]);
+        setToastMsg(toastT('duplicateSuccess', { name: createdTest.name }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : toastT('duplicateError');
+        setToastMsg(message);
+      }
+    },
+    [locale, t, toastT],
+  );
+
+  const deleteTest = useCallback(
+    async (test: TestDto) => {
+      if (!window.confirm(bulkT('deleteConfirm', { count: 1 }))) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/tests', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ ids: [test.id] }),
+        });
+
+        const json = (await response.json().catch(() => ({}))) as { error?: string };
+
+        if (!response.ok) {
+          throw new Error(json.error || toastT('deleteError'));
+        }
+
+        setTests((prev) => prev.filter((item) => item.id !== test.id));
+        setToastMsg(toastT('deleteSuccess', { count: 1 }));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : toastT('deleteError');
+        setToastMsg(message);
+      }
+    },
+    [bulkT, toastT],
   );
 
   const beginEdit = (test: TestDto, columnId: EditingColumnId) => {
@@ -266,288 +913,32 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     }
   };
 
-  const [rowSelection, setRowSelection] = useState({});
-
-  const columns = useMemo<ColumnDef<TestDto>[]>(
-    () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <input
-            aria-label={t('columns.select')}
-            type="checkbox"
-            className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
-            checked={table.getIsAllPageRowsSelected()}
-            onChange={table.getToggleAllPageRowsSelectedHandler()}
-          />
-        ),
-        cell: ({ row }) => (
-          <input
-            aria-label={t('columns.selectRow')}
-            type="checkbox"
-            className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
-            checked={row.getIsSelected()}
-            disabled={!row.getCanSelect()}
-            onChange={row.getToggleSelectedHandler()}
-          />
-        ),
-      },
-      {
-        accessorKey: 'name',
-        header: t('columns.title'),
-        enableGlobalFilter: true,
-        cell: ({ row }) => {
-          const test = row.original;
-          const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'name';
-
-          if (isEditing) {
-            return (
-              <input
-                autoFocus
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500"
-                value={draftValue}
-                onChange={(event) => setDraftValue(event.target.value)}
-                onBlur={() => void saveEditing(test, 'name')}
-                onKeyDown={(event) => handleCellKeyDown(event, test, 'name')}
-              />
-            );
-          }
-
-          return (
-            <div
-              className="flex flex-col gap-1"
-              onClick={() => beginEdit(test, 'name')}
-              onDoubleClick={() => beginEdit(test, 'name')}
-            >
-              <span className="w-fit rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-300">
-                {test.tags[0] ?? t('tagFallback')}
-              </span>
-              <Link
-                className="text-sm font-semibold text-slate-100 hover:underline"
-                href={{ pathname: '/administration/tests/edit/[id]', params: { id: test.id } }}
-              >
-                {test.name}
-              </Link>
-              <span className="text-xs text-slate-400">{test.slug}</span>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'status',
-        header: t('columns.status'),
-        filterFn: 'equalsString',
-        enableGlobalFilter: true,
-        cell: ({ row }) => {
-          const test = row.original;
-          const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'status';
-
-          if (isEditing) {
-            return (
-              <select
-                autoFocus
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100"
-                value={draftValue}
-                onChange={(event) => setDraftValue(event.target.value)}
-                onBlur={() => void saveEditing(test, 'status')}
-                onKeyDown={(event) => handleCellKeyDown(event, test, 'status')}
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {statusT(status)}
-                  </option>
-                ))}
-              </select>
-            );
-          }
-
-          return (
-            <button
-              type="button"
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${statusBadgeStyles[test.status]}`}
-              onClick={() => beginEdit(test, 'status')}
-              onDoubleClick={() => beginEdit(test, 'status')}
-            >
-              <span className={`h-2 w-2 rounded-full ${statusDotStyles[test.status]}`} />
-              {statusT(test.status)}
-            </button>
-          );
-        },
-      },
-      {
-        accessorFn: (row) => [...row.domains, ...row.themes],
-        id: 'domainTheme',
-        header: t('columns.domainTheme'),
-        filterFn: (row, columnId, filterValue) => {
-          if (!Array.isArray(filterValue) || filterValue.length === 0) {
-            return true;
-          }
-          const raw = row.getValue(columnId) as string[] | undefined;
-          return (raw ?? []).some((value) => filterValue.includes(value));
-        },
-        enableGlobalFilter: true,
-        cell: ({ row }) => {
-          const test = row.original;
-          const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'domainTheme';
-
-          if (isEditing) {
-            return (
-              <div
-                className="flex flex-col gap-2"
-                onBlur={(event) => {
-                  const nextTarget = event.relatedTarget as Node | null;
-                  if (nextTarget && event.currentTarget.contains(nextTarget)) {
-                    return;
-                  }
-                  void saveEditing(test, 'domainTheme');
-                }}
-              >
-                <input
-                  autoFocus
-                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500"
-                  value={draftDomainTheme.domains}
-                  placeholder={t('placeholders.domains')}
-                  onChange={(event) =>
-                    setDraftDomainTheme((prev) => ({ ...prev, domains: event.target.value }))
-                  }
-                  onKeyDown={(event) => handleCellKeyDown(event, test, 'domainTheme')}
-                />
-                <input
-                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500"
-                  value={draftDomainTheme.themes}
-                  placeholder={t('placeholders.themes')}
-                  onChange={(event) =>
-                    setDraftDomainTheme((prev) => ({ ...prev, themes: event.target.value }))
-                  }
-                  onKeyDown={(event) => handleCellKeyDown(event, test, 'domainTheme')}
-                />
-              </div>
-            );
-          }
-
-          return (
-            <div
-              className="text-sm text-slate-200"
-              onClick={() => beginEdit(test, 'domainTheme')}
-              onDoubleClick={() => beginEdit(test, 'domainTheme')}
-            >
-              <div>
-                <span className="font-semibold text-slate-300">{t('labels.domains')}:</span>{' '}
-                {test.domains.length > 0 ? test.domains.join(', ') : t('empty')}
-              </div>
-              <div>
-                <span className="font-semibold text-slate-300">{t('labels.themes')}:</span>{' '}
-                {test.themes.length > 0 ? test.themes.join(', ') : t('empty')}
-              </div>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'tags',
-        header: t('columns.tags'),
-        filterFn: (row, columnId, filterValue) => {
-          if (!Array.isArray(filterValue) || filterValue.length === 0) {
-            return true;
-          }
-          const raw = row.getValue(columnId) as string[] | undefined;
-          return (raw ?? []).some((value) => filterValue.includes(value));
-        },
-        enableGlobalFilter: true,
-        cell: ({ row }) => {
-          const test = row.original;
-          const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'tags';
-
-          if (isEditing) {
-            return (
-              <input
-                autoFocus
-                className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500"
-                value={draftValue}
-                placeholder={t('placeholders.tags')}
-                onChange={(event) => setDraftValue(event.target.value)}
-                onBlur={() => void saveEditing(test, 'tags')}
-                onKeyDown={(event) => handleCellKeyDown(event, test, 'tags')}
-              />
-            );
-          }
-
-          return (
-            <div
-              className="flex flex-wrap gap-1 text-sm text-slate-200"
-              onClick={() => beginEdit(test, 'tags')}
-              onDoubleClick={() => beginEdit(test, 'tags')}
-            >
-              {test.tags.length > 0 ? (
-                test.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-sky-200"
-                  >
-                    {tag}
-                  </span>
-                ))
-              ) : (
-                <span className="text-slate-400">{t('empty')}</span>
-              )}
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: 'updatedAt',
-        header: t('columns.updatedAt'),
-        cell: ({ row }) => {
-          const date = new Date(row.original.updatedAt);
-          return (
-            <span className="text-sm text-slate-300">
-              {Number.isNaN(date.getTime())
-                ? t('dateFallback')
-                : new Intl.DateTimeFormat(locale, {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  }).format(date)}
-            </span>
-          );
-        },
-      },
-      {
-        id: 'actions',
-        header: t('columns.actions'),
-        cell: ({ row }) => (
-          <Link
-            aria-label={t('actions.edit')}
-            className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 p-2 text-slate-200 transition hover:bg-white/10 hover:text-emerald-200"
-            href={{
-              pathname: '/administration/tests/edit/[id]',
-              params: { id: row.original.id },
-            }}
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.862 4.487 19.5 7.125m-2.638-2.638L6.75 14.6a4.5 4.5 0 0 0-1.146 1.93l-.69 2.761 2.762-.69a4.5 4.5 0 0 0 1.93-1.146l10.356-10.356a1.875 1.875 0 0 0 0-2.651l-1.949-1.949a1.875 1.875 0 0 0-2.651 0Z"
-              />
-            </svg>
-          </Link>
-        ),
-      },
-    ],
+  const columns = useMemo(
+    () =>
+      buildColumns({
+        locale,
+        t,
+        statusT,
+        onBeginEdit: beginEdit,
+        onSaveEdit: (test, columnId) => void saveEditing(test, columnId),
+        onKeyDown: handleCellKeyDown,
+        draftValue,
+        draftDomainTheme,
+        setDraftValue,
+        setDraftDomainTheme,
+        editingCell,
+        statusOptions,
+        onDuplicate: (test) => void duplicateTest(test),
+        onDelete: (test) => void deleteTest(test),
+      }),
     [
-      draftDomainTheme.domains,
-      draftDomainTheme.themes,
+      draftDomainTheme,
       draftValue,
+      duplicateTest,
+      deleteTest,
       editingCell,
       locale,
+      saveEditing,
       statusT,
       t,
     ],
@@ -558,12 +949,17 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     columns,
     state: {
       rowSelection,
+      sorting,
+      columnVisibility,
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     initialState: {
       pagination: {
         pageSize: pageSizeOptions[0],
@@ -650,26 +1046,12 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     return taxonomy.tags.map((tag) => tag.label).sort((a, b) => a.localeCompare(b, locale));
   }, [locale, taxonomy]);
 
-  const handleDomainFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const values = Array.from(event.target.selectedOptions).map((option) => option.value);
-    table.getColumn('domainTheme')?.setFilterValue(values);
-  };
-
-  const handleTagsFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const values = Array.from(event.target.selectedOptions).map((option) => option.value);
-    table.getColumn('tags')?.setFilterValue(values);
-  };
-
-  const currentDomainFilters = (table.getColumn('domainTheme')?.getFilterValue() as string[]) ?? [];
-  const currentTagFilters = (table.getColumn('tags')?.getFilterValue() as string[]) ?? [];
-  const statusFilter = (table.getColumn('status')?.getFilterValue() as string) ?? '';
-
   return (
     <section className="mt-10 space-y-6 text-slate-100">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-slate-100">{t('title')}</h2>
-          <p className="text-sm text-slate-400">{t('subtitle')}</p>
+          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -682,202 +1064,13 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
       </div>
 
       <div className="grid gap-4 rounded-2xl border border-white/10 bg-neutral-950/90 p-4 shadow-lg shadow-black/30">
-        <div className="flex flex-wrap items-end gap-4">
-          <label className="flex min-w-[220px] flex-1 flex-col gap-2 text-sm font-medium text-slate-200">
-            {t('filters.search')}
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-4 w-4"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35" />
-                  <circle cx="11" cy="11" r="7" />
-                </svg>
-              </span>
-              <input
-                className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500"
-                placeholder={t('filters.searchPlaceholder')}
-                value={(table.getState().globalFilter as string) ?? ''}
-                onChange={(event) => table.setGlobalFilter(event.target.value)}
-              />
-            </div>
-          </label>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <details className="group relative">
-              <summary className="flex list-none items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/10">
-                <span>{t('filters.status')}</span>
-                <span className="text-slate-400">
-                  {statusFilter ? statusT(statusFilter as TestDto['status']) : t('filters.statusAll')}
-                </span>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-                </svg>
-              </summary>
-              <div className="absolute left-0 z-20 mt-2 w-56 rounded-xl border border-white/10 bg-slate-950 p-3 shadow-xl shadow-black/40">
-                <label className="flex flex-col gap-2 text-xs font-semibold text-slate-200">
-                  {t('filters.status')}
-                  <select
-                    className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-                    value={statusFilter}
-                    onChange={(event) =>
-                      table.getColumn('status')?.setFilterValue(event.target.value || undefined)
-                    }
-                  >
-                    <option value="">{t('filters.statusAll')}</option>
-                    {statusOptions.map((status) => (
-                      <option key={status} value={status}>
-                        {statusT(status)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            </details>
-
-            <details className="group relative">
-              <summary className="flex list-none items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/10">
-                <span>{t('filters.domainTheme')}</span>
-                <span className="text-slate-400">
-                  {currentDomainFilters.length > 0
-                    ? t('filters.selectedCount', { count: currentDomainFilters.length })
-                    : t('filters.all')}
-                </span>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-                </svg>
-              </summary>
-              <div className="absolute left-0 z-20 mt-2 w-64 rounded-xl border border-white/10 bg-slate-950 p-3 shadow-xl shadow-black/40">
-                <label className="flex flex-col gap-2 text-xs font-semibold text-slate-200">
-                  {t('filters.domainTheme')}
-                  <select
-                    multiple
-                    className="min-h-[140px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-                    value={currentDomainFilters}
-                    onChange={handleDomainFilterChange}
-                  >
-                    {domainsFilterOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            </details>
-
-            <details className="group relative">
-              <summary className="flex list-none items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/10">
-                <span>{t('filters.tags')}</span>
-                <span className="text-slate-400">
-                  {currentTagFilters.length > 0
-                    ? t('filters.selectedCount', { count: currentTagFilters.length })
-                    : t('filters.all')}
-                </span>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-                </svg>
-              </summary>
-              <div className="absolute left-0 z-20 mt-2 w-64 rounded-xl border border-white/10 bg-slate-950 p-3 shadow-xl shadow-black/40">
-                <label className="flex flex-col gap-2 text-xs font-semibold text-slate-200">
-                  {t('filters.tags')}
-                  <select
-                    multiple
-                    className="min-h-[140px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-                    value={currentTagFilters}
-                    onChange={handleTagsFilterChange}
-                  >
-                    {tagsFilterOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            </details>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            {statusFilter && (
-              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-200">
-                {t('filters.status')} {statusT(statusFilter as TestDto['status'])}
-              </span>
-            )}
-            {currentDomainFilters.map((item) => (
-              <span
-                key={`domain-${item}`}
-                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-200"
-              >
-                {item}
-              </span>
-            ))}
-            {currentTagFilters.map((item) => (
-              <span
-                key={`tag-${item}`}
-                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-200"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
-              onClick={() => {
-                table.setGlobalFilter('');
-                table.getColumn('status')?.setFilterValue(undefined);
-                table.getColumn('domainTheme')?.setFilterValue([]);
-                table.getColumn('tags')?.setFilterValue([]);
-              }}
-            >
-              {t('filters.clear')}
-            </button>
-            <label className="flex items-center gap-2 text-xs font-semibold text-slate-200">
-              {t('filters.pageSize')}
-              <select
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-100"
-                value={table.getState().pagination.pageSize}
-                onChange={(event) => table.setPageSize(Number(event.target.value))}
-              >
-                {pageSizeOptions.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
+        <DataTableToolbar
+          table={table}
+          t={t}
+          statusT={statusT}
+          domainsFilterOptions={domainsFilterOptions}
+          tagsFilterOptions={tagsFilterOptions}
+        />
       </div>
 
       {selectedRows.length > 0 && (
@@ -886,82 +1079,90 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
             {bulkT('selected', { count: selectedRows.length })}
           </span>
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            <Button
               type="button"
-              className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
+              variant="outline"
+              className="h-8 border-emerald-400/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20"
               onClick={() => void updateRows(selectedRows, { status: 'published' })}
             >
               {bulkT('publish')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
+              variant="outline"
+              className="h-8 border-emerald-400/40 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20"
               onClick={() => void updateRows(selectedRows, { status: 'draft' })}
             >
               {bulkT('unpublish')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+              variant="outline"
+              className="h-8 border-white/10 bg-white/5 text-slate-100 hover:bg-white/10"
               onClick={() => void handleBulkTags()}
             >
               {bulkT('tags')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="rounded-full border border-red-400/40 bg-red-500/10 px-3 py-1 text-sm font-semibold text-red-200 transition hover:bg-red-500/20"
+              variant="outline"
+              className="h-8 border-red-400/40 bg-red-500/10 text-red-200 hover:bg-red-500/20"
               onClick={() => void handleBulkDelete()}
             >
               {bulkT('delete')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950 shadow-xl shadow-black/30">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-white/5 text-xs uppercase text-slate-400">
+        <Table>
+          <TableHeader className="bg-white/5">
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-4 py-3">
+                  <TableHead key={header.id} className="h-8 px-4 text-xs">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
-          <tbody>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <tr className="hover:bg-white/5">
-                <td className="px-4 py-6 text-sm text-slate-400" colSpan={columns.length}>
+              <TableRow>
+                <TableCell className="px-4 py-6 text-sm text-muted-foreground" colSpan={table.getVisibleLeafColumns().length}>
                   {t('loading')}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
-              <tr className="hover:bg-white/5">
-                <td className="px-4 py-6 text-sm text-slate-400" colSpan={columns.length}>
+              <TableRow>
+                <TableCell className="px-4 py-6 text-sm text-muted-foreground" colSpan={table.getVisibleLeafColumns().length}>
                   {t('emptyState')}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-t border-white/10 hover:bg-white/5">
+                <TableRow
+                  key={row.id}
+                  className="border-t border-white/10 hover:bg-white/5"
+                  data-state={row.getIsSelected() && 'selected'}
+                >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 align-top">
+                    <TableCell key={cell.id} className="px-4 py-3 align-top">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <span>
           {t('pagination.summary', {
             page: table.getState().pagination.pageIndex + 1,
@@ -969,22 +1170,24 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           })}
         </span>
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:bg-white/10 disabled:opacity-50"
+            variant="outline"
+            className="h-8"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
             {t('pagination.previous')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:bg-white/10 disabled:opacity-50"
+            variant="outline"
+            className="h-8"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
             {t('pagination.next')}
-          </button>
+          </Button>
         </div>
       </div>
 

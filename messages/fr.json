@@ -216,7 +216,11 @@
       },
       "actions": {
         "edit": "Modifier",
-        "newTest": "Nouveau test"
+        "newTest": "Nouveau test",
+        "duplicate": "Dupliquer",
+        "delete": "Supprimer",
+        "viewOptions": "Options d'affichage",
+        "duplicateName": "Copie de {name}"
       },
       "pagination": {
         "summary": "Page {page} sur {total}",
@@ -242,7 +246,9 @@
       "deleteSuccess": "{count} tests supprimés.",
       "deleteError": "Impossible de supprimer les tests sélectionnés.",
       "tagsEmpty": "Veuillez saisir au moins un tag.",
-      "nameRequired": "Un titre est requis."
+      "nameRequired": "Un titre est requis.",
+      "duplicateSuccess": "\"{name}\" dupliqué.",
+      "duplicateError": "Impossible de dupliquer le test."
     },
     "create": {
       "metadata": {
