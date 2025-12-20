@@ -361,7 +361,13 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         accessorFn: (row) => [...row.domains, ...row.themes],
         id: 'domainTheme',
         header: t('columns.domainTheme'),
-        filterFn: 'arrayIncludesSome',
+        filterFn: (row, columnId, filterValue) => {
+          if (!Array.isArray(filterValue) || filterValue.length === 0) {
+            return true;
+          }
+          const raw = row.getValue(columnId) as string[] | undefined;
+          return (raw ?? []).some((value) => filterValue.includes(value));
+        },
         enableGlobalFilter: true,
         cell: ({ row }) => {
           const test = row.original;
@@ -423,7 +429,13 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
       {
         accessorKey: 'tags',
         header: t('columns.tags'),
-        filterFn: 'arrayIncludesSome',
+        filterFn: (row, columnId, filterValue) => {
+          if (!Array.isArray(filterValue) || filterValue.length === 0) {
+            return true;
+          }
+          const raw = row.getValue(columnId) as string[] | undefined;
+          return (raw ?? []).some((value) => filterValue.includes(value));
+        },
         enableGlobalFilter: true,
         cell: ({ row }) => {
           const test = row.original;
@@ -522,15 +534,6 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
       const raw = row.getValue(columnId) as string | string[] | undefined;
       const normalized = Array.isArray(raw) ? raw.join(' ') : raw ?? '';
       return normalized.toLowerCase().includes(filterValue.toLowerCase());
-    },
-    filterFns: {
-      arrayIncludesSome: (row, columnId, filterValue) => {
-        if (!Array.isArray(filterValue) || filterValue.length === 0) {
-          return true;
-        }
-        const raw = row.getValue(columnId) as string[] | undefined;
-        return (raw ?? []).some((value) => filterValue.includes(value));
-      },
     },
   });
 
