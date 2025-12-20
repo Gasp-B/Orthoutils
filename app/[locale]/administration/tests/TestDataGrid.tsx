@@ -22,11 +22,12 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, SlidersHorizontal } from 'lucide-react';
 import { type Locale } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DataTableFacetedFilter } from '@/components/ui/data-table-faceted-filter';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -157,7 +158,7 @@ function buildColumns({
       id: 'select',
       enableHiding: false,
       header: ({ table }) => (
-        <input
+        <Input
           aria-label={t('columns.select')}
           type="checkbox"
           className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
@@ -166,7 +167,7 @@ function buildColumns({
         />
       ),
       cell: ({ row }) => (
-        <input
+        <Input
           aria-label={t('columns.selectRow')}
           type="checkbox"
           className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
@@ -186,7 +187,9 @@ function buildColumns({
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           {t('columns.title')}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <span className="ml-2 inline-flex">
+            <ArrowUpDown className="h-4 w-4" />
+          </span>
         </Button>
       ),
       meta: { label: t('columns.title') },
@@ -223,7 +226,7 @@ function buildColumns({
             >
               {test.name}
             </Link>
-            <span className="text-xs text-muted-foreground">{test.slug}</span>
+            <span className="text-xs font-mono text-muted-foreground">{test.slug}</span>
           </div>
         );
       },
@@ -232,7 +235,13 @@ function buildColumns({
       accessorKey: 'status',
       header: t('columns.status'),
       meta: { label: t('columns.status') },
-      filterFn: 'equalsString',
+      filterFn: (row, columnId, filterValue) => {
+        if (!Array.isArray(filterValue) || filterValue.length === 0) {
+          return true;
+        }
+        const value = row.getValue(columnId) as string | undefined;
+        return value ? filterValue.includes(value) : false;
+      },
       enableGlobalFilter: true,
       cell: ({ row }) => {
         const test = row.original;
@@ -395,7 +404,7 @@ function buildColumns({
       cell: ({ row }) => {
         const date = new Date(row.original.updatedAt);
         return (
-          <span className="text-sm text-muted-foreground tabular-nums">
+          <span className="text-sm font-mono text-muted-foreground tabular-nums">
             {Number.isNaN(date.getTime())
               ? t('dateFallback')
               : new Intl.DateTimeFormat(locale, {
@@ -455,187 +464,72 @@ function DataTableToolbar({
   table,
   t,
   statusT,
-  domainsFilterOptions,
-  tagsFilterOptions,
+  themesFilterOptions,
 }: {
   table: TableInstance<TestDto>;
   t: ReturnType<typeof useTranslations>;
   statusT: ReturnType<typeof useTranslations>;
-  domainsFilterOptions: string[];
-  tagsFilterOptions: string[];
+  themesFilterOptions: string[];
 }) {
-  const statusFilter = (table.getColumn('status')?.getFilterValue() as string) ?? '';
-  const currentDomainFilters =
-    (table.getColumn('domainTheme')?.getFilterValue() as string[]) ?? [];
-  const currentTagFilters = (table.getColumn('tags')?.getFilterValue() as string[]) ?? [];
+  const statusOptionsWithLabels = statusOptions.map((status) => ({
+    label: statusT(status),
+    value: status,
+  }));
 
-  const toggleFilterValue = (columnId: 'domainTheme' | 'tags', value: string) => {
-    const current = new Set(
-      ((table.getColumn(columnId)?.getFilterValue() as string[]) ?? []).map((item) =>
-        item.trim(),
-      ),
-    );
-    if (current.has(value)) {
-      current.delete(value);
-    } else {
-      current.add(value);
-    }
-    table.getColumn(columnId)?.setFilterValue(Array.from(current));
-  };
-
-  const clearFilters = () => {
-    table.setGlobalFilter('');
-    table.getColumn('status')?.setFilterValue(undefined);
-    table.getColumn('domainTheme')?.setFilterValue([]);
-    table.getColumn('tags')?.setFilterValue([]);
-  };
+  const themeOptionsWithLabels = themesFilterOptions.map((theme) => ({
+    label: theme,
+    value: theme,
+  }));
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-full flex-1 items-center gap-2">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="h-8 w-full pl-8"
-              placeholder={t('filters.searchPlaceholder')}
-              value={(table.getState().globalFilter as string) ?? ''}
-              onChange={(event) => table.setGlobalFilter(event.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Select
-            className="h-8 min-w-[160px]"
-            value={statusFilter}
-            onChange={(event) =>
-              table.getColumn('status')?.setFilterValue(event.target.value || undefined)
-            }
-          >
-            <option value="">{t('filters.statusAll')}</option>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {statusT(status)}
-              </option>
-            ))}
-          </Select>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-8 gap-2">
-                {t('filters.domainTheme')}
-                {currentDomainFilters.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[11px] tabular-nums">
-                    {currentDomainFilters.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-64 overflow-auto">
-              {domainsFilterOptions.map((option) => (
-                <DropdownMenuCheckboxItem
-                  key={option}
-                  checked={currentDomainFilters.includes(option)}
-                  onCheckedChange={() => toggleFilterValue('domainTheme', option)}
-                >
-                  {option}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-8 gap-2">
-                {t('filters.tags')}
-                {currentTagFilters.length > 0 && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[11px] tabular-nums">
-                    {currentTagFilters.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-64 overflow-auto">
-              {tagsFilterOptions.map((option) => (
-                <DropdownMenuCheckboxItem
-                  key={option}
-                  checked={currentTagFilters.includes(option)}
-                  onCheckedChange={() => toggleFilterValue('tags', option)}
-                >
-                  {option}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {(statusFilter || currentDomainFilters.length > 0 || currentTagFilters.length > 0) && (
-            <Button variant="ghost" className="h-8" onClick={clearFilters}>
-              {t('filters.clear')}
-            </Button>
-          )}
-        </div>
-
-        <div className="flex items-center justify-end gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-8 gap-2">
-                <SlidersHorizontal className="h-4 w-4" />
-                {t('actions.viewOptions')}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
-                  >
-                    {column.columnDef.meta?.label ?? column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <div className="flex items-center justify-between py-4">
+      <div className="flex flex-1 items-center gap-2">
+        <Input
+          className="h-8 w-[150px] lg:w-[250px]"
+          placeholder={t('filters.searchPlaceholder')}
+          value={(table.getState().globalFilter as string) ?? ''}
+          onChange={(event) => table.setGlobalFilter(event.target.value)}
+        />
+        <DataTableFacetedFilter
+          column={table.getColumn('status')}
+          title={t('filters.status')}
+          options={statusOptionsWithLabels}
+        />
+        <DataTableFacetedFilter
+          column={table.getColumn('domainTheme')}
+          title={t('labels.themes')}
+          options={themeOptionsWithLabels}
+        />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {statusFilter && (
-            <Badge variant="outline" className="text-xs font-medium">
-              {t('filters.status')} {statusT(statusFilter as TestDto['status'])}
-            </Badge>
-          )}
-          {currentDomainFilters.map((item) => (
-            <Badge key={`domain-${item}`} variant="outline" className="text-xs font-medium">
-              {item}
-            </Badge>
-          ))}
-          {currentTagFilters.map((item) => (
-            <Badge key={`tag-${item}`} variant="outline" className="text-xs font-medium">
-              {item}
-            </Badge>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">{t('filters.pageSize')}</span>
-          <Select
-            className="h-8 w-[110px]"
-            value={table.getState().pagination.pageSize}
-            onChange={(event) => table.setPageSize(Number(event.target.value))}
-          >
-            {pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </Select>
-        </div>
+      <div className="flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              {t('actions.viewOptions')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanHide())
+              .map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
+                >
+                  {column.columnDef.meta?.label ?? column.id}
+                </DropdownMenuCheckboxItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Link href="/administration/tests/create" className="ui-button ui-button-sm">
+          {t('actions.newTest')}
+        </Link>
       </div>
     </div>
   );
@@ -1031,19 +925,11 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     }
   };
 
-  const domainsFilterOptions = useMemo(() => {
+  const themesFilterOptions = useMemo(() => {
     if (!taxonomy) {
       return [] as string[];
     }
-    const labels = [...taxonomy.domains, ...taxonomy.themes].map((item) => item.label);
-    return Array.from(new Set(labels)).sort((a, b) => a.localeCompare(b, locale));
-  }, [locale, taxonomy]);
-
-  const tagsFilterOptions = useMemo(() => {
-    if (!taxonomy) {
-      return [] as string[];
-    }
-    return taxonomy.tags.map((tag) => tag.label).sort((a, b) => a.localeCompare(b, locale));
+    return taxonomy.themes.map((theme) => theme.label).sort((a, b) => a.localeCompare(b, locale));
   }, [locale, taxonomy]);
 
   return (
@@ -1053,25 +939,14 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <h2 className="text-xl font-semibold text-slate-100">{t('title')}</h2>
           <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-black/20 transition hover:bg-emerald-300"
-            href="/administration/tests/create"
-          >
-            {t('actions.newTest')}
-          </Link>
-        </div>
       </div>
 
-      <div className="grid gap-4 rounded-2xl border border-white/10 bg-neutral-950/90 p-4 shadow-lg shadow-black/30">
-        <DataTableToolbar
-          table={table}
-          t={t}
-          statusT={statusT}
-          domainsFilterOptions={domainsFilterOptions}
-          tagsFilterOptions={tagsFilterOptions}
-        />
-      </div>
+      <DataTableToolbar
+        table={table}
+        t={t}
+        statusT={statusT}
+        themesFilterOptions={themesFilterOptions}
+      />
 
       {selectedRows.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
@@ -1115,9 +990,9 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950 shadow-xl shadow-black/30">
+      <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-white/5">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -1133,13 +1008,19 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell className="px-4 py-6 text-sm text-muted-foreground" colSpan={table.getVisibleLeafColumns().length}>
+                <TableCell
+                  className="px-4 py-6 text-sm text-muted-foreground"
+                  colSpan={table.getVisibleLeafColumns().length}
+                >
                   {t('loading')}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
-                <TableCell className="px-4 py-6 text-sm text-muted-foreground" colSpan={table.getVisibleLeafColumns().length}>
+                <TableCell
+                  className="px-4 py-6 text-sm text-muted-foreground"
+                  colSpan={table.getVisibleLeafColumns().length}
+                >
                   {t('emptyState')}
                 </TableCell>
               </TableRow>
@@ -1173,7 +1054,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <Button
             type="button"
             variant="outline"
-            className="h-8"
+            size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
@@ -1182,7 +1063,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <Button
             type="button"
             variant="outline"
-            className="h-8"
+            size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
