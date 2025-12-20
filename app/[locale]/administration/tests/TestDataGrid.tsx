@@ -19,10 +19,9 @@ import {
   type TestDto,
 } from '@/lib/validation/tests';
 
-type EditingCell =
-  | { rowId: string; columnId: 'name' | 'status' | 'tags' }
-  | { rowId: string; columnId: 'domainTheme' }
-  | null;
+type EditingColumnId = 'name' | 'status' | 'tags' | 'domainTheme';
+
+type EditingCell = { rowId: string; columnId: EditingColumnId } | null;
 
 type DraftDomainTheme = {
   domains: string;
@@ -163,7 +162,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     [locale, toastT],
   );
 
-  const beginEdit = (test: TestDto, columnId: EditingCell['columnId']) => {
+  const beginEdit = (test: TestDto, columnId: EditingColumnId) => {
     if (columnId === 'domainTheme') {
       setDraftDomainTheme({
         domains: buildCsv(test.domains),
@@ -176,7 +175,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     } else {
       setDraftValue(test.name);
     }
-    setEditingCell({ rowId: test.id, columnId } as EditingCell);
+    setEditingCell({ rowId: test.id, columnId });
   };
 
   const resetEditing = () => {
@@ -186,7 +185,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
   };
 
   const saveEditing = useCallback(
-    async (test: TestDto, columnId: EditingCell['columnId']) => {
+    async (test: TestDto, columnId: EditingColumnId) => {
       let overrides: UpdateOverrides = {};
 
       if (columnId === 'name') {
@@ -242,7 +241,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
   const handleCellKeyDown = (
     event: KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
     test: TestDto,
-    columnId: EditingCell['columnId'],
+    columnId: EditingColumnId,
   ) => {
     if (event.key === 'Escape') {
       event.preventDefault();
