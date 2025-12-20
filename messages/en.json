@@ -216,7 +216,11 @@
       },
       "actions": {
         "edit": "Edit",
-        "newTest": "New test"
+        "newTest": "New test",
+        "duplicate": "Duplicate",
+        "delete": "Delete",
+        "viewOptions": "View options",
+        "duplicateName": "Copy of {name}"
       },
       "pagination": {
         "summary": "Page {page} of {total}",
@@ -242,7 +246,9 @@
       "deleteSuccess": "{count} tests deleted.",
       "deleteError": "Unable to delete the selected tests.",
       "tagsEmpty": "Please enter at least one tag.",
-      "nameRequired": "A title is required."
+      "nameRequired": "A title is required.",
+      "duplicateSuccess": "\"{name}\" duplicated.",
+      "duplicateError": "Unable to duplicate the test."
     },
     "create": {
       "metadata": {
