@@ -771,7 +771,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="hover:bg-gray-50">
+              <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th key={header.id} className="px-4 py-3">
                     {header.isPlaceholder
