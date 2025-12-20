@@ -216,7 +216,7 @@
       },
       "actions": {
         "edit": "Edit",
-        "newTest": "New test",
+        "newTest": "Create",
         "duplicate": "Duplicate",
         "delete": "Delete",
         "viewOptions": "View options",

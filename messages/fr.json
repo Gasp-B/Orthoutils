@@ -216,7 +216,7 @@
       },
       "actions": {
         "edit": "Modifier",
-        "newTest": "Nouveau test",
+        "newTest": "Créer",
         "duplicate": "Dupliquer",
         "delete": "Supprimer",
         "viewOptions": "Options d'affichage",
