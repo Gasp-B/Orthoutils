@@ -134,9 +134,13 @@ function Header() {
           <div className="ph-header__logo" aria-hidden>OT</div>
           <div>
             <p className="ph-header__name">{t('brandName')}</p>
-            <p className="ph-header__tagline">{t('tagline')}</p>
           </div>
         </Link>
+
+        {loadingCatalogue && (
+          <span className="ph-header__link ph-header__link--muted">{t('navLoading')}</span>
+        )}
+        {!loadingCatalogue && !error && <CatalogueMegaMenu domains={catalogueDomains} />}
 
         {/* Barre de recherche */}
         <form className="ph-header__search" role="search" action={`/${locale}/search`} method="get">
@@ -147,18 +151,13 @@ function Header() {
             aria-label={t('searchAria')}
           />
           <input type="hidden" name="page" value="1" />
-          <button className="ph-header__search-button" type="submit">
-            {t('searchSubmit')}
+          <button className="ph-header__search-button" type="submit" aria-label={t('searchSubmit')}>
+            <span aria-hidden>⌕</span>
           </button>
         </form>
 
         {/* Navigation Droite */}
         <nav className="ph-header__nav" aria-label={t('navAria')}>
-          
-          {loadingCatalogue && (
-            <span className="ph-header__link ph-header__link--muted">{t('navLoading')}</span>
-          )}
-          {!loadingCatalogue && !error && <CatalogueMegaMenu domains={catalogueDomains} />}
           
           {isAdmin && (
             <div className="ph-header__menu">
@@ -236,7 +235,6 @@ function Header() {
             >
               FR
             </button>
-            <span className="u-opacity-30">|</span>
             <button
               type="button"
               className="ph-header__locale-button"

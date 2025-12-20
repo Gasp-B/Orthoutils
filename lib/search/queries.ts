@@ -254,7 +254,7 @@ export async function getSearchHubData(input: SearchQueryInput): Promise<SearchH
     url: row.url,
   }));
 
-  const [domainRows, tagRows] = await Promise.all([
+  const [domainRows, tagRows, themeRows] = await Promise.all([
     db
       .select({ label: domainsTranslations.label })
       .from(domainsTranslations)
@@ -265,6 +265,11 @@ export async function getSearchHubData(input: SearchQueryInput): Promise<SearchH
       .from(tagsTranslations)
       .where(eq(tagsTranslations.locale, locale))
       .orderBy(asc(tagsTranslations.label)),
+    db
+      .select({ label: themeTranslations.label })
+      .from(themeTranslations)
+      .where(eq(themeTranslations.locale, locale))
+      .orderBy(asc(themeTranslations.label)),
   ]);
 
   const groups = [
@@ -283,5 +288,6 @@ export async function getSearchHubData(input: SearchQueryInput): Promise<SearchH
     groups,
     domains: domainRows.map((row) => row.label),
     tags: tagRows.map((row) => row.label),
+    themes: themeRows.map((row) => row.label),
   };
 }

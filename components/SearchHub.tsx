@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import type {
@@ -68,15 +68,52 @@ function isResourceResult(result: SearchResult): result is ResourceSearchResult 
   return result.kind === 'resource';
 }
 
-export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
+const allowedTypes: SearchResultKind[] = ['test', 'resource'];
+
+export default function SearchHub({ groups, domains, tags, themes, initialFilters }: SearchHubProps) {
   const t = useTranslations('SearchHub');
   const shared = useTranslations('Shared');
   const typeFilters = useMemo(() => buildTypeFilters(t), [t]);
 
-  const [activeTypes, setActiveTypes] = useState<Set<SearchResultKind>>(new Set(['test', 'resource']));
-  const [activeDomains, setActiveDomains] = useState<Set<string>>(new Set());
-  const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
+  const initialFilterValues = useMemo(() => {
+    const selectedTypes = (initialFilters?.types ?? allowedTypes).filter((value) =>
+      allowedTypes.includes(value),
+    );
+    return {
+      types: selectedTypes.length > 0 ? selectedTypes : allowedTypes,
+      domains: (initialFilters?.domains ?? []).filter((value) => domains.includes(value)),
+      tags: (initialFilters?.tags ?? []).filter((value) => tags.includes(value)),
+      themes: (initialFilters?.themes ?? []).filter((value) => themes.includes(value)),
+    };
+  }, [
+    domains,
+    initialFilters?.domains,
+    initialFilters?.tags,
+    initialFilters?.themes,
+    initialFilters?.types,
+    tags,
+    themes,
+  ]);
+
+  const [activeTypes, setActiveTypes] = useState<Set<SearchResultKind>>(
+    new Set(initialFilterValues.types),
+  );
+  const [activeDomains, setActiveDomains] = useState<Set<string>>(
+    new Set(initialFilterValues.domains),
+  );
+  const [activeTags, setActiveTags] = useState<Set<string>>(new Set(initialFilterValues.tags));
+  const [activeThemes, setActiveThemes] = useState<Set<string>>(
+    new Set(initialFilterValues.themes),
+  );
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setActiveTypes(new Set(initialFilterValues.types));
+    setActiveDomains(new Set(initialFilterValues.domains));
+    setActiveTags(new Set(initialFilterValues.tags));
+    setActiveThemes(new Set(initialFilterValues.themes));
+    setExpanded(new Set());
+  }, [initialFilterValues]);
 
   const toggleType = (value: SearchResultKind) => {
     setActiveTypes((current) => {
@@ -114,6 +151,18 @@ export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
     });
   };
 
+  const toggleTheme = (value: string) => {
+    setActiveThemes((current) => {
+      const next = new Set(current);
+      if (next.has(value)) {
+        next.delete(value);
+      } else {
+        next.add(value);
+      }
+      return next;
+    });
+  };
+
   const toggleExpanded = (id: string) => {
     setExpanded((current) => {
       const next = new Set(current);
@@ -135,11 +184,13 @@ export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
           const matchDomain =
             activeDomains.size === 0 || result.domains.some((domain) => activeDomains.has(domain));
           const matchTag = activeTags.size === 0 || result.tags.some((tag) => activeTags.has(tag));
-          return matchType && matchDomain && matchTag;
+          const matchTheme =
+            activeThemes.size === 0 || result.themes.some((theme) => activeThemes.has(theme));
+          return matchType && matchDomain && matchTag && matchTheme;
         }),
       }))
       .filter((group) => group.results.length > 0);
-  }, [activeDomains, activeTags, activeTypes, groups]);
+  }, [activeDomains, activeTags, activeThemes, activeTypes, groups]);
 
   const resourceTypeGroups = useMemo(() => {
     const resourcesGroup = filteredGroups.find((group) => group.category === 'resources');
@@ -296,6 +347,28 @@ export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
         </div>
 
         <div className={styles.filterGroup}>
+          <p className={styles.filterTitle}>{t('filters.themesLabel')}</p>
+          <div className={styles.domainList}>
+            {themes.map((theme) => {
+              const isActive = activeThemes.has(theme);
+              return (
+                <button
+                  key={theme}
+                  type="button"
+                  className={`${styles.domainChip} ${isActive ? styles.domainChipActive : ''}`}
+                  onClick={() => toggleTheme(theme)}
+                  aria-pressed={isActive}
+                >
+                  {theme}
+                </button>
+              );
+            })}
+
+            {themes.length === 0 && <p className={styles.emptyHelper}>{t('filters.emptyThemes')}</p>}
+          </div>
+        </div>
+
+        <div className={styles.filterGroup}>
           <p className={styles.filterTitle}>{t('filters.tagsLabel')}</p>
           <div className={styles.domainList}>
             {tags.map((tag) => {
@@ -324,7 +397,8 @@ export default function SearchHub({ groups, domains, tags }: SearchHubProps) {
             onClick={() => {
               setActiveDomains(new Set());
               setActiveTags(new Set());
-              setActiveTypes(new Set(['test', 'resource']));
+              setActiveThemes(new Set());
+              setActiveTypes(new Set(allowedTypes));
             }}
           >
             {t('filters.reset')}

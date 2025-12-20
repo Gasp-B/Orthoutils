@@ -10,7 +10,15 @@ export const dynamic = 'force-dynamic';
 
 type LocalePageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string; page?: string; limit?: string }>;
+  searchParams: Promise<{
+    q?: string | string[];
+    page?: string | string[];
+    limit?: string | string[];
+    domain?: string | string[];
+    theme?: string | string[];
+    tag?: string | string[];
+    type?: string | string[];
+  }>;
 };
 
 export async function generateMetadata({ params }: LocalePageProps): Promise<Metadata> {
@@ -31,18 +39,31 @@ export async function generateMetadata({ params }: LocalePageProps): Promise<Met
 
 export default async function SearchPage({ params, searchParams }: LocalePageProps) {
   const { locale } = await params;
-  const { q, page, limit } = await searchParams;
+  const { q, page, limit, domain, theme, tag, type } = await searchParams;
 
   if (!locales.includes(locale as Locale)) {
     notFound();
   }
 
+  const normalizeSearchParam = (value?: string | string[]) => {
+    if (!value) return [];
+    const values = Array.isArray(value) ? value : [value];
+    return values.map((item) => item.trim()).filter(Boolean);
+  };
+
+  const normalizedDomains = normalizeSearchParam(domain);
+  const normalizedThemes = normalizeSearchParam(theme);
+  const normalizedTags = normalizeSearchParam(tag);
+  const normalizedTypes = normalizeSearchParam(type).filter(
+    (value): value is 'test' | 'resource' => value === 'test' || value === 'resource',
+  );
+
   const t = await getTranslations({ locale, namespace: 'SearchHub' });
   const searchHubData = await getSearchHubData({
     locale: locale as Locale,
-    query: q ?? undefined,
-    page,
-    limit,
+    query: Array.isArray(q) ? q[0] : q ?? undefined,
+    page: Array.isArray(page) ? page[0] : page,
+    limit: Array.isArray(limit) ? limit[0] : limit,
   });
 
   return (
@@ -70,14 +91,28 @@ export default async function SearchPage({ params, searchParams }: LocalePagePro
             </label>
             <input
               className={`ui-input ${styles.searchInput}`}
-              defaultValue={q ?? ''}
+              defaultValue={Array.isArray(q) ? q[0] ?? '' : q ?? ''}
               id="search-query"
               name="q"
               placeholder={t('search.inputPlaceholder')}
               type="search"
             />
           </div>
-          {limit ? <input name="limit" type="hidden" value={limit} /> : null}
+          {Array.isArray(limit) ? limit[0] : limit ? (
+            <input name="limit" type="hidden" value={Array.isArray(limit) ? limit[0] : limit} />
+          ) : null}
+          {normalizedDomains.map((value) => (
+            <input key={`domain-${value}`} name="domain" type="hidden" value={value} />
+          ))}
+          {normalizedThemes.map((value) => (
+            <input key={`theme-${value}`} name="theme" type="hidden" value={value} />
+          ))}
+          {normalizedTags.map((value) => (
+            <input key={`tag-${value}`} name="tag" type="hidden" value={value} />
+          ))}
+          {normalizedTypes.map((value) => (
+            <input key={`type-${value}`} name="type" type="hidden" value={value} />
+          ))}
           <input name="page" type="hidden" value="1" />
           <button className={`ui-button ui-button-sm ${styles.searchButton}`} type="submit">
             {t('search.submit')}
@@ -85,7 +120,18 @@ export default async function SearchPage({ params, searchParams }: LocalePagePro
         </form>
       </header>
 
-      <SearchHub groups={searchHubData.groups} domains={searchHubData.domains} tags={searchHubData.tags} />
+      <SearchHub
+        groups={searchHubData.groups}
+        domains={searchHubData.domains}
+        tags={searchHubData.tags}
+        themes={searchHubData.themes}
+        initialFilters={{
+          domains: normalizedDomains,
+          tags: normalizedTags,
+          themes: normalizedThemes,
+          types: normalizedTypes,
+        }}
+      />
     </main>
   );
 }
