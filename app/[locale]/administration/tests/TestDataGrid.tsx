@@ -527,9 +527,9 @@ function DataTableToolbar({
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button asChild size="sm">
-          <Link href="/administration/tests/create">{t('actions.newTest')}</Link>
-        </Button>
+        <Link href="/administration/tests/create" className="ui-button ui-button-sm">
+          {t('actions.newTest')}
+        </Link>
       </div>
     </div>
   );
