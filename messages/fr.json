@@ -212,7 +212,8 @@
         "all": "Tous",
         "selectedCount": "({count} sélectionné(s))",
         "clear": "Réinitialiser les filtres",
-        "pageSize": "Lignes par page"
+        "pageSize": "Lignes par page",
+        "filterButton": "Filtres"
       },
       "actions": {
         "edit": "Modifier",
@@ -226,6 +227,11 @@
         "summary": "Page {page} sur {total}",
         "previous": "Précédent",
         "next": "Suivant"
+      },
+      "columnHeader": {
+        "sortAsc": "Trier par ordre croissant",
+        "sortDesc": "Trier par ordre décroissant",
+        "hide": "Masquer la colonne"
       }
     },
     "bulk": {

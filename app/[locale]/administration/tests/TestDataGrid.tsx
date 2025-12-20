@@ -22,12 +22,14 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, SlidersHorizontal } from 'lucide-react';
+import { Filter, MoreHorizontal, SlidersHorizontal } from 'lucide-react';
 import { type Locale } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import { DataTableFacetedFilter } from '@/components/ui/data-table-faceted-filter';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -180,18 +182,7 @@ function buildColumns({
     {
       accessorKey: 'name',
       enableSorting: true,
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          className="h-8 px-2 text-xs font-medium"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          {t('columns.title')}
-          <span className="ml-2 inline-flex">
-            <ArrowUpDown className="h-4 w-4" />
-          </span>
-        </Button>
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.title')} />,
       meta: { label: t('columns.title') },
       enableGlobalFilter: true,
       cell: ({ row }) => {
@@ -217,9 +208,6 @@ function buildColumns({
             onClick={() => onBeginEdit(test, 'name')}
             onDoubleClick={() => onBeginEdit(test, 'name')}
           >
-            <Badge variant="outline" className="w-fit text-[10px] uppercase tracking-wide">
-              {test.tags[0] ?? t('tagFallback')}
-            </Badge>
             <Link
               className="text-sm font-medium text-slate-100 hover:underline"
               href={{ pathname: '/administration/tests/edit/[id]', params: { id: test.id } }}
@@ -233,7 +221,7 @@ function buildColumns({
     },
     {
       accessorKey: 'status',
-      header: t('columns.status'),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.status')} />,
       meta: { label: t('columns.status') },
       filterFn: (row, columnId, filterValue) => {
         if (!Array.isArray(filterValue) || filterValue.length === 0) {
@@ -281,7 +269,9 @@ function buildColumns({
     {
       accessorFn: (row) => [...row.domains, ...row.themes],
       id: 'domainTheme',
-      header: t('columns.domainTheme'),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('columns.domainTheme')} />
+      ),
       meta: { label: t('columns.domainTheme') },
       filterFn: (row, columnId, filterValue) => {
         if (!Array.isArray(filterValue) || filterValue.length === 0) {
@@ -350,7 +340,7 @@ function buildColumns({
     },
     {
       accessorKey: 'tags',
-      header: t('columns.tags'),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.tags')} />,
       meta: { label: t('columns.tags') },
       filterFn: (row, columnId, filterValue) => {
         if (!Array.isArray(filterValue) || filterValue.length === 0) {
@@ -399,7 +389,9 @@ function buildColumns({
     },
     {
       accessorKey: 'updatedAt',
-      header: t('columns.updatedAt'),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('columns.updatedAt')} />
+      ),
       meta: { label: t('columns.updatedAt') },
       cell: ({ row }) => {
         const date = new Date(row.original.updatedAt);
@@ -419,7 +411,7 @@ function buildColumns({
     {
       id: 'actions',
       enableHiding: false,
-      header: t('columns.actions'),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.actions')} />,
       cell: ({ row }) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -471,6 +463,7 @@ function DataTableToolbar({
   statusT: ReturnType<typeof useTranslations>;
   themesFilterOptions: string[];
 }) {
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const statusOptionsWithLabels = statusOptions.map((status) => ({
     label: statusT(status),
     value: status,
@@ -482,54 +475,70 @@ function DataTableToolbar({
   }));
 
   return (
-    <div className="flex items-center justify-between py-4">
-      <div className="flex flex-1 items-center gap-2">
-        <Input
-          className="h-8 w-[150px] lg:w-[250px]"
-          placeholder={t('filters.searchPlaceholder')}
-          value={(table.getState().globalFilter as string) ?? ''}
-          onChange={(event) => table.setGlobalFilter(event.target.value)}
-        />
-        <DataTableFacetedFilter
-          column={table.getColumn('status')}
-          title={t('filters.status')}
-          options={statusOptionsWithLabels}
-        />
-        <DataTableFacetedFilter
-          column={table.getColumn('domainTheme')}
-          title={t('labels.themes')}
-          options={themeOptionsWithLabels}
-        />
-      </div>
+    <div className="flex flex-col gap-3 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          <Input
+            className="h-8 w-[150px] lg:w-[250px]"
+            placeholder={t('filters.searchPlaceholder')}
+            value={(table.getState().globalFilter as string) ?? ''}
+            onChange={(event) => table.setGlobalFilter(event.target.value)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2"
+            onClick={() => setFiltersOpen((prev) => !prev)}
+          >
+            <Filter className="h-4 w-4" />
+            {t('filters.filterButton')}
+          </Button>
+          {filtersOpen && (
+            <>
+              <DataTableFacetedFilter
+                column={table.getColumn('status')}
+                title={t('filters.status')}
+                options={statusOptionsWithLabels}
+              />
+              <DataTableFacetedFilter
+                column={table.getColumn('domainTheme')}
+                title={t('labels.themes')}
+                options={themeOptionsWithLabels}
+              />
+            </>
+          )}
+        </div>
 
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-2">
-              <SlidersHorizontal className="h-4 w-4" />
-              {t('actions.viewOptions')}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
-                >
-                  {column.columnDef.meta?.label ?? column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Link href="/administration/tests/create" className="ui-button ui-button-sm">
-          {t('actions.newTest')}
-        </Link>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-2">
+                <SlidersHorizontal className="h-4 w-4" />
+                {t('actions.viewOptions')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
+                  >
+                    {column.columnDef.meta?.label ?? column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Link href="/administration/tests/create" className="ui-button ui-button-sm">
+            {t('actions.newTest')}
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -990,7 +999,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </div>
       )}
 
-      <div className="rounded-md border">
+      <div className="rounded-md border border-slate-300 bg-white/95 shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -1043,34 +1052,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </Table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span>
-          {t('pagination.summary', {
-            page: table.getState().pagination.pageIndex + 1,
-            total: table.getPageCount(),
-          })}
-        </span>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            {t('pagination.previous')}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            {t('pagination.next')}
-          </Button>
-        </div>
-      </div>
+      <DataTablePagination table={table} pageSizeOptions={pageSizeOptions} />
 
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
     </section>
