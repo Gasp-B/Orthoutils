@@ -485,7 +485,7 @@ function DataTableToolbar({
     <div className="flex items-center justify-between py-4">
       <div className="flex flex-1 items-center gap-2">
         <Input
-          className="h-8 w-[150px] lg:w-[250px]"
+          className="h-8 w-[120px] sm:w-[150px] lg:w-[190px]"
           placeholder={t('filters.searchPlaceholder')}
           value={(table.getState().globalFilter as string) ?? ''}
           onChange={(event) => table.setGlobalFilter(event.target.value)}
