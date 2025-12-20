@@ -35,7 +35,8 @@
   "catalogue": "Catalogue",
   "megaMenuLabel": "Navigation catalogue",
     "domainsLabel": "Domaines du catalogue",
-    "tagsLabel": "Tags"
+    "tagsLabel": "Tags",
+    "themesLabel": "Thèmes"
   },
   "Hero": {
     "sectionLabel": "Référentiels conçus et validés par des orthophonistes",

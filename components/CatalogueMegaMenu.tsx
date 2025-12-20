@@ -167,32 +167,32 @@ function CatalogueMegaMenu({ domains }: Props) {
             </ul>
           </div>
 
-          {/* Colonne tags */}
+          {/* Colonne thèmes */}
           <div
             className="ph-header__mega-column ph-header__mega-tags"
             aria-live="polite"
           >
             <p className="ph-header__mega-title">
-              {activeDomain?.label ?? t('tagsLabel')}
+              {activeDomain?.label ?? t('themesLabel')}
             </p>
             <div className="ph-header__mega-tag-grid">
-              {(activeDomain?.tags ?? []).map((tag) => {
+              {(activeDomain?.themes ?? []).map((theme) => {
                 if (!activeDomain) return null;
 
                 return (
                   <Link
-                    key={`${activeDomain.id}-${tag.id}`}
+                    key={`${activeDomain.id}-${theme.id}`}
                     href={{
-                      pathname: '/catalogue/[slug]/[tag]',
+                      pathname: '/catalogue/[slug]/[theme]',
                       params: {
                         slug: activeDomain.slug,
-                        tag: tag.slug,
+                        theme: theme.slug,
                       },
                     }}
                     className="ph-header__mega-tag"
                     onClick={() => setIsOpen(false)}
                   >
-                    {tag.label}
+                    {theme.label}
                   </Link>
                 );
               })}

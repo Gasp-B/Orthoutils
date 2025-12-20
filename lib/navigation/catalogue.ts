@@ -1,16 +1,16 @@
 import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
-import { slugify } from '@/lib/utils/slug';
 import { defaultLocale, type Locale } from '@/i18n/routing';
 
 type SupabaseClient = Awaited<ReturnType<typeof createRouteHandlerSupabaseClient>>;
 
 type DomainTranslationRow = { domain_id: string; locale: string; label: string; slug: string };
-type TagTranslationRow = { tag_id: string; locale: string; label: string };
+type ThemeTranslationRow = { theme_id: string; locale: string; label: string };
+type ThemeRow = { id: string; slug: string };
 type TestDomainRow = { test_id: string; domain_id: string };
-type TestTagRow = { test_id: string; tag_id: string };
+type TestThemeRow = { test_id: string; theme_id: string };
 
-export type CatalogueTag = { id: string; label: string; slug: string };
-export type CatalogueDomain = { id: string; label: string; slug: string; tags: CatalogueTag[] };
+export type CatalogueTheme = { id: string; label: string; slug: string };
+export type CatalogueDomain = { id: string; label: string; slug: string; themes: CatalogueTheme[] };
 
 export async function getCatalogueTaxonomy(
   locale: Locale = defaultLocale,
@@ -32,20 +32,20 @@ export async function getCatalogueTaxonomy(
     return [];
   }
 
-  // 2. Récupérer les relations Domaines/Tags pour ces tests
-  const [testDomainsResult, testTagsResult] = await Promise.all([
+  // 2. Récupérer les relations Domaines/Thèmes pour ces tests
+  const [testDomainsResult, testThemesResult] = await Promise.all([
     supabase.from('test_domains').select('test_id, domain_id').in('test_id', publishedTestIds),
-    supabase.from('test_tags').select('test_id, tag_id').in('test_id', publishedTestIds),
+    supabase.from('test_themes').select('test_id, theme_id').in('test_id', publishedTestIds),
   ]);
 
   if (testDomainsResult.error) throw testDomainsResult.error;
-  if (testTagsResult.error) throw testTagsResult.error;
+  if (testThemesResult.error) throw testThemesResult.error;
 
   const testDomainRows = (testDomainsResult.data ?? []) as TestDomainRow[];
-  const testTagRows = (testTagsResult.data ?? []) as TestTagRow[];
+  const testThemeRows = (testThemesResult.data ?? []) as TestThemeRow[];
 
   const domainIds = Array.from(new Set(testDomainRows.map((row) => row.domain_id)));
-  const tagIds = Array.from(new Set(testTagRows.map((row) => row.tag_id)));
+  const themeIds = Array.from(new Set(testThemeRows.map((row) => row.theme_id)));
 
   // Si les tests n'ont pas de domaines, menu vide
   if (domainIds.length === 0) {
@@ -53,25 +53,32 @@ export async function getCatalogueTaxonomy(
   }
 
   // 3. Récupérer les traductions
-  const [domainTranslationsResult, tagTranslationsResult] = await Promise.all([
+  const [domainTranslationsResult, themeTranslationsResult, themeSlugsResult] = await Promise.all([
     supabase
       .from('domains_translations')
       .select('domain_id, locale, label, slug')
       .in('domain_id', domainIds)
       .in('locale', [locale, defaultLocale]),
-    supabase
-      .from('tags_translations')
-      .select('tag_id, locale, label')
-      .in('tag_id', tagIds)
-      .in('locale', [locale, defaultLocale]),
+    themeIds.length
+      ? supabase
+          .from('theme_translations')
+          .select('theme_id, locale, label')
+          .in('theme_id', themeIds)
+          .in('locale', [locale, defaultLocale])
+      : Promise.resolve({ data: [], error: null }),
+    themeIds.length
+      ? supabase.from('themes').select('id, slug').in('id', themeIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (domainTranslationsResult.error) throw domainTranslationsResult.error;
-  if (tagTranslationsResult.error) throw tagTranslationsResult.error;
+  if (themeTranslationsResult.error) throw themeTranslationsResult.error;
+  if (themeSlugsResult.error) throw themeSlugsResult.error;
 
   // ... (le reste de la logique de mapping reste identique)
   const domainTranslations = (domainTranslationsResult.data ?? []) as DomainTranslationRow[];
-  const tagTranslations = (tagTranslationsResult.data ?? []) as TagTranslationRow[];
+  const themeTranslations = (themeTranslationsResult.data ?? []) as ThemeTranslationRow[];
+  const themeSlugs = (themeSlugsResult.data ?? []) as ThemeRow[];
 
   const domainsById = new Map<string, DomainTranslationRow[]>();
   for (const translation of domainTranslations) {
@@ -80,38 +87,44 @@ export async function getCatalogueTaxonomy(
     domainsById.set(translation.domain_id, existing);
   }
 
-  const tagsById = new Map<string, TagTranslationRow[]>();
-  for (const translation of tagTranslations) {
-    const existing = tagsById.get(translation.tag_id) ?? [];
+  const themesById = new Map<string, ThemeTranslationRow[]>();
+  for (const translation of themeTranslations) {
+    const existing = themesById.get(translation.theme_id) ?? [];
     existing.push(translation);
-    tagsById.set(translation.tag_id, existing);
+    themesById.set(translation.theme_id, existing);
   }
 
-  const tagsByTest = new Map<string, string[]>();
-  for (const relation of testTagRows) {
-    const existing = tagsByTest.get(relation.test_id) ?? [];
-    existing.push(relation.tag_id);
-    tagsByTest.set(relation.test_id, existing);
+  const themeSlugsById = new Map<string, string>();
+  for (const theme of themeSlugs) {
+    themeSlugsById.set(theme.id, theme.slug);
   }
 
-  const tagsByDomain = new Map<string, CatalogueTag[]>();
+  const themesByTest = new Map<string, string[]>();
+  for (const relation of testThemeRows) {
+    const existing = themesByTest.get(relation.test_id) ?? [];
+    existing.push(relation.theme_id);
+    themesByTest.set(relation.test_id, existing);
+  }
+
+  const themesByDomain = new Map<string, CatalogueTheme[]>();
   for (const relation of testDomainRows) {
-    const relatedTags = tagsByTest.get(relation.test_id) ?? [];
+    const relatedThemes = themesByTest.get(relation.test_id) ?? [];
 
-    for (const tagId of relatedTags) {
-      const translations = tagsById.get(tagId) ?? [];
+    for (const themeId of relatedThemes) {
+      const translations = themesById.get(themeId) ?? [];
       const localized = translations.find((row) => row.locale === locale);
       const fallback = translations.find((row) => row.locale === defaultLocale);
       const label = localized?.label ?? fallback?.label;
+      const slug = themeSlugsById.get(themeId);
 
-      if (!label) continue;
+      if (!label || !slug) continue;
 
-      const tag: CatalogueTag = { id: tagId, label, slug: slugify(label) };
-      const existing = tagsByDomain.get(relation.domain_id) ?? [];
+      const theme: CatalogueTheme = { id: themeId, label, slug };
+      const existing = themesByDomain.get(relation.domain_id) ?? [];
 
-      if (!existing.some((item) => item.id === tag.id)) {
-        existing.push(tag);
-        tagsByDomain.set(relation.domain_id, existing);
+      if (!existing.some((item) => item.id === theme.id)) {
+        existing.push(theme);
+        themesByDomain.set(relation.domain_id, existing);
       }
     }
   }
@@ -131,7 +144,7 @@ export async function getCatalogueTaxonomy(
         id,
         label,
         slug,
-        tags: tagsByDomain.get(id) ?? [],
+        themes: (themesByDomain.get(id) ?? []).sort((a, b) => a.label.localeCompare(b.label)),
       };
     })
     .filter((domain): domain is CatalogueDomain => Boolean(domain))

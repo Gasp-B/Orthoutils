@@ -35,7 +35,8 @@
   "catalogue": "Catalog",
   "megaMenuLabel": "Catalog navigation",
     "domainsLabel": "Catalog domains",
-    "tagsLabel": "Tags"
+    "tagsLabel": "Tags",
+    "themesLabel": "Themes"
   },
   "Hero": {
     "sectionLabel": "References designed and validated by speech-language pathologists",

@@ -20,9 +20,9 @@ export const pathnames = {
     en: '/catalogue/[slug]',
     fr: '/catalogue/[slug]',
   },
-  '/catalogue/[slug]/[tag]': {
-    en: '/catalogue/[slug]/[tag]',
-    fr: '/catalogue/[slug]/[tag]',
+  '/catalogue/[slug]/[theme]': {
+    en: '/catalogue/[slug]/[theme]',
+    fr: '/catalogue/[slug]/[theme]',
   },
   '/search': {
     en: '/search',
