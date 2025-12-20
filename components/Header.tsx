@@ -138,6 +138,11 @@ function Header() {
           </div>
         </Link>
 
+        {loadingCatalogue && (
+          <span className="ph-header__link ph-header__link--muted">{t('navLoading')}</span>
+        )}
+        {!loadingCatalogue && !error && <CatalogueMegaMenu domains={catalogueDomains} />}
+
         {/* Barre de recherche */}
         <form className="ph-header__search" role="search" action={`/${locale}/search`} method="get">
           <input
@@ -154,11 +159,6 @@ function Header() {
 
         {/* Navigation Droite */}
         <nav className="ph-header__nav" aria-label={t('navAria')}>
-          
-          {loadingCatalogue && (
-            <span className="ph-header__link ph-header__link--muted">{t('navLoading')}</span>
-          )}
-          {!loadingCatalogue && !error && <CatalogueMegaMenu domains={catalogueDomains} />}
           
           {isAdmin && (
             <div className="ph-header__menu">
