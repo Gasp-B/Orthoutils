@@ -160,7 +160,6 @@ function Header() {
           )}
           {!loadingCatalogue && !error && <CatalogueMegaMenu domains={catalogueDomains} />}
           
-
           {isAdmin && (
             <div className="ph-header__menu">
               <button className="ph-header__link ph-header__menu-toggle" type="button">
