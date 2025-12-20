@@ -48,10 +48,10 @@ function AdministrationDashboard() {
       </div>
 
       <div className={styles.cardGrid}>
-        <Link href="/administration/tests" className={styles.card} aria-label={t('addTest')}>
+        <Link href="/administration/tests" className={styles.card} aria-label={t('testsManagement')}>
           <div className={styles.cardBody}>
             <p className={styles.cardEyebrow}>{t('catalogue')}</p>
-            <span className={styles.cardTitle}>{t('addTest')}</span>
+            <span className={styles.cardTitle}>{t('testsManagement')}</span>
           </div>
           <span aria-hidden className={styles.cardArrow}>
             →
