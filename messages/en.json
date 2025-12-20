@@ -160,6 +160,33 @@
     "pageTitle": "Add / Edit a test",
     "pageLead": "Use this form to create a test or edit an existing sheet, including its associated tags and domains."
   },
+  "AdminTests": {
+    "metadata": {
+      "title": "Manage tests | Othoutils",
+      "description": "Manage tests from the administration dashboard."
+    },
+    "sectionLabel": "Test management",
+    "pageTitle": "Manage tests",
+    "pageLead": "Create new tests or update existing entries from the administration dashboard.",
+    "create": {
+      "metadata": {
+        "title": "Create a test | Othoutils",
+        "description": "Create a new test entry for the catalog."
+      },
+      "sectionLabel": "Create a test",
+      "pageTitle": "Add a new test",
+      "pageLead": "Fill in the form to add a new test to the catalog."
+    },
+    "edit": {
+      "metadata": {
+        "title": "Edit a test | Othoutils",
+        "description": "Update an existing test entry."
+      },
+      "sectionLabel": "Edit a test",
+      "pageTitle": "Update a test",
+      "pageLead": "Review the test details and save your changes."
+    }
+  },
   "ResourcesManage": {
     "metadata": {
       "title": "Manage resources | Othoutils",

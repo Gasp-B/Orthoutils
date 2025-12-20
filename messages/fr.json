@@ -160,6 +160,33 @@
     "pageTitle": "Ajouter / Éditer un test",
     "pageLead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags et domaines associés."
   },
+  "AdminTests": {
+    "metadata": {
+      "title": "Gérer les tests | Othoutils",
+      "description": "Gérez les tests depuis le tableau de bord d'administration."
+    },
+    "sectionLabel": "Gestion des tests",
+    "pageTitle": "Gérer les tests",
+    "pageLead": "Créez de nouveaux tests ou mettez à jour les entrées existantes depuis l'administration.",
+    "create": {
+      "metadata": {
+        "title": "Créer un test | Othoutils",
+        "description": "Créer une nouvelle fiche test pour le catalogue."
+      },
+      "sectionLabel": "Créer un test",
+      "pageTitle": "Ajouter un nouveau test",
+      "pageLead": "Renseignez le formulaire pour ajouter un nouveau test au catalogue."
+    },
+    "edit": {
+      "metadata": {
+        "title": "Modifier un test | Othoutils",
+        "description": "Mettre à jour une fiche test existante."
+      },
+      "sectionLabel": "Modifier un test",
+      "pageTitle": "Mettre à jour un test",
+      "pageLead": "Vérifiez les informations du test et enregistrez vos modifications."
+    }
+  },
   "ResourcesManage": {
     "metadata": {
       "title": "Gérer les ressources | Othoutils",

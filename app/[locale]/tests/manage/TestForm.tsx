@@ -22,6 +22,7 @@ import styles from './test-form.module.css';
 
 type TestFormProps = {
   locale: Locale;
+  initialTestId?: string | null;
 };
 
 // --- Schéma Zod ---
@@ -186,14 +187,14 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 }
 
 // --- Composant Principal ---
-function TestForm({ locale }: TestFormProps) {
+function TestForm({ locale, initialTestId = null }: TestFormProps) {
   const formT = useTranslations('ManageTests.form');
   const feedbackT = useTranslations('ManageTests.feedback');
   const multiSelectT = useTranslations('ManageTests.form.multiSelect');
 
   const queryClient = useQueryClient();
 
-  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(initialTestId);
   const [newBibliography, setNewBibliography] = useState({ label: '', url: '' });
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -228,6 +229,10 @@ function TestForm({ locale }: TestFormProps) {
   const ageMaxValue = watch('ageMaxValue');
   const ageMinUnit = watch('ageMinUnit');
   const ageMaxUnit = watch('ageMaxUnit');
+
+  useEffect(() => {
+    setSelectedTestId(initialTestId ?? null);
+  }, [initialTestId]);
 
   // Chargement des données lors de la sélection d'un test
   useEffect(() => {

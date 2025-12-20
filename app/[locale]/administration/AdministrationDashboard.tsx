@@ -33,12 +33,12 @@ function AdministrationDashboard() {
             <p className={styles.sectionLabel}>{t('admin')}</p>
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => void handleLogout()} 
+        <Button
+          variant="outline"
+          onClick={() => void handleLogout()}
           className="text-red-600 border-red-200 hover:bg-red-50"
         >
-          Déconnexion
+          {t('logout')}
         </Button>
       </div>
 
@@ -48,7 +48,7 @@ function AdministrationDashboard() {
       </div>
 
       <div className={styles.cardGrid}>
-        <Link href="/tests/manage" className={styles.card} aria-label={t('addTest')}>
+        <Link href="/administration/tests" className={styles.card} aria-label={t('addTest')}>
           <div className={styles.cardBody}>
             <p className={styles.cardEyebrow}>{t('catalogue')}</p>
             <span className={styles.cardTitle}>{t('addTest')}</span>
