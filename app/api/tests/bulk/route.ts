@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
     const { data: usageRows, error: usageError } = await adminClient
       .from(PATIENT_ASSESSMENT_TESTS_TABLE)
       .select('test_id')
-      .in('test_id', payload.ids);
+      .in('test_id', payload.ids)
+      .returns<{ test_id: string }[]>();
 
     if (usageError) {
       throw usageError;
