@@ -530,6 +530,8 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
+              width="16"
+              height="16"
               className="h-4 w-4"
             >
               <path
@@ -693,6 +695,8 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
+                  width="16"
+                  height="16"
                   className="h-4 w-4"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35" />
@@ -721,6 +725,8 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
+                  width="12"
+                  height="12"
                   className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
@@ -761,6 +767,8 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
+                  width="12"
+                  height="12"
                   className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
@@ -799,6 +807,8 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
+                  width="12"
+                  height="12"
                   className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
