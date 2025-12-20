@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +23,7 @@ import styles from './test-form.module.css';
 
 type TestFormProps = {
   locale: Locale;
-  initialTestId?: string | null;
+  testId?: string | null;
 };
 
 // --- Schéma Zod ---
@@ -187,14 +188,14 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 }
 
 // --- Composant Principal ---
-function TestForm({ locale, initialTestId = null }: TestFormProps) {
+function TestForm({ locale, testId = null }: TestFormProps) {
   const formT = useTranslations('ManageTests.form');
   const feedbackT = useTranslations('ManageTests.feedback');
   const multiSelectT = useTranslations('ManageTests.form.multiSelect');
 
+  const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [selectedTestId, setSelectedTestId] = useState<string | null>(initialTestId);
   const [newBibliography, setNewBibliography] = useState({ label: '', url: '' });
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -224,15 +225,30 @@ function TestForm({ locale, initialTestId = null }: TestFormProps) {
   const currentTags = watch('tags') ?? [];
   const currentThemes = watch('themes') ?? [];
   const currentBibliography = watch('bibliography');
+  const watchedTestId = watch('id');
+  const selectedTestId = testId ?? watchedTestId ?? null;
   const targetAudience = watch('targetAudience'); // <-- Utilisation du nouveau champ
   const ageMinValue = watch('ageMinValue');
   const ageMaxValue = watch('ageMaxValue');
   const ageMinUnit = watch('ageMinUnit');
   const ageMaxUnit = watch('ageMaxUnit');
 
-  useEffect(() => {
-    setSelectedTestId(initialTestId ?? null);
-  }, [initialTestId]);
+  const applyTestValues = useCallback((test: TestDto) => {
+    const audience = test.targetAudience ?? 'child';
+    const baseUnit: AgeUnit = audience === 'adult' ? 'years' : 'months';
+    reset({
+      ...test,
+      bibliography: test.bibliography ?? [],
+      themes: test.themes ?? [],
+      domains: test.domains ?? [],
+      tags: test.tags ?? [],
+      targetAudience: audience, // <-- Mapping DB vers Form
+      ageMinValue: fromMonths(test.ageMinMonths, baseUnit),
+      ageMinUnit: baseUnit,
+      ageMaxValue: fromMonths(test.ageMaxMonths, baseUnit),
+      ageMaxUnit: baseUnit,
+    });
+  }, [reset]);
 
   // Chargement des données lors de la sélection d'un test
   useEffect(() => {
@@ -242,22 +258,9 @@ function TestForm({ locale, initialTestId = null }: TestFormProps) {
     }
     const test = tests?.find((t) => t.id === selectedTestId);
     if (test) {
-      const audience = test.targetAudience ?? 'child';
-      const baseUnit: AgeUnit = audience === 'adult' ? 'years' : 'months';
-      reset({
-        ...test,
-        bibliography: test.bibliography ?? [],
-        themes: test.themes ?? [],
-        domains: test.domains ?? [],
-        tags: test.tags ?? [],
-        targetAudience: audience, // <-- Mapping DB vers Form
-        ageMinValue: fromMonths(test.ageMinMonths, baseUnit),
-        ageMinUnit: baseUnit,
-        ageMaxValue: fromMonths(test.ageMaxMonths, baseUnit),
-        ageMaxUnit: baseUnit,
-      });
+      applyTestValues(test);
     }
-  }, [selectedTestId, tests, reset]);
+  }, [selectedTestId, tests, applyTestValues, reset]);
 
   const mutation = useMutation({
     mutationFn: (payload: SubmitValues) => 
@@ -344,34 +347,63 @@ function TestForm({ locale, initialTestId = null }: TestFormProps) {
     setValue('ageMaxValue', fromMonths(currentMaxMonths, nextUnit), { shouldDirty: true });
   };
 
+  const handleTestSelection = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextId = event.currentTarget.value || null;
+    if (!nextId) {
+      reset(defaultValues);
+      return;
+    }
+    setValue('id', nextId, { shouldDirty: true });
+  };
+
+  const handleReset = () => {
+    if (selectedTestId) {
+      const test = tests?.find((current) => current.id === selectedTestId);
+      if (test) {
+        applyTestValues(test);
+      }
+      return;
+    }
+    reset(defaultValues);
+  };
+
   return (
     <form className="notion-form" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
 
       <div className="notion-toolbar sticky top-4 z-40 shadow-sm">
-        <div className="notion-toolbar__group flex-1 max-w-md">
-          <div className="flex flex-col gap-1 w-full">
-            <Label htmlFor="test-selector" className="text-xs uppercase tracking-wider text-slate-500">
-              {formT('toolbar.sheetLabel')}
-            </Label>
-              <Select
-                id="test-selector"
-                value={selectedTestId ?? ''}
-                onChange={(e) => setSelectedTestId(e.currentTarget.value || null)}
-                className="font-semibold bg-white/50"
-              >
-              <option value="">✨ {formT('toolbar.newTest')}</option>
-              {tests?.map((test) => (
-                <option key={test.id} value={test.id}>
-                  📝 {test.name}
-                </option>
-              ))}
-            </Select>
+        {!testId && (
+          <div className="notion-toolbar__group flex-1 max-w-md">
+            <div className="flex flex-col gap-1 w-full">
+              <Label htmlFor="test-selector" className="text-xs uppercase tracking-wider text-slate-500">
+                {formT('toolbar.sheetLabel')}
+              </Label>
+                <Select
+                  id="test-selector"
+                  value={selectedTestId ?? ''}
+                  onChange={handleTestSelection}
+                  className="font-semibold bg-white/50"
+                >
+                <option value="">✨ {formT('toolbar.newTest')}</option>
+                {tests?.map((test) => (
+                  <option key={test.id} value={test.id}>
+                    📝 {test.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="notion-toolbar__group">
-          <Button type="button" variant="ghost" onClick={() => { setSelectedTestId(null); reset(defaultValues); }}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => router.push(`/${locale}/administration/tests`)}
+          >
+            {formT('toolbar.back')}
+          </Button>
+          <Button type="button" variant="ghost" onClick={handleReset}>
             {formT('toolbar.reset')}
           </Button>
           <Button type="submit" disabled={mutation.isPending} className="min-w-[140px]">

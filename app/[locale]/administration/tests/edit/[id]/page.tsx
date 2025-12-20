@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { z } from 'zod';
 import TestForm from '../../../../tests/manage/TestForm';
 import styles from '../../../../tests/manage/manage-page.module.css';
 import { locales, type Locale } from '@/i18n/routing';
+import { getTestWithMetadata } from '@/lib/tests/queries';
 
 type AdministrationTestsEditPageProps = {
   params: Promise<{ locale: string; id: string }>;
@@ -32,6 +34,16 @@ export default async function AdministrationTestsEditPage({ params }: Administra
     notFound();
   }
 
+  const parsedId = z.string().uuid().safeParse(id);
+  if (!parsedId.success) {
+    redirect(`/${locale}/catalogue`);
+  }
+
+  const test = await getTestWithMetadata(parsedId.data, locale as Locale);
+  if (!test) {
+    redirect(`/${locale}/catalogue`);
+  }
+
   const t = await getTranslations({ locale, namespace: 'AdminTests' });
 
   return (
@@ -46,7 +58,7 @@ export default async function AdministrationTestsEditPage({ params }: Administra
         <p className={`text-subtle ${styles.pageLead}`}>{t('edit.pageLead')}</p>
       </div>
 
-      <TestForm locale={locale as Locale} initialTestId={id} />
+      <TestForm locale={locale as Locale} testId={test.id} />
     </main>
   );
 }
