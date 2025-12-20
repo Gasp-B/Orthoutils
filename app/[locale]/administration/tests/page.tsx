@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import TestDataGrid from './TestDataGrid';
-import styles from '../../tests/manage/manage-page.module.css';
 import { locales, type Locale } from '@/i18n/routing';
 
 type AdministrationTestsPageProps = {
@@ -35,16 +34,18 @@ export default async function AdministrationTestsPage({ params }: Administration
   const t = await getTranslations({ locale, namespace: 'AdminTests' });
 
   return (
-    <main className={`container section-shell ${styles.page}`}>
-      <div className="section-title">
-        <span />
-        <p className={styles.sectionLabel}>{t('sectionLabel')}</p>
-      </div>
-
-      <div className={`glass panel ${styles.introPanel}`}>
-        <h1 className={styles.pageTitle}>{t('pageTitle')}</h1>
-        <p className={`text-subtle ${styles.pageLead}`}>{t('pageLead')}</p>
-      </div>
+    <main className="container section-shell flex flex-col gap-6">
+      <header className="rounded-2xl bg-slate-950/80 px-6 py-5 shadow-lg shadow-slate-950/30 ring-1 ring-white/10">
+        <div className="flex flex-col gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+            {t('sectionLabel')}
+          </p>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-semibold text-white/90">{t('pageTitle')}</h1>
+            <p className="text-sm text-white/70 sm:text-base">{t('pageLead')}</p>
+          </div>
+        </div>
+      </header>
 
       <TestDataGrid locale={locale as Locale} />
     </main>
