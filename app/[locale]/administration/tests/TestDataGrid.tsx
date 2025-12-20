@@ -41,10 +41,10 @@ type UpdateOverrides = Partial<
 const pageSizeOptions = [20, 50];
 const statusOptions = validationStatusSchema.options;
 const statusBadgeStyles: Record<TestDto['status'], string> = {
-  draft: 'border-slate-200 bg-slate-100 text-slate-700',
-  in_review: 'border-amber-200 bg-amber-100 text-amber-800',
-  published: 'border-emerald-200 bg-emerald-100 text-emerald-800',
-  archived: 'border-slate-300 bg-slate-200 text-slate-600',
+  draft: 'border-white/10 bg-white/5 text-slate-200',
+  in_review: 'border-amber-400/40 bg-amber-500/10 text-amber-200',
+  published: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200',
+  archived: 'border-white/10 bg-slate-900 text-slate-300',
 };
 
 function buildCsv(values: string[]) {
@@ -65,7 +65,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed top-4 right-4 z-50 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-emerald-800 shadow-lg animate-in slide-in-from-top-2 fade-in duration-300">
+    <div className="fixed top-4 right-4 z-50 rounded-xl border border-emerald-400/40 bg-slate-950 px-4 py-3 text-emerald-100 shadow-lg shadow-black/40 animate-in slide-in-from-top-2 fade-in duration-300">
       <div className="flex items-center gap-2">
         <span className="text-xl">✓</span>
         <p className="text-sm font-semibold">{message}</p>
@@ -219,7 +219,6 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
       }
 
       try {
-
         if (
           (overrides.name && overrides.name === test.name) ||
           (overrides.status && overrides.status === test.status) ||
@@ -271,6 +270,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <input
             aria-label={t('columns.select')}
             type="checkbox"
+            className="h-4 w-4 rounded border-white/20 bg-slate-950 text-emerald-400"
             checked={table.getIsAllPageRowsSelected()}
             onChange={table.getToggleAllPageRowsSelectedHandler()}
           />
@@ -279,6 +279,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <input
             aria-label={t('columns.selectRow')}
             type="checkbox"
+            className="h-4 w-4 rounded border-white/20 bg-slate-950 text-emerald-400"
             checked={row.getIsSelected()}
             disabled={!row.getCanSelect()}
             onChange={row.getToggleSelectedHandler()}
@@ -297,7 +298,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
             return (
               <input
                 autoFocus
-                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm"
+                className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500"
                 value={draftValue}
                 onChange={(event) => setDraftValue(event.target.value)}
                 onBlur={() => void saveEditing(test, 'name')}
@@ -313,12 +314,12 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               onDoubleClick={() => beginEdit(test, 'name')}
             >
               <Link
-                className="text-sm font-semibold text-slate-900 hover:underline"
+                className="text-sm font-semibold text-slate-100 hover:underline"
                 href={{ pathname: '/administration/tests/edit/[id]', params: { id: test.id } }}
               >
                 {test.name}
               </Link>
-              <span className="text-xs text-slate-500">{test.slug}</span>
+              <span className="text-xs text-slate-400">{test.slug}</span>
             </div>
           );
         },
@@ -336,7 +337,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
             return (
               <select
                 autoFocus
-                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm"
+                className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100"
                 value={draftValue}
                 onChange={(event) => setDraftValue(event.target.value)}
                 onBlur={() => void saveEditing(test, 'status')}
@@ -393,7 +394,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               >
                 <input
                   autoFocus
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm"
+                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500"
                   value={draftDomainTheme.domains}
                   placeholder={t('placeholders.domains')}
                   onChange={(event) =>
@@ -402,7 +403,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
                   onKeyDown={(event) => handleCellKeyDown(event, test, 'domainTheme')}
                 />
                 <input
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm"
+                  className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500"
                   value={draftDomainTheme.themes}
                   placeholder={t('placeholders.themes')}
                   onChange={(event) =>
@@ -416,16 +417,16 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
 
           return (
             <div
-              className="text-sm text-slate-700"
+              className="text-sm text-slate-200"
               onClick={() => beginEdit(test, 'domainTheme')}
               onDoubleClick={() => beginEdit(test, 'domainTheme')}
             >
               <div>
-                <span className="font-semibold text-slate-600">{t('labels.domains')}:</span>{' '}
+                <span className="font-semibold text-slate-300">{t('labels.domains')}:</span>{' '}
                 {test.domains.length > 0 ? test.domains.join(', ') : t('empty')}
               </div>
               <div>
-                <span className="font-semibold text-slate-600">{t('labels.themes')}:</span>{' '}
+                <span className="font-semibold text-slate-300">{t('labels.themes')}:</span>{' '}
                 {test.themes.length > 0 ? test.themes.join(', ') : t('empty')}
               </div>
             </div>
@@ -451,7 +452,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
             return (
               <input
                 autoFocus
-                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm"
+                className="w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100 placeholder:text-slate-500"
                 value={draftValue}
                 placeholder={t('placeholders.tags')}
                 onChange={(event) => setDraftValue(event.target.value)}
@@ -463,7 +464,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
 
           return (
             <div
-              className="flex flex-wrap gap-1 text-sm text-slate-700"
+              className="flex flex-wrap gap-1 text-sm text-slate-200"
               onClick={() => beginEdit(test, 'tags')}
               onDoubleClick={() => beginEdit(test, 'tags')}
             >
@@ -471,13 +472,13 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
                 test.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
+                    className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-sky-200"
                   >
                     {tag}
                   </span>
                 ))
               ) : (
-                <span className="text-slate-500">{t('empty')}</span>
+                <span className="text-slate-400">{t('empty')}</span>
               )}
             </div>
           );
@@ -489,7 +490,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         cell: ({ row }) => {
           const date = new Date(row.original.updatedAt);
           return (
-            <span className="text-sm text-slate-600">
+            <span className="text-sm text-slate-300">
               {Number.isNaN(date.getTime())
                 ? t('dateFallback')
                 : new Intl.DateTimeFormat(locale, {
@@ -507,7 +508,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         cell: ({ row }) => (
           <Link
             aria-label={t('actions.edit')}
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2 text-slate-600 transition hover:border-emerald-200 hover:text-emerald-700"
+            className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 p-2 text-slate-200 transition hover:bg-white/10 hover:text-emerald-200"
             href={{
               pathname: '/administration/tests/edit/[id]',
               params: { id: row.original.id },
@@ -651,28 +652,31 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
 
   const currentDomainFilters = (table.getColumn('domainTheme')?.getFilterValue() as string[]) ?? [];
   const currentTagFilters = (table.getColumn('tags')?.getFilterValue() as string[]) ?? [];
+  const statusFilter = (table.getColumn('status')?.getFilterValue() as string) ?? '';
 
   return (
-    <section className="mt-10 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="mt-10 space-y-6 text-slate-100">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">{t('title')}</h2>
-          <p className="text-sm text-slate-500">{t('subtitle')}</p>
+          <h2 className="text-xl font-semibold text-slate-100">{t('title')}</h2>
+          <p className="text-sm text-slate-400">{t('subtitle')}</p>
         </div>
-        <Link
-          className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-          href="/administration/tests/create"
-        >
-          {t('actions.newTest')}
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-black/20 transition hover:bg-emerald-300"
+            href="/administration/tests/create"
+          >
+            {t('actions.newTest')}
+          </Link>
+        </div>
       </div>
 
-      <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="grid gap-4 rounded-2xl border border-white/10 bg-neutral-950/90 p-4 shadow-lg shadow-black/30">
         <div className="flex flex-wrap items-end gap-4">
-          <label className="flex flex-1 flex-col gap-2 text-sm font-medium text-slate-700">
+          <label className="flex min-w-[220px] flex-1 flex-col gap-2 text-sm font-medium text-slate-200">
             {t('filters.search')}
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
                 <svg
                   aria-hidden="true"
                   viewBox="0 0 24 24"
@@ -686,7 +690,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
                 </svg>
               </span>
               <input
-                className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm"
+                className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500"
                 placeholder={t('filters.searchPlaceholder')}
                 value={(table.getState().globalFilter as string) ?? ''}
                 onChange={(event) => table.setGlobalFilter(event.target.value)}
@@ -694,119 +698,208 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
             </div>
           </label>
 
-          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-            <label className="flex min-w-[160px] flex-col gap-2 text-sm font-medium text-slate-700">
-              {t('filters.status')}
-              <select
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
-                onChange={(event) =>
-                  table.getColumn('status')?.setFilterValue(event.target.value || undefined)
-                }
-              >
-                <option value="">{t('filters.statusAll')}</option>
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {statusT(status)}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <details className="group relative">
+              <summary className="flex list-none items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/10">
+                <span>{t('filters.status')}</span>
+                <span className="text-slate-400">
+                  {statusFilter ? statusT(statusFilter as TestDto['status']) : t('filters.statusAll')}
+                </span>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div className="absolute left-0 z-20 mt-2 w-56 rounded-xl border border-white/10 bg-slate-950 p-3 shadow-xl shadow-black/40">
+                <label className="flex flex-col gap-2 text-xs font-semibold text-slate-200">
+                  {t('filters.status')}
+                  <select
+                    className="rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                    value={statusFilter}
+                    onChange={(event) =>
+                      table.getColumn('status')?.setFilterValue(event.target.value || undefined)
+                    }
+                  >
+                    <option value="">{t('filters.statusAll')}</option>
+                    {statusOptions.map((status) => (
+                      <option key={status} value={status}>
+                        {statusT(status)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </details>
 
-            <label className="flex min-w-[200px] flex-col gap-2 text-sm font-medium text-slate-700">
-              {t('filters.domainTheme')}
-              <select
-                multiple
-                className="min-h-[88px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                value={currentDomainFilters}
-                onChange={handleDomainFilterChange}
-              >
-                {domainsFilterOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <details className="group relative">
+              <summary className="flex list-none items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/10">
+                <span>{t('filters.domainTheme')}</span>
+                <span className="text-slate-400">
+                  {currentDomainFilters.length > 0
+                    ? t('filters.selectedCount', { count: currentDomainFilters.length })
+                    : t('filters.all')}
+                </span>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div className="absolute left-0 z-20 mt-2 w-64 rounded-xl border border-white/10 bg-slate-950 p-3 shadow-xl shadow-black/40">
+                <label className="flex flex-col gap-2 text-xs font-semibold text-slate-200">
+                  {t('filters.domainTheme')}
+                  <select
+                    multiple
+                    className="min-h-[140px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                    value={currentDomainFilters}
+                    onChange={handleDomainFilterChange}
+                  >
+                    {domainsFilterOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </details>
 
-            <label className="flex min-w-[200px] flex-col gap-2 text-sm font-medium text-slate-700">
-              {t('filters.tags')}
-              <select
-                multiple
-                className="min-h-[88px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-                value={currentTagFilters}
-                onChange={handleTagsFilterChange}
+            <details className="group relative">
+              <summary className="flex list-none items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/10">
+                <span>{t('filters.tags')}</span>
+                <span className="text-slate-400">
+                  {currentTagFilters.length > 0
+                    ? t('filters.selectedCount', { count: currentTagFilters.length })
+                    : t('filters.all')}
+                </span>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-3 w-3 text-slate-400 transition group-open:rotate-180"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div className="absolute left-0 z-20 mt-2 w-64 rounded-xl border border-white/10 bg-slate-950 p-3 shadow-xl shadow-black/40">
+                <label className="flex flex-col gap-2 text-xs font-semibold text-slate-200">
+                  {t('filters.tags')}
+                  <select
+                    multiple
+                    className="min-h-[140px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                    value={currentTagFilters}
+                    onChange={handleTagsFilterChange}
+                  >
+                    {tagsFilterOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {statusFilter && (
+              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-200">
+                {t('filters.status')} {statusT(statusFilter as TestDto['status'])}
+              </span>
+            )}
+            {currentDomainFilters.map((item) => (
+              <span
+                key={`domain-${item}`}
+                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-200"
               >
-                {tagsFilterOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {item}
+              </span>
+            ))}
+            {currentTagFilters.map((item) => (
+              <span
+                key={`tag-${item}`}
+                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-200"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+              onClick={() => {
+                table.setGlobalFilter('');
+                table.getColumn('status')?.setFilterValue(undefined);
+                table.getColumn('domainTheme')?.setFilterValue([]);
+                table.getColumn('tags')?.setFilterValue([]);
+              }}
+            >
+              {t('filters.clear')}
+            </button>
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-200">
+              {t('filters.pageSize')}
+              <select
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-100"
+                value={table.getState().pagination.pageSize}
+                onChange={(event) => table.setPageSize(Number(event.target.value))}
+              >
+                {pageSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
                   </option>
                 ))}
               </select>
             </label>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <button
-            type="button"
-            className="text-sm font-semibold text-emerald-700"
-            onClick={() => {
-              table.setGlobalFilter('');
-              table.getColumn('status')?.setFilterValue(undefined);
-              table.getColumn('domainTheme')?.setFilterValue([]);
-              table.getColumn('tags')?.setFilterValue([]);
-            }}
-          >
-            {t('filters.clear')}
-          </button>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            {t('filters.pageSize')}
-            <select
-              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm"
-              value={table.getState().pagination.pageSize}
-              onChange={(event) => table.setPageSize(Number(event.target.value))}
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
       </div>
 
       {selectedRows.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <span className="text-sm font-semibold text-emerald-900">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
+          <span className="text-sm font-semibold text-emerald-100">
             {bulkT('selected', { count: selectedRows.length })}
           </span>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="rounded-full border border-emerald-200 bg-white px-3 py-1 text-sm font-semibold text-emerald-800"
+              className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
               onClick={() => void updateRows(selectedRows, { status: 'published' })}
             >
               {bulkT('publish')}
             </button>
             <button
               type="button"
-              className="rounded-full border border-emerald-200 bg-white px-3 py-1 text-sm font-semibold text-emerald-800"
+              className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
               onClick={() => void updateRows(selectedRows, { status: 'draft' })}
             >
               {bulkT('unpublish')}
             </button>
             <button
               type="button"
-              className="rounded-full border border-emerald-200 bg-white px-3 py-1 text-sm font-semibold text-emerald-800"
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
               onClick={() => void handleBulkTags()}
             >
               {bulkT('tags')}
             </button>
             <button
               type="button"
-              className="rounded-full border border-red-200 bg-white px-3 py-1 text-sm font-semibold text-red-700"
+              className="rounded-full border border-red-400/40 bg-red-500/10 px-3 py-1 text-sm font-semibold text-red-200 transition hover:bg-red-500/20"
               onClick={() => void handleBulkDelete()}
             >
               {bulkT('delete')}
@@ -815,9 +908,9 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-md">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-950 shadow-xl shadow-black/30">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="bg-white/5 text-xs uppercase text-slate-400">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -832,20 +925,20 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           </thead>
           <tbody>
             {loading ? (
-              <tr className="hover:bg-gray-50">
-                <td className="px-4 py-6 text-sm text-slate-500" colSpan={columns.length}>
+              <tr className="hover:bg-white/5">
+                <td className="px-4 py-6 text-sm text-slate-400" colSpan={columns.length}>
                   {t('loading')}
                 </td>
               </tr>
             ) : table.getRowModel().rows.length === 0 ? (
-              <tr className="hover:bg-gray-50">
-                <td className="px-4 py-6 text-sm text-slate-500" colSpan={columns.length}>
+              <tr className="hover:bg-white/5">
+                <td className="px-4 py-6 text-sm text-slate-400" colSpan={columns.length}>
                   {t('emptyState')}
                 </td>
               </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-t border-slate-100 hover:bg-gray-50">
+                <tr key={row.id} className="border-t border-white/10 hover:bg-white/5">
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 align-top">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -858,7 +951,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
         <span>
           {t('pagination.summary', {
             page: table.getState().pagination.pageIndex + 1,
@@ -868,7 +961,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="rounded-full border border-slate-200 px-3 py-1 text-sm font-semibold text-slate-700 disabled:opacity-50"
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:bg-white/10 disabled:opacity-50"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
@@ -876,7 +969,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           </button>
           <button
             type="button"
-            className="rounded-full border border-slate-200 px-3 py-1 text-sm font-semibold text-slate-700 disabled:opacity-50"
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:bg-white/10 disabled:opacity-50"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
