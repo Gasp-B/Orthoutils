@@ -306,7 +306,10 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               onClick={() => beginEdit(test, 'name')}
               onDoubleClick={() => beginEdit(test, 'name')}
             >
-              <Link className="text-sm font-semibold text-slate-900 hover:underline" href={`/administration/tests/edit/${test.id}`}>
+              <Link
+                className="text-sm font-semibold text-slate-900 hover:underline"
+                href={{ pathname: '/administration/tests/edit/[id]', params: { id: test.id } }}
+              >
                 {test.name}
               </Link>
               <span className="text-xs text-slate-500">{test.slug}</span>
@@ -475,7 +478,10 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         cell: ({ row }) => (
           <Link
             className="text-sm font-semibold text-emerald-700 hover:text-emerald-900"
-            href={`/administration/tests/edit/${row.original.id}`}
+            href={{
+              pathname: '/administration/tests/edit/[id]',
+              params: { id: row.original.id },
+            }}
           >
             {t('actions.edit')}
           </Link>
