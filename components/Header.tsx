@@ -134,7 +134,6 @@ function Header() {
           <div className="ph-header__logo" aria-hidden>OT</div>
           <div>
             <p className="ph-header__name">{t('brandName')}</p>
-            <p className="ph-header__tagline">{t('tagline')}</p>
           </div>
         </Link>
 
@@ -152,8 +151,8 @@ function Header() {
             aria-label={t('searchAria')}
           />
           <input type="hidden" name="page" value="1" />
-          <button className="ph-header__search-button" type="submit">
-            {t('searchSubmit')}
+          <button className="ph-header__search-button" type="submit" aria-label={t('searchSubmit')}>
+            <span aria-hidden>⌕</span>
           </button>
         </form>
 
