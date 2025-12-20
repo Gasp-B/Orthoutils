@@ -3,7 +3,7 @@ import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 import { createSupabaseAdminClient, createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createTestWithRelations, updateTestWithRelations } from '@/lib/tests/mutations';
-import { testsResponseSchema, type TestDto } from '@/lib/validation/tests';
+import { testsDeletionSchema, testsResponseSchema, type TestDto } from '@/lib/validation/tests';
 
 type TestsBaseRow = {
   id: string;
@@ -326,6 +326,33 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error('Failed to update test with relations', error);
     const message = error instanceof Error ? error.message : "Impossible de mettre à jour le test";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await createRouteHandlerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = testsDeletionSchema.parse(await request.json());
+    const adminClient = createSupabaseAdminClient();
+    const { error } = await adminClient.from('tests').delete().in('id', payload.ids);
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json({ deleted: payload.ids }, { status: 200 });
+  } catch (error) {
+    console.error('Failed to delete tests', error);
+    const message = error instanceof Error ? error.message : 'Impossible de supprimer les tests';
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

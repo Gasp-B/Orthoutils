@@ -82,6 +82,10 @@ export const updateTestInputSchema = testInputSchema.extend({
   id: z.string().uuid(),
 });
 
+export const testsDeletionSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1),
+});
+
 export const taxonomyResponseSchema = z.object({
   domains: z.array(
     z.object({

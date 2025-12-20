@@ -168,6 +168,78 @@
     "sectionLabel": "Gestion des tests",
     "pageTitle": "Gérer les tests",
     "pageLead": "Créez de nouveaux tests ou mettez à jour les entrées existantes depuis l'administration.",
+    "status": {
+      "draft": "Brouillon",
+      "in_review": "En revue",
+      "published": "Publié",
+      "archived": "Archivé"
+    },
+    "grid": {
+      "title": "Catalogue des tests",
+      "subtitle": "Filtrez, mettez à jour et pilotez le catalogue des tests.",
+      "loading": "Chargement des tests…",
+      "emptyState": "Aucun test ne correspond aux filtres actuels.",
+      "dateFallback": "Date inconnue",
+      "empty": "Aucun",
+      "labels": {
+        "domains": "Domaines",
+        "themes": "Thèmes"
+      },
+      "placeholders": {
+        "domains": "Libellés des domaines, séparés par des virgules",
+        "themes": "Libellés des thèmes, séparés par des virgules",
+        "tags": "Libellés des tags, séparés par des virgules"
+      },
+      "columns": {
+        "select": "Tout sélectionner",
+        "selectRow": "Sélectionner la ligne",
+        "title": "Titre",
+        "status": "Statut",
+        "domainTheme": "Domaine / Thème",
+        "tags": "Tags",
+        "updatedAt": "Dernière mise à jour",
+        "actions": "Actions"
+      },
+      "filters": {
+        "search": "Recherche globale",
+        "searchPlaceholder": "Rechercher par titre, statut, tags…",
+        "status": "Statut",
+        "statusAll": "Tous les statuts",
+        "domainTheme": "Domaine / Thème",
+        "tags": "Tags",
+        "clear": "Réinitialiser les filtres",
+        "pageSize": "Lignes par page"
+      },
+      "actions": {
+        "edit": "Modifier",
+        "newTest": "Nouveau test"
+      },
+      "pagination": {
+        "summary": "Page {page} sur {total}",
+        "previous": "Précédent",
+        "next": "Suivant"
+      }
+    },
+    "bulk": {
+      "selected": "{count} sélectionné(s)",
+      "publish": "Publier",
+      "unpublish": "Dépublier",
+      "tags": "Modifier les tags",
+      "delete": "Supprimer",
+      "deleteConfirm": "Supprimer {count} tests ?",
+      "tagsPrompt": "Saisissez les tags séparés par des virgules"
+    },
+    "toast": {
+      "loadError": "Impossible de charger les tests.",
+      "updateSuccess": "Test mis à jour.",
+      "updateError": "Impossible de mettre à jour le test.",
+      "bulkUpdateSuccess": "{count} tests mis à jour.",
+      "bulkUpdateError": "Impossible de mettre à jour les tests sélectionnés.",
+      "deleteSuccess": "{count} tests supprimés.",
+      "deleteError": "Impossible de supprimer les tests sélectionnés.",
+      "tagsEmpty": "Veuillez saisir au moins un tag.",
+      "nameRequired": "Un titre est requis."
+    },
     "create": {
       "metadata": {
         "title": "Créer un test | Othoutils",
