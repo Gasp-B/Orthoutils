@@ -46,6 +46,12 @@ const statusBadgeStyles: Record<TestDto['status'], string> = {
   published: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200',
   archived: 'border-white/10 bg-slate-900 text-slate-300',
 };
+const statusDotStyles: Record<TestDto['status'], string> = {
+  draft: 'bg-slate-400',
+  in_review: 'bg-amber-400',
+  published: 'bg-emerald-400',
+  archived: 'bg-slate-500',
+};
 
 function buildCsv(values: string[]) {
   return values.join(', ');
@@ -270,7 +276,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <input
             aria-label={t('columns.select')}
             type="checkbox"
-            className="h-4 w-4 rounded border-white/20 bg-slate-950 text-emerald-400"
+            className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
             checked={table.getIsAllPageRowsSelected()}
             onChange={table.getToggleAllPageRowsSelectedHandler()}
           />
@@ -279,7 +285,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           <input
             aria-label={t('columns.selectRow')}
             type="checkbox"
-            className="h-4 w-4 rounded border-white/20 bg-slate-950 text-emerald-400"
+            className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
             checked={row.getIsSelected()}
             disabled={!row.getCanSelect()}
             onChange={row.getToggleSelectedHandler()}
@@ -313,6 +319,9 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               onClick={() => beginEdit(test, 'name')}
               onDoubleClick={() => beginEdit(test, 'name')}
             >
+              <span className="w-fit rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-300">
+                {test.tags[0] ?? t('tagFallback')}
+              </span>
               <Link
                 className="text-sm font-semibold text-slate-100 hover:underline"
                 href={{ pathname: '/administration/tests/edit/[id]', params: { id: test.id } }}
@@ -355,10 +364,11 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           return (
             <button
               type="button"
-              className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusBadgeStyles[test.status]}`}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${statusBadgeStyles[test.status]}`}
               onClick={() => beginEdit(test, 'status')}
               onDoubleClick={() => beginEdit(test, 'status')}
             >
+              <span className={`h-2 w-2 rounded-full ${statusDotStyles[test.status]}`} />
               {statusT(test.status)}
             </button>
           );
