@@ -40,6 +40,12 @@ type UpdateOverrides = Partial<
 
 const pageSizeOptions = [20, 50];
 const statusOptions = validationStatusSchema.options;
+const statusBadgeStyles: Record<TestDto['status'], string> = {
+  draft: 'border-slate-200 bg-slate-100 text-slate-700',
+  in_review: 'border-amber-200 bg-amber-100 text-amber-800',
+  published: 'border-emerald-200 bg-emerald-100 text-emerald-800',
+  archived: 'border-slate-300 bg-slate-200 text-slate-600',
+};
 
 function buildCsv(values: string[]) {
   return values.join(', ');
@@ -348,7 +354,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
           return (
             <button
               type="button"
-              className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700"
+              className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusBadgeStyles[test.status]}`}
               onClick={() => beginEdit(test, 'status')}
               onDoubleClick={() => beginEdit(test, 'status')}
             >
@@ -457,11 +463,22 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
 
           return (
             <div
-              className="text-sm text-slate-700"
+              className="flex flex-wrap gap-1 text-sm text-slate-700"
               onClick={() => beginEdit(test, 'tags')}
               onDoubleClick={() => beginEdit(test, 'tags')}
             >
-              {test.tags.length > 0 ? test.tags.join(', ') : t('empty')}
+              {test.tags.length > 0 ? (
+                test.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
+                  >
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <span className="text-slate-500">{t('empty')}</span>
+              )}
             </div>
           );
         },
@@ -489,13 +506,27 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         header: t('columns.actions'),
         cell: ({ row }) => (
           <Link
-            className="text-sm font-semibold text-emerald-700 hover:text-emerald-900"
+            aria-label={t('actions.edit')}
+            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2 text-slate-600 transition hover:border-emerald-200 hover:text-emerald-700"
             href={{
               pathname: '/administration/tests/edit/[id]',
               params: { id: row.original.id },
             }}
           >
-            {t('actions.edit')}
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-4 w-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.862 4.487 19.5 7.125m-2.638-2.638L6.75 14.6a4.5 4.5 0 0 0-1.146 1.93l-.69 2.761 2.762-.69a4.5 4.5 0 0 0 1.93-1.146l10.356-10.356a1.875 1.875 0 0 0 0-2.651l-1.949-1.949a1.875 1.875 0 0 0-2.651 0Z"
+              />
+            </svg>
           </Link>
         ),
       },
