@@ -161,6 +161,59 @@
     "pageTitle": "Add / Edit a test",
     "pageLead": "Use this form to create a test or edit an existing sheet, including its associated tags and domains."
   },
+  "TestsManageTasks": {
+    "metadata": {
+      "title": "Manage tasks | Othoutils",
+      "description": "Review priorities and status updates for ongoing tasks."
+    },
+    "eyebrow": "Team tasks",
+    "title": "Welcome back!",
+    "subtitle": "Here is what is happening with the clinical test backlog today.",
+    "actions": {
+      "filter": "Filter",
+      "status": "Status",
+      "priority": "Priority",
+      "view": "View",
+      "primary": "Create task"
+    },
+    "status": {
+      "inReview": "In review",
+      "inProgress": "In progress",
+      "waiting": "Waiting"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "table": {
+      "columns": {
+        "task": "Task",
+        "title": "Title",
+        "status": "Status",
+        "priority": "Priority",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View",
+        "update": "Update"
+      },
+      "rows": {
+        "uxAudit": {
+          "task": "UI refinement",
+          "title": "Audit task list visuals for the tests dashboard."
+        },
+        "contentRefresh": {
+          "task": "Content refresh",
+          "title": "Refresh summaries for the latest assessment protocols."
+        },
+        "qaReview": {
+          "task": "QA review",
+          "title": "Coordinate review for newly submitted test updates."
+        }
+      }
+    }
+  },
   "AdminTests": {
     "metadata": {
       "title": "Manage tests | Othoutils",

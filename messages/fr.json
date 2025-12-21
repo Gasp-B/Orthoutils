@@ -161,6 +161,59 @@
     "pageTitle": "Ajouter / Éditer un test",
     "pageLead": "Utilisez ce formulaire pour créer un test ou modifier une fiche existante, y compris ses tags et domaines associés."
   },
+  "TestsManageTasks": {
+    "metadata": {
+      "title": "Gérer les tâches | Othoutils",
+      "description": "Suivez les priorités et statuts des tâches en cours."
+    },
+    "eyebrow": "Tâches de l'équipe",
+    "title": "Bon retour !",
+    "subtitle": "Voici l'état du backlog des tests cliniques pour aujourd'hui.",
+    "actions": {
+      "filter": "Filtrer",
+      "status": "Statut",
+      "priority": "Priorité",
+      "view": "Vue",
+      "primary": "Créer une tâche"
+    },
+    "status": {
+      "inReview": "En revue",
+      "inProgress": "En cours",
+      "waiting": "En attente"
+    },
+    "priority": {
+      "high": "Haute",
+      "medium": "Moyenne",
+      "low": "Basse"
+    },
+    "table": {
+      "columns": {
+        "task": "Tâche",
+        "title": "Titre",
+        "status": "Statut",
+        "priority": "Priorité",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "Voir",
+        "update": "Mettre à jour"
+      },
+      "rows": {
+        "uxAudit": {
+          "task": "Affinage UI",
+          "title": "Auditer le visuel de la liste des tâches du tableau de bord."
+        },
+        "contentRefresh": {
+          "task": "Mise à jour du contenu",
+          "title": "Actualiser les synthèses des derniers protocoles d'évaluation."
+        },
+        "qaReview": {
+          "task": "Revue QA",
+          "title": "Coordonner la revue des mises à jour de tests soumises."
+        }
+      }
+    }
+  },
   "AdminTests": {
     "metadata": {
       "title": "Gérer les tests | Othoutils",
