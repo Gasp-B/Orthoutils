@@ -22,7 +22,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Filter, MoreHorizontal, SlidersHorizontal } from 'lucide-react';
+import { MoreHorizontal, SlidersHorizontal, X } from 'lucide-react';
 import { type Locale } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -463,7 +463,6 @@ function DataTableToolbar({
   statusT: ReturnType<typeof useTranslations>;
   themesFilterOptions: string[];
 }) {
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const statusOptionsWithLabels = statusOptions.map((status) => ({
     label: statusT(status),
     value: status,
@@ -474,44 +473,47 @@ function DataTableToolbar({
     value: theme,
   }));
 
+  const isFiltered =
+    table.getState().columnFilters.length > 0 ||
+    Boolean(table.getState().globalFilter);
+
   return (
-    <div className="py-3">
-      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
-        <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-2">
-          <Input
-            className="h-8 w-[150px] text-[11px] lg:w-[250px]"
-            placeholder={t('filters.searchPlaceholder')}
-            value={(table.getState().globalFilter as string) ?? ''}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-          />
+    <div className="flex items-center justify-between gap-2 py-3">
+      <div className="flex flex-1 items-center space-x-2">
+        <Input
+          className="h-8 w-[150px] text-[11px] lg:w-[250px]"
+          placeholder={t('filters.searchPlaceholder')}
+          value={(table.getState().globalFilter as string) ?? ''}
+          onChange={(event) => table.setGlobalFilter(event.target.value)}
+        />
+        <DataTableFacetedFilter
+          column={table.getColumn('status')}
+          title={t('filters.status')}
+          options={statusOptionsWithLabels}
+        />
+        <DataTableFacetedFilter
+          column={table.getColumn('domainTheme')}
+          title={t('labels.themes')}
+          options={themeOptionsWithLabels}
+        />
+        {isFiltered && (
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="h-6 gap-1.5 px-2 text-[11px]"
-            onClick={() => setFiltersOpen((prev) => !prev)}
-            aria-label={t('filters.filterButton')}
+            className="h-6 px-2 text-[11px]"
+            aria-label={t('filters.clear')}
+            onClick={() => {
+              table.resetColumnFilters();
+              table.resetGlobalFilter();
+            }}
           >
-            <Filter className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('filters.filterButton')}</span>
+            <X className="h-3.5 w-3.5" />
           </Button>
-          {filtersOpen && (
-            <>
-              <DataTableFacetedFilter
-                column={table.getColumn('status')}
-                title={t('filters.status')}
-                options={statusOptionsWithLabels}
-              />
-              <DataTableFacetedFilter
-                column={table.getColumn('domainTheme')}
-                title={t('labels.themes')}
-                options={themeOptionsWithLabels}
-              />
-            </>
-          )}
-        </div>
+        )}
+      </div>
 
-        <div className="ml-auto flex flex-nowrap items-center gap-2 whitespace-nowrap">
+      <div className="flex items-center gap-2 whitespace-nowrap">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
