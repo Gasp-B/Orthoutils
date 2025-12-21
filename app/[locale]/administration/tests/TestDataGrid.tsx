@@ -463,7 +463,9 @@ function DataTableToolbar({
   statusT: ReturnType<typeof useTranslations>;
   themesFilterOptions: string[];
 }) {
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  // On vérifie si des filtres sont actifs pour afficher un bouton "Reset" (optionnel mais recommandé style shadcn)
+  const isFiltered = table.getState().columnFilters.length > 0 || !!table.getState().globalFilter;
+
   const statusOptionsWithLabels = statusOptions.map((status) => ({
     label: statusT(status),
     value: status,
@@ -475,70 +477,76 @@ function DataTableToolbar({
   }));
 
   return (
-    <div className="flex flex-col gap-3 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-1 flex-wrap items-center gap-2">
-          <Input
-            className="h-8 w-[150px] lg:w-[250px]"
-            placeholder={t('filters.searchPlaceholder')}
-            value={(table.getState().globalFilter as string) ?? ''}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
+    <div className="flex items-center justify-between py-4">
+      {/* Partie GAUCHE : Recherche + Filtres */}
+      <div className="flex flex-1 items-center space-x-2">
+        <Input
+          className="h-8 w-[150px] lg:w-[250px]"
+          placeholder={t('filters.searchPlaceholder')}
+          value={(table.getState().globalFilter as string) ?? ''}
+          onChange={(event) => table.setGlobalFilter(event.target.value)}
+        />
+        
+        {/* Les facettes sont affichées directement ici */}
+        {table.getColumn('status') && (
+          <DataTableFacetedFilter
+            column={table.getColumn('status')}
+            title={t('filters.status')}
+            options={statusOptionsWithLabels}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2"
-            onClick={() => setFiltersOpen((prev) => !prev)}
-          >
-            <Filter className="h-4 w-4" />
-            {t('filters.filterButton')}
-          </Button>
-          {filtersOpen && (
-            <>
-              <DataTableFacetedFilter
-                column={table.getColumn('status')}
-                title={t('filters.status')}
-                options={statusOptionsWithLabels}
-              />
-              <DataTableFacetedFilter
-                column={table.getColumn('domainTheme')}
-                title={t('labels.themes')}
-                options={themeOptionsWithLabels}
-              />
-            </>
-          )}
-        </div>
+        )}
+        
+        {table.getColumn('domainTheme') && (
+          <DataTableFacetedFilter
+            column={table.getColumn('domainTheme')}
+            title={t('labels.themes')}
+            options={themeOptionsWithLabels}
+          />
+        )}
 
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-2">
-                <SlidersHorizontal className="h-4 w-4" />
-                {t('actions.viewOptions')}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
-                  >
-                    {column.columnDef.meta?.label ?? column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Link href="/administration/tests/create" className="ui-button ui-button-sm">
-            {t('actions.newTest')}
-          </Link>
-        </div>
+        {/* Bouton Reset (X) si des filtres sont actifs */}
+        {isFiltered && (
+          <Button
+            variant="ghost"
+            onClick={() => table.resetColumnFilters()}
+            className="h-8 px-2 lg:px-3"
+          >
+            {t('filters.reset') || 'Reset'}
+            <Filter className="ml-2 h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Partie DROITE : View Options + Nouveau Test */}
+      <div className="flex items-center space-x-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 ml-auto hidden lg:flex">
+              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              {t('actions.viewOptions')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanHide())
+              .map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
+                >
+                  {column.columnDef.meta?.label ?? column.id}
+                </DropdownMenuCheckboxItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <Link href="/administration/tests/create" className="ui-button ui-button-sm">
+          {t('actions.newTest')}
+        </Link>
       </div>
     </div>
   );
