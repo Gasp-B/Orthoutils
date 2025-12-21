@@ -511,13 +511,13 @@ function DataTableToolbar({
           )}
         </div>
 
-        <div className="flex flex-nowrap items-center gap-2">
+        <div className="ml-auto flex flex-nowrap items-center gap-2 whitespace-nowrap">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-6 gap-1.5 px-2 text-[11px]"
+                className="h-6 gap-1.5 px-2 text-[11px] whitespace-nowrap"
                 aria-label={t('actions.viewOptions')}
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -543,7 +543,7 @@ function DataTableToolbar({
           </DropdownMenu>
           <Link
             href="/administration/tests/create"
-            className="ui-button ui-button-sm h-6 px-2 text-[11px]"
+            className="ui-button ui-button-sm h-6 px-2 text-[11px] whitespace-nowrap"
             aria-label={t('actions.newTest')}
           >
             <span className="hidden lg:inline">{t('actions.newTest')}</span>
