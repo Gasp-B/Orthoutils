@@ -1,4 +1,5 @@
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react';
+import type { useTranslations } from 'next-intl';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CheckCircle2, Clock3, FileArchive } from 'lucide-react';
 import { type Locale } from '@/i18n/routing';
@@ -27,8 +28,8 @@ export type DraftDomainTheme = {
 
 type ColumnBuilderParams = {
   locale: Locale;
-  t: (key: string, values?: Record<string, unknown>) => string;
-  statusT: (key: string) => string;
+  t: ReturnType<typeof useTranslations>;
+  statusT: ReturnType<typeof useTranslations>;
   onBeginEdit: (test: TestDto, columnId: EditingColumnId) => void;
   onSaveEdit: (test: TestDto, columnId: EditingColumnId) => void;
   onKeyDown: (
