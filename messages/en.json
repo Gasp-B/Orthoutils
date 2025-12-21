@@ -31,6 +31,7 @@
     "dashboard": "Dashboard",
     "taxonomy": "Section settings",
     "resources": "Resource configuration",
+    "tests": "Test management",
     "catalogue": "Catalog",
     "megaMenuLabel": "Catalog navigation",
     "domainsLabel": "Catalog domains",
@@ -230,6 +231,73 @@
       },
       "success": {
         "saved": "Resource saved successfully!"
+      }
+    }
+  },
+  "AdminTests": {
+    "metadata": {
+      "title": "Manage tests | Othoutils",
+      "description": "Track all tests and update their status or metadata quickly."
+    },
+    "sectionLabel": "Test administration",
+    "pageTitle": "Manage tests",
+    "pageLead": "Review every test in the catalog, filter by status or audience, and open the records you need to update.",
+    "errors": {
+      "load": "Unable to load tests right now. Try again later."
+    },
+    "nav": {
+      "cardEyebrow": "Tests",
+      "cardTitle": "Test management"
+    },
+    "audience": {
+      "child": "Children",
+      "adult": "Adults"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "in_review": "In review",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "grid": {
+      "filters": {
+        "searchPlaceholder": "Filter tests...",
+        "statusLabel": "Status",
+        "audienceLabel": "Audience",
+        "pageSize": "Rows"
+      },
+      "viewOptions": "View",
+      "columns": {
+        "slug": "Code",
+        "name": "Title",
+        "status": "Status",
+        "targetAudience": "Audience",
+        "updatedAt": "Updated",
+        "actions": "Actions"
+      },
+      "selection": {
+        "selectAll": "Select all rows",
+        "selectRow": "Select row"
+      },
+      "actions": {
+        "copyId": "Copy ID",
+        "copySlug": "Copy slug",
+        "openBuyLink": "Open purchase link"
+      },
+      "placeholders": {
+        "shortDescription": "Short description pending."
+      },
+      "results": "{filtered} of {total} tests",
+      "empty": "No tests match your filters.",
+      "columnHeader": {
+        "sortAsc": "Sort ascending",
+        "sortDesc": "Sort descending",
+        "hide": "Hide column"
+      },
+      "pagination": {
+        "summary": "Page {page} of {total}",
+        "previous": "Previous",
+        "next": "Next"
       }
     }
   },

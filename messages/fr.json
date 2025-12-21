@@ -31,6 +31,7 @@
     "dashboard": "Tableau de bord",
     "taxonomy": "Paramétrage des sections",
     "resources": "Configuration des ressources",
+    "tests": "Gestion des tests",
     "catalogue": "Catalogue",
     "megaMenuLabel": "Navigation catalogue",
     "domainsLabel": "Domaines du catalogue",
@@ -230,6 +231,73 @@
       },
       "success": {
         "saved": "Ressource enregistrée avec succès !"
+      }
+    }
+  },
+  "AdminTests": {
+    "metadata": {
+      "title": "Gestion des tests | Othoutils",
+      "description": "Suivez tous les tests et mettez à jour leur statut ou leurs informations rapidement."
+    },
+    "sectionLabel": "Administration des tests",
+    "pageTitle": "Gérer les tests",
+    "pageLead": "Passez en revue chaque test du catalogue, filtrez par statut ou audience et retrouvez rapidement les fiches à mettre à jour.",
+    "errors": {
+      "load": "Impossible de charger les tests pour le moment. Réessayez plus tard."
+    },
+    "nav": {
+      "cardEyebrow": "Tests",
+      "cardTitle": "Gestion des tests"
+    },
+    "audience": {
+      "child": "Enfants",
+      "adult": "Adultes"
+    },
+    "statuses": {
+      "draft": "Brouillon",
+      "in_review": "En relecture",
+      "published": "Publié",
+      "archived": "Archivé"
+    },
+    "grid": {
+      "filters": {
+        "searchPlaceholder": "Filtrer les tests…",
+        "statusLabel": "Statut",
+        "audienceLabel": "Audience",
+        "pageSize": "Lignes"
+      },
+      "viewOptions": "Affichage",
+      "columns": {
+        "slug": "Code",
+        "name": "Titre",
+        "status": "Statut",
+        "targetAudience": "Audience",
+        "updatedAt": "Mise à jour",
+        "actions": "Actions"
+      },
+      "selection": {
+        "selectAll": "Sélectionner toutes les lignes",
+        "selectRow": "Sélectionner la ligne"
+      },
+      "actions": {
+        "copyId": "Copier l'identifiant",
+        "copySlug": "Copier le slug",
+        "openBuyLink": "Ouvrir le lien d'achat"
+      },
+      "placeholders": {
+        "shortDescription": "Description courte à compléter."
+      },
+      "results": "{filtered} sur {total} tests",
+      "empty": "Aucun test ne correspond à vos filtres.",
+      "columnHeader": {
+        "sortAsc": "Trier par ordre croissant",
+        "sortDesc": "Trier par ordre décroissant",
+        "hide": "Masquer la colonne"
+      },
+      "pagination": {
+        "summary": "Page {page} sur {total}",
+        "previous": "Précédent",
+        "next": "Suivant"
       }
     }
   },
