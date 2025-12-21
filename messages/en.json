@@ -233,6 +233,77 @@
       }
     }
   },
+  "TestsManage": {
+    "metadata": {
+      "title": "Manage tests | Othoutils",
+      "description": "Review and update test sheets from one central dashboard."
+    },
+    "sectionLabel": "Test management",
+    "pageTitle": "Manage tests",
+    "pageLead": "Filter the catalog, scan validation status, and jump to test sheets to keep everything up to date.",
+    "nav": {
+      "cardEyebrow": "Tests",
+      "cardTitle": "Test management"
+    },
+    "errors": {
+      "load": "Unable to load tests right now. Check the Supabase connection and try again."
+    }
+  },
+  "AdminTests": {
+    "grid": {
+      "columns": {
+        "select": "Select",
+        "selectRow": "Select row",
+        "name": "Test",
+        "status": "Status",
+        "targetAudience": "Audience",
+        "durationMinutes": "Duration",
+        "updatedAt": "Updated",
+        "actions": "Actions"
+      },
+      "filters": {
+        "searchPlaceholder": "Filter tests...",
+        "status": "Status",
+        "audience": "Audience",
+        "pageSize": "Rows"
+      },
+      "duration": {
+        "value": "{minutes} min",
+        "variable": "Variable"
+      },
+      "pagination": {
+        "summary": "Page {page} of {total}",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "columnHeader": {
+        "sortAsc": "Asc",
+        "sortDesc": "Desc",
+        "hide": "Hide"
+      },
+      "toolbar": {
+        "view": "View"
+      },
+      "actions": {
+        "open": "Open actions",
+        "title": "Actions",
+        "copyId": "Copy ID",
+        "viewSheet": "View sheet"
+      },
+      "empty": "No tests match the current filters.",
+      "emptyError": "Unable to display tests right now."
+    },
+    "statuses": {
+      "draft": "Draft",
+      "in_review": "In review",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "audiences": {
+      "child": "Children",
+      "adult": "Adults"
+    }
+  },
   "Footer": {
     "note": "Made with care for speech-language pathology teams. Mobile-first, adaptive, and built for collaboration."
   },

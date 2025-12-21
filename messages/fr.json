@@ -233,6 +233,77 @@
       }
     }
   },
+  "TestsManage": {
+    "metadata": {
+      "title": "Gestion des tests | Othoutils",
+      "description": "Suivre et mettre à jour les fiches tests depuis un tableau de bord centralisé."
+    },
+    "sectionLabel": "Gestion des tests",
+    "pageTitle": "Gérer les tests",
+    "pageLead": "Filtrez le catalogue, suivez l'état de validation et accédez rapidement aux fiches pour rester à jour.",
+    "nav": {
+      "cardEyebrow": "Tests",
+      "cardTitle": "Gestion des tests"
+    },
+    "errors": {
+      "load": "Impossible de charger les tests pour le moment. Vérifiez la connexion Supabase et réessayez."
+    }
+  },
+  "AdminTests": {
+    "grid": {
+      "columns": {
+        "select": "Sélectionner",
+        "selectRow": "Sélectionner la ligne",
+        "name": "Test",
+        "status": "Statut",
+        "targetAudience": "Public",
+        "durationMinutes": "Durée",
+        "updatedAt": "Mise à jour",
+        "actions": "Actions"
+      },
+      "filters": {
+        "searchPlaceholder": "Filtrer les tests...",
+        "status": "Statut",
+        "audience": "Public",
+        "pageSize": "Lignes"
+      },
+      "duration": {
+        "value": "{minutes} min",
+        "variable": "Variable"
+      },
+      "pagination": {
+        "summary": "Page {page} sur {total}",
+        "previous": "Précédent",
+        "next": "Suivant"
+      },
+      "columnHeader": {
+        "sortAsc": "Croissant",
+        "sortDesc": "Décroissant",
+        "hide": "Masquer"
+      },
+      "toolbar": {
+        "view": "Vue"
+      },
+      "actions": {
+        "open": "Ouvrir les actions",
+        "title": "Actions",
+        "copyId": "Copier l'identifiant",
+        "viewSheet": "Voir la fiche"
+      },
+      "empty": "Aucun test ne correspond aux filtres actuels.",
+      "emptyError": "Impossible d'afficher les tests pour le moment."
+    },
+    "statuses": {
+      "draft": "Brouillon",
+      "in_review": "En relecture",
+      "published": "Publié",
+      "archived": "Archivé"
+    },
+    "audiences": {
+      "child": "Enfants",
+      "adult": "Adultes"
+    }
+  },
   "Footer": {
     "note": "Fait avec soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour la collaboration."
   },
