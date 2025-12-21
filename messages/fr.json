@@ -265,6 +265,7 @@
         "name": "Test",
         "status": "Statut",
         "domains": "Domaines",
+        "tags": "Tags",
         "targetAudience": "Audience",
         "isStandardized": "Standardisation",
         "themes": "Thèmes",
@@ -289,6 +290,9 @@
         "more": "+{count}"
       },
       "domains": {
+        "more": "+{count}"
+      },
+      "tags": {
         "more": "+{count}"
       },
       "emptyDescription": "Description manquante",

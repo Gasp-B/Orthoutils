@@ -110,6 +110,10 @@
   align-items: center;
 }
 
+.pill {
+  font-size: 0.78rem;
+}
+
 .actionButton {
   height: 2rem;
   width: 2rem;
