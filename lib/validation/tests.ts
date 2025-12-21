@@ -109,3 +109,15 @@ export const taxonomyDeletionSchema = z.object({
 
 export type TaxonomyMutationInput = z.infer<typeof taxonomyMutationSchema>;
 export type TaxonomyDeletionInput = z.infer<typeof taxonomyDeletionSchema>;
+
+export const testAdminUpdateSchema = z.object({
+  id: z.string().uuid(),
+  locale: localeEnum.default(defaultLocale),
+  status: validationStatusSchema.optional(),
+  targetAudience: targetAudienceSchema.optional(),
+  domains: z.array(z.string()).optional(),
+  themes: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+export type TestAdminUpdateInput = z.infer<typeof testAdminUpdateSchema>;

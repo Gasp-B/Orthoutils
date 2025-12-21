@@ -308,8 +308,44 @@
         "label": "Ouvrir les actions",
         "copyId": "Copier l'identifiant",
         "copySlug": "Copier le slug",
-        "quickEdit": "Modification rapide (bientôt disponible)"
+        "quickEdit": "Modification rapide (bientôt disponible)",
+        "editTest": "Modifier {name}"
+      },
+      "inlineEdit": {
+        "loading": "Chargement..."
       }
+    }
+  },
+  "AdminTests.edit": {
+    "metadata": {
+      "title": "Modifier {name} | Othoutils",
+      "description": "Mettez à jour rapidement les informations clés pour {name}."
+    },
+    "sectionLabel": "Administration",
+    "pageTitle": "Modifier {name}",
+    "pageLead": "Ajustez le statut, l'audience et la taxonomie associée à ce test.",
+    "form": {
+      "statusLabel": "Statut",
+      "audienceLabel": "Audience",
+      "domainsLabel": "Domaines",
+      "themesLabel": "Thèmes",
+      "tagsLabel": "Tags",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "success": "Les modifications ont bien été enregistrées.",
+      "error": "Impossible d'enregistrer les modifications."
+    },
+    "multiSelect": {
+      "add": "Ajouter",
+      "remove": "Retirer",
+      "clear": "Tout effacer",
+      "close": "Fermer",
+      "emptySelection": "Aucune sélection",
+      "emptyResults": "Aucun résultat",
+      "loading": "Chargement...",
+      "searchPlaceholder": "Rechercher...",
+      "dialogTitle": "Filtrer {label}",
+      "dialogHelper": "Sélectionnez les valeurs pertinentes."
     }
   },
   "Footer": {
