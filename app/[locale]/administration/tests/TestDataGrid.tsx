@@ -479,7 +479,7 @@ function DataTableToolbar({
       <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
         <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-2">
           <Input
-            className="h-6 !w-[140px] flex-none text-[11px] lg:!w-[200px]"
+            className="h-6 !w-[150px] flex-none text-[11px] lg:!w-[250px]"
             placeholder={t('filters.searchPlaceholder')}
             value={(table.getState().globalFilter as string) ?? ''}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
