@@ -61,7 +61,7 @@ export default function SignupPage() {
 
     if (data.session) {
       router.refresh();
-      router.push(`/${locale}/tests/manage`);
+      router.push(`/${locale}/administration`);
       return;
     }
 

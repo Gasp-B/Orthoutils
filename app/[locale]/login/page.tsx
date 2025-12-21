@@ -57,7 +57,7 @@ export default function LoginPage() {
     }
 
     router.refresh();
-    router.push(`/${locale}/tests/manage`);
+    router.push(`/${locale}/administration`);
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'apple') => {
@@ -68,7 +68,7 @@ export default function LoginPage() {
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/${locale}/tests/manage`,
+        redirectTo: `${window.location.origin}/${locale}/administration`,
       },
     });
 
@@ -96,7 +96,7 @@ export default function LoginPage() {
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email: parsed.data.email,
       options: {
-        emailRedirectTo: `${window.location.origin}/${locale}/tests/manage`,
+        emailRedirectTo: `${window.location.origin}/${locale}/administration`,
       },
     });
 

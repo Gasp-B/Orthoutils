@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils/cn';
-import styles from '@/app/[locale]/tests/manage/test-form.module.css';
+import styles from './multi-select.module.css';
 
 type Option = {
   id: string;

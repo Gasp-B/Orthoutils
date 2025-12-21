@@ -1,0 +1,161 @@
+.multiSelectWrapper {
+  display: grid;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.multiSelectHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.multiSelectControl {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.multiSelectControl:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.multiSelectOpen {
+  border-color: #3b82f6;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
+.multiSelectTokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.token {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+}
+
+.tokenRemove {
+  font-weight: 700;
+}
+
+.chevron {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.popupLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.popupBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+.popup {
+  position: relative;
+  background: var(--card);
+  color: var(--card-foreground);
+  border-radius: 0.9rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  pointer-events: auto;
+  width: 100%;
+  min-width: 320px;
+  max-width: 520px;
+  max-height: 85vh;
+}
+
+.popupHeader {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.popupTitle {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 1.1rem;
+}
+
+.searchBar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.optionsList {
+  max-height: 240px;
+  overflow-y: auto;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.optionItem {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.7rem;
+  border: 1px solid #e2e8f0;
+  background: #0f172a08;
+  transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
+}
+
+.optionItem:hover {
+  background: #f1f5f9;
+  border-color: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.optionItemActive {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.optionLabel {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.emptyState {
+  margin: 0;
+  padding: 0.75rem;
+  color: #94a3b8;
+  text-align: center;
+}
