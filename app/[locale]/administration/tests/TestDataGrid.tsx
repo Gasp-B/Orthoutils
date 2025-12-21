@@ -478,12 +478,14 @@ function DataTableToolbar({
     <div className="py-3">
       <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
         <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-2">
-          <Input
-            className="h-6 !w-[150px] flex-none text-[11px] lg:!w-[250px]"
-            placeholder={t('filters.searchPlaceholder')}
-            value={(table.getState().globalFilter as string) ?? ''}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-          />
+          <div className="w-[150px] shrink-0 lg:w-[250px]">
+            <Input
+              className="h-6 text-[11px]"
+              placeholder={t('filters.searchPlaceholder')}
+              value={(table.getState().globalFilter as string) ?? ''}
+              onChange={(event) => table.setGlobalFilter(event.target.value)}
+            />
+          </div>
           <Button
             type="button"
             variant="outline"
