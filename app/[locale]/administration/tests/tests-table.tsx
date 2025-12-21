@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/react-table';
 import {
   flexRender,
@@ -26,8 +26,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { TestDto } from '@/lib/validation/tests';
+import { Link } from '@/i18n/navigation';
+import type { TaxonomyResponse, TestDto } from '@/lib/validation/tests';
 import styles from './tests-table.module.css';
 
 type TestsTableProps = {
@@ -47,6 +49,29 @@ type AdminTestRow = {
   tags: string[];
   updatedAt: string;
 };
+
+type EditableField = 'status' | 'targetAudience' | 'domains' | 'themes' | 'tags';
+
+type InlineEditTarget = {
+  id: string;
+  field: EditableField;
+};
+
+type InlineEditState = InlineEditTarget | null;
+
+const toAdminRow = (test: TestDto): AdminTestRow => ({
+  id: test.id,
+  name: test.name,
+  slug: test.slug,
+  shortDescription: test.shortDescription,
+  status: test.status,
+  targetAudience: test.targetAudience,
+  isStandardized: test.isStandardized,
+  domains: test.domains,
+  themes: test.themes,
+  tags: test.tags,
+  updatedAt: test.updatedAt,
+});
 
 function DataTableViewOptions({ table }: { table: ReturnType<typeof useReactTable<AdminTestRow>> }) {
   const t = useTranslations('AdminTests.grid');
@@ -81,23 +106,30 @@ export default function TestsTable({ tests }: TestsTableProps) {
   const t = useTranslations('AdminTests.grid');
   const locale = useLocale();
 
-  const data = useMemo<AdminTestRow[]>(
-    () =>
-      tests.map((test) => ({
-        id: test.id,
-        name: test.name,
-        slug: test.slug,
-        shortDescription: test.shortDescription,
-        status: test.status,
-        targetAudience: test.targetAudience,
-        isStandardized: test.isStandardized,
-        domains: test.domains,
-        themes: test.themes,
-        tags: test.tags,
-        updatedAt: test.updatedAt,
-      })),
-    [tests],
-  );
+  const [tableData, setTableData] = useState<AdminTestRow[]>(() => tests.map(toAdminRow));
+  const [inlineEdit, setInlineEdit] = useState<InlineEditState>(null);
+  const [savingCell, setSavingCell] = useState<InlineEditState>(null);
+  const [taxonomy, setTaxonomy] = useState<TaxonomyResponse | null>(null);
+
+  useEffect(() => {
+    setTableData(tests.map(toAdminRow));
+  }, [tests]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadTaxonomy = async () => {
+      const response = await fetch(`/api/tests/taxonomy?locale=${locale}`, { credentials: 'include' });
+      if (!response.ok) return;
+      const data = (await response.json()) as TaxonomyResponse;
+      if (isMounted) setTaxonomy(data);
+    };
+
+    void loadTaxonomy();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [locale]);
 
   const statusOptions = useMemo(
     () => [
@@ -125,6 +157,55 @@ export default function TestsTable({ tests }: TestsTableProps) {
     [t],
   );
 
+  const domainOptions = useMemo(
+    () => taxonomy?.domains.map((domain) => ({ label: domain.label, value: domain.label })) ?? [],
+    [taxonomy],
+  );
+
+  const themeOptions = useMemo(
+    () => taxonomy?.themes.map((theme) => ({ label: theme.label, value: theme.label })) ?? [],
+    [taxonomy],
+  );
+
+  const tagOptions = useMemo(
+    () => taxonomy?.tags.map((tag) => ({ label: tag.label, value: tag.label })) ?? [],
+    [taxonomy],
+  );
+
+  const updateTest = async (
+    target: InlineEditTarget,
+    updates: Partial<Pick<AdminTestRow, 'status' | 'targetAudience' | 'domains' | 'themes' | 'tags'>>,
+    closeOnSuccess = true,
+  ) => {
+    setSavingCell(target);
+    try {
+      const response = await fetch('/api/tests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          id: target.id,
+          locale,
+          ...updates,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('updateError');
+      }
+
+      const json = (await response.json()) as { test: TestDto };
+      setTableData((prev) => prev.map((row) => (row.id === target.id ? toAdminRow(json.test) : row)));
+      if (closeOnSuccess) {
+        setInlineEdit(null);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSavingCell(null);
+    }
+  };
+
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: 'updatedAt',
@@ -136,6 +217,8 @@ export default function TestsTable({ tests }: TestsTableProps) {
     isStandardized: false,
   });
 
+  const data = tableData;
+
   const columns = useMemo<ColumnDef<AdminTestRow>[]>(
     () => [
       {
@@ -145,7 +228,13 @@ export default function TestsTable({ tests }: TestsTableProps) {
           const description = row.original.shortDescription ?? t('emptyDescription');
           return (
             <div className={styles.nameCell}>
-              <span className={styles.nameTitle}>{row.getValue('name')}</span>
+              <Link
+                href={{ pathname: '/administration/tests/edit/[id]', params: { id: row.original.id } }}
+                className={styles.nameLink}
+                aria-label={t('actions.editTest', { name: row.original.name })}
+              >
+                <span className={styles.nameTitle}>{row.getValue('name')}</span>
+              </Link>
               <span className={styles.descriptionText}>{description}</span>
             </div>
           );
@@ -164,10 +253,42 @@ export default function TestsTable({ tests }: TestsTableProps) {
                 : status === 'archived'
                   ? 'outline'
                   : 'secondary';
+          const isEditing = inlineEdit?.id === row.original.id && inlineEdit.field === 'status';
+          const isSaving = savingCell?.id === row.original.id && savingCell.field === 'status';
+
+          if (isEditing) {
+            return (
+              <Select
+                className={styles.inlineSelect}
+                value={status}
+                onChange={(event) =>
+                  updateTest(
+                    { id: row.original.id, field: 'status' },
+                    { status: event.target.value as AdminTestRow['status'] },
+                  )
+                }
+                onBlur={() => setInlineEdit(null)}
+                aria-label={t('columns.status')}
+                disabled={isSaving}
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            );
+          }
+
           return (
-            <Badge variant={variant} className={styles.pill}>
-              {t(`status.${status}`)}
-            </Badge>
+            <div
+              className={styles.inlineEditCell}
+              onDoubleClick={() => setInlineEdit({ id: row.original.id, field: 'status' })}
+            >
+              <Badge variant={variant} className={styles.pill}>
+                {t(`status.${status}`)}
+              </Badge>
+            </div>
           );
         },
         filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
@@ -180,8 +301,68 @@ export default function TestsTable({ tests }: TestsTableProps) {
           const domains = row.original.domains;
           const visibleDomains = domains.slice(0, 2);
           const remaining = domains.length - visibleDomains.length;
+          const isEditing = inlineEdit?.id === row.original.id && inlineEdit.field === 'domains';
+          const selectedValues = new Set(domains);
+
+          if (isEditing) {
+            return (
+              <DropdownMenu
+                open
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setInlineEdit(null);
+                  }
+                }}
+              >
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className={styles.inlineEditTrigger}>
+                    <div className={styles.themeCell}>
+                      {visibleDomains.map((domain) => (
+                        <Badge key={domain} variant="outline" className={styles.pill}>
+                          {domain}
+                        </Badge>
+                      ))}
+                      {remaining > 0 && (
+                        <span className={styles.mutedText}>{t('domains.more', { count: remaining })}</span>
+                      )}
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={styles.inlineEditMenu}>
+                  {domainOptions.length === 0 && (
+                    <DropdownMenuItem disabled>{t('inlineEdit.loading')}</DropdownMenuItem>
+                  )}
+                  {domainOptions.map((option) => {
+                    const isSelected = selectedValues.has(option.value);
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={isSelected}
+                        onCheckedChange={() => {
+                          const nextValues = isSelected
+                            ? domains.filter((value) => value !== option.value)
+                            : [...domains, option.value];
+                          void updateTest(
+                            { id: row.original.id, field: 'domains' },
+                            { domains: nextValues },
+                            false,
+                          );
+                        }}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
+
           return (
-            <div className={styles.themeCell}>
+            <div
+              className={styles.themeCell}
+              onDoubleClick={() => setInlineEdit({ id: row.original.id, field: 'domains' })}
+            >
               {visibleDomains.map((domain) => (
                 <Badge key={domain} variant="outline" className={styles.pill}>
                   {domain}
@@ -202,8 +383,68 @@ export default function TestsTable({ tests }: TestsTableProps) {
           const themes = row.original.themes;
           const visibleThemes = themes.slice(0, 2);
           const remaining = themes.length - visibleThemes.length;
+          const isEditing = inlineEdit?.id === row.original.id && inlineEdit.field === 'themes';
+          const selectedValues = new Set(themes);
+
+          if (isEditing) {
+            return (
+              <DropdownMenu
+                open
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setInlineEdit(null);
+                  }
+                }}
+              >
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className={styles.inlineEditTrigger}>
+                    <div className={styles.themeCell}>
+                      {visibleThemes.map((theme) => (
+                        <Badge key={theme} variant="outline" className={styles.pill}>
+                          {theme}
+                        </Badge>
+                      ))}
+                      {remaining > 0 && (
+                        <span className={styles.mutedText}>{t('themes.more', { count: remaining })}</span>
+                      )}
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={styles.inlineEditMenu}>
+                  {themeOptions.length === 0 && (
+                    <DropdownMenuItem disabled>{t('inlineEdit.loading')}</DropdownMenuItem>
+                  )}
+                  {themeOptions.map((option) => {
+                    const isSelected = selectedValues.has(option.value);
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={isSelected}
+                        onCheckedChange={() => {
+                          const nextValues = isSelected
+                            ? themes.filter((value) => value !== option.value)
+                            : [...themes, option.value];
+                          void updateTest(
+                            { id: row.original.id, field: 'themes' },
+                            { themes: nextValues },
+                            false,
+                          );
+                        }}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
+
           return (
-            <div className={styles.themeCell}>
+            <div
+              className={styles.themeCell}
+              onDoubleClick={() => setInlineEdit({ id: row.original.id, field: 'themes' })}
+            >
               {visibleThemes.map((theme) => (
                 <Badge key={theme} variant="outline" className={styles.pill}>
                   {theme}
@@ -222,8 +463,68 @@ export default function TestsTable({ tests }: TestsTableProps) {
           const tags = row.original.tags;
           const visibleTags = tags.slice(0, 2);
           const remaining = tags.length - visibleTags.length;
+          const isEditing = inlineEdit?.id === row.original.id && inlineEdit.field === 'tags';
+          const selectedValues = new Set(tags);
+
+          if (isEditing) {
+            return (
+              <DropdownMenu
+                open
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setInlineEdit(null);
+                  }
+                }}
+              >
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className={styles.inlineEditTrigger}>
+                    <div className={styles.themeCell}>
+                      {visibleTags.map((tag) => (
+                        <Badge key={tag} variant="outline" className={styles.pill}>
+                          {tag}
+                        </Badge>
+                      ))}
+                      {remaining > 0 && (
+                        <span className={styles.mutedText}>{t('tags.more', { count: remaining })}</span>
+                      )}
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={styles.inlineEditMenu}>
+                  {tagOptions.length === 0 && (
+                    <DropdownMenuItem disabled>{t('inlineEdit.loading')}</DropdownMenuItem>
+                  )}
+                  {tagOptions.map((option) => {
+                    const isSelected = selectedValues.has(option.value);
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={isSelected}
+                        onCheckedChange={() => {
+                          const nextValues = isSelected
+                            ? tags.filter((value) => value !== option.value)
+                            : [...tags, option.value];
+                          void updateTest(
+                            { id: row.original.id, field: 'tags' },
+                            { tags: nextValues },
+                            false,
+                          );
+                        }}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
+
           return (
-            <div className={styles.themeCell}>
+            <div
+              className={styles.themeCell}
+              onDoubleClick={() => setInlineEdit({ id: row.original.id, field: 'tags' })}
+            >
               {visibleTags.map((tag) => (
                 <Badge key={tag} variant="outline" className={styles.pill}>
                   {tag}
@@ -241,10 +542,42 @@ export default function TestsTable({ tests }: TestsTableProps) {
         ),
         cell: ({ row }) => {
           const audience = row.getValue('targetAudience') as AdminTestRow['targetAudience'];
+          const isEditing = inlineEdit?.id === row.original.id && inlineEdit.field === 'targetAudience';
+          const isSaving = savingCell?.id === row.original.id && savingCell.field === 'targetAudience';
+
+          if (isEditing) {
+            return (
+              <Select
+                className={styles.inlineSelect}
+                value={audience}
+                onChange={(event) =>
+                  updateTest(
+                    { id: row.original.id, field: 'targetAudience' },
+                    { targetAudience: event.target.value as AdminTestRow['targetAudience'] },
+                  )
+                }
+                onBlur={() => setInlineEdit(null)}
+                aria-label={t('columns.targetAudience')}
+                disabled={isSaving}
+              >
+                {audienceOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            );
+          }
+
           return (
-            <Badge variant="secondary" className={styles.pill}>
-              {t(`audience.${audience}`)}
-            </Badge>
+            <div
+              className={styles.inlineEditCell}
+              onDoubleClick={() => setInlineEdit({ id: row.original.id, field: 'targetAudience' })}
+            >
+              <Badge variant="secondary" className={styles.pill}>
+                {t(`audience.${audience}`)}
+              </Badge>
+            </div>
           );
         },
         filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
@@ -303,7 +636,18 @@ export default function TestsTable({ tests }: TestsTableProps) {
         ),
       },
     ],
-    [locale, t],
+    [
+      audienceOptions,
+      domainOptions,
+      inlineEdit,
+      locale,
+      savingCell,
+      statusOptions,
+      t,
+      tagOptions,
+      themeOptions,
+      updateTest,
+    ],
   );
 
   const table = useReactTable({
