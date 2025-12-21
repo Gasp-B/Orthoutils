@@ -233,6 +233,71 @@
       }
     }
   },
+  "AdminTests": {
+    "meta": {
+      "title": "Test management | Othoutils",
+      "description": "Review tests, statuses, and themes from a single management view."
+    },
+    "sectionLabel": "Test management",
+    "pageTitle": "Manage the test catalogue",
+    "pageLead": "Quickly scan every test, filter by status or theme, and keep the key details at hand.",
+    "tableTitle": "All tests",
+    "tableLead": "Use the filters to find a test quickly and keep the catalogue organized.",
+    "nav": {
+      "cardEyebrow": "Tests",
+      "cardTitle": "Test management"
+    },
+    "grid": {
+      "searchPlaceholder": "Filter by name…",
+      "empty": "No tests match the selected filters.",
+      "emptyLabel": "No data",
+      "more": "+{count}",
+      "columns": {
+        "name": "Test",
+        "status": "Status",
+        "audience": "Audience",
+        "domains": "Domains",
+        "themes": "Themes",
+        "standardized": "Standardization",
+        "updated": "Last updated",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Draft",
+        "in_review": "In review",
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "audience": {
+        "child": "Children",
+        "adult": "Adults"
+      },
+      "standardized": {
+        "yes": "Standardized",
+        "no": "Not standardized"
+      },
+      "filters": {
+        "status": "Status",
+        "audience": "Audience",
+        "domains": "Domains",
+        "pageSize": "Rows"
+      },
+      "actions": {
+        "copyId": "Copy ID",
+        "copySlug": "Copy slug"
+      },
+      "columnHeader": {
+        "sortAsc": "Sort ascending",
+        "sortDesc": "Sort descending",
+        "hide": "Hide"
+      },
+      "pagination": {
+        "summary": "Page {page} of {total}",
+        "previous": "Previous",
+        "next": "Next"
+      }
+    }
+  },
   "Footer": {
     "note": "Made with care for speech-language pathology teams. Mobile-first, adaptive, and built for collaboration."
   },

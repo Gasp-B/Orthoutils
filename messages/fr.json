@@ -233,6 +233,71 @@
       }
     }
   },
+  "AdminTests": {
+    "meta": {
+      "title": "Gestion des tests | Othoutils",
+      "description": "Superviser les tests, leurs statuts et leurs thématiques depuis une vue unifiée."
+    },
+    "sectionLabel": "Gestion des tests",
+    "pageTitle": "Piloter le référentiel de tests",
+    "pageLead": "Visualisez rapidement tous les tests, filtrez-les par statut ou thématique et accédez aux informations clés.",
+    "tableTitle": "Tous les tests",
+    "tableLead": "Utilisez les filtres pour retrouver une fiche et garder une vue claire sur le catalogue.",
+    "nav": {
+      "cardEyebrow": "Tests",
+      "cardTitle": "Gestion des tests"
+    },
+    "grid": {
+      "searchPlaceholder": "Filtrer par nom…",
+      "empty": "Aucun test ne correspond aux filtres sélectionnés.",
+      "emptyLabel": "Aucune donnée",
+      "more": "+{count}",
+      "columns": {
+        "name": "Test",
+        "status": "Statut",
+        "audience": "Public",
+        "domains": "Domaines",
+        "themes": "Thèmes",
+        "standardized": "Norme",
+        "updated": "Dernière mise à jour",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Brouillon",
+        "in_review": "En revue",
+        "published": "Publié",
+        "archived": "Archivé"
+      },
+      "audience": {
+        "child": "Enfants",
+        "adult": "Adultes"
+      },
+      "standardized": {
+        "yes": "Standardisé",
+        "no": "Non standardisé"
+      },
+      "filters": {
+        "status": "Statut",
+        "audience": "Public",
+        "domains": "Domaines",
+        "pageSize": "Lignes"
+      },
+      "actions": {
+        "copyId": "Copier l'identifiant",
+        "copySlug": "Copier le slug"
+      },
+      "columnHeader": {
+        "sortAsc": "Trier par ordre croissant",
+        "sortDesc": "Trier par ordre décroissant",
+        "hide": "Masquer"
+      },
+      "pagination": {
+        "summary": "Page {page} sur {total}",
+        "previous": "Précédent",
+        "next": "Suivant"
+      }
+    }
+  },
   "Footer": {
     "note": "Fait avec soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour la collaboration."
   },
