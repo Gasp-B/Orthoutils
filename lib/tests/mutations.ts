@@ -109,7 +109,9 @@ export async function updateTestAdminFields(input: unknown) {
       payload.name !== undefined ||
       payload.slug !== undefined ||
       payload.shortDescription !== undefined ||
-      payload.objective !== undefined;
+      payload.objective !== undefined ||
+      payload.ageMinMonths !== undefined ||
+      payload.ageMaxMonths !== undefined;
 
     if (shouldTouchTest) {
       const updates: Partial<typeof tests.$inferInsert> = {
@@ -118,6 +120,8 @@ export async function updateTestAdminFields(input: unknown) {
 
       if (payload.status !== undefined) updates.status = payload.status;
       if (payload.targetAudience !== undefined) updates.targetAudience = payload.targetAudience;
+      if (payload.ageMinMonths !== undefined) updates.ageMinMonths = payload.ageMinMonths;
+      if (payload.ageMaxMonths !== undefined) updates.ageMaxMonths = payload.ageMaxMonths;
 
       await tx.update(tests).set(updates).where(eq(tests.id, payload.id));
     }
@@ -176,15 +180,15 @@ export async function updateTestAdminFields(input: unknown) {
           shortDescription,
           objective,
         })
-        .onConflictDoUpdate({
-          target: [testsTranslations.testId, testsTranslations.locale],
-          set: {
-            name,
-            slug,
-            shortDescription,
-            objective,
-          },
-        });
+      .onConflictDoUpdate({
+        target: [testsTranslations.testId, testsTranslations.locale],
+        set: {
+          name,
+          slug,
+          shortDescription,
+          objective,
+        },
+      });
     }
 
     if (payload.domains !== undefined) {
@@ -240,6 +244,8 @@ export async function createTestAdminFields(input: unknown) {
       .values({
         status: payload.status ?? 'draft',
         targetAudience: payload.targetAudience ?? 'child',
+        ageMinMonths: payload.ageMinMonths ?? null,
+        ageMaxMonths: payload.ageMaxMonths ?? null,
         updatedAt: new Date(),
       })
       .returning({ id: tests.id });

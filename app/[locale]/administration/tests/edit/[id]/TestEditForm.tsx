@@ -23,6 +23,8 @@ type FormState = Pick<
   | 'slug'
   | 'shortDescription'
   | 'objective'
+  | 'ageMinMonths'
+  | 'ageMaxMonths'
   | 'status'
   | 'targetAudience'
   | 'domains'
@@ -37,6 +39,8 @@ const toFormState = (test: TestDto): FormState => ({
   slug: test.slug,
   shortDescription: test.shortDescription,
   objective: test.objective,
+  ageMinMonths: test.ageMinMonths,
+  ageMaxMonths: test.ageMaxMonths,
   status: test.status,
   targetAudience: test.targetAudience,
   domains: test.domains,
@@ -125,6 +129,8 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
           slug: formState.slug,
           shortDescription: formState.shortDescription,
           objective: formState.objective,
+          ageMinMonths: formState.ageMinMonths,
+          ageMaxMonths: formState.ageMaxMonths,
           status: formState.status,
           targetAudience: formState.targetAudience,
           domains: formState.domains,
@@ -216,6 +222,44 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
               </option>
             ))}
           </Select>
+        </div>
+
+        <div className={styles.formRow}>
+          <label className={styles.formLabel} htmlFor="ageMinMonths">
+            {t('ageMinLabel')}
+          </label>
+          <Input
+            id="ageMinMonths"
+            type="number"
+            min={0}
+            value={formState.ageMinMonths ?? ''}
+            onChange={(event) =>
+              setFormState((prev) => ({
+                ...prev,
+                ageMinMonths: event.target.value === '' ? null : Number(event.target.value),
+              }))
+            }
+            placeholder={t('ageMinPlaceholder')}
+          />
+        </div>
+
+        <div className={styles.formRow}>
+          <label className={styles.formLabel} htmlFor="ageMaxMonths">
+            {t('ageMaxLabel')}
+          </label>
+          <Input
+            id="ageMaxMonths"
+            type="number"
+            min={0}
+            value={formState.ageMaxMonths ?? ''}
+            onChange={(event) =>
+              setFormState((prev) => ({
+                ...prev,
+                ageMaxMonths: event.target.value === '' ? null : Number(event.target.value),
+              }))
+            }
+            placeholder={t('ageMaxPlaceholder')}
+          />
         </div>
       </div>
 
