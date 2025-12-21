@@ -708,9 +708,9 @@ export default function TestsTable({ tests }: TestsTableProps) {
         </div>
         <div className={styles.toolbarActions}>
           <DataTableViewOptions table={table} />
-          <Button asChild size="sm">
-            <Link href="/administration/tests/create">{pageT('actions.create')}</Link>
-          </Button>
+          <Link href="/administration/tests/create" className="ui-button ui-button-sm">
+            {pageT('actions.create')}
+          </Link>
         </div>
       </div>
 
