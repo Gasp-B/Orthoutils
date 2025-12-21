@@ -101,9 +101,9 @@ export function DataTableToolbar({ table, t, statusT }: DataTableToolbarProps) {
         </div>
         <div className="flex items-center gap-2">
           <DataTableViewOptions table={table} t={t} />
-          <Button asChild size="sm" className="h-8">
-            <Link href="/administration/tests/create">{t('actions.newTest')}</Link>
-          </Button>
+          <Link href="/administration/tests/create" className="ui-button ui-button-sm">
+            {t('actions.newTest')}
+          </Link>
         </div>
       </div>
     </div>
