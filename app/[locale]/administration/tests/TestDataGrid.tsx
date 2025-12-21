@@ -514,44 +514,43 @@ function DataTableToolbar({
       </div>
 
       <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-6 gap-1.5 px-2 text-[11px] whitespace-nowrap"
-                aria-label={t('actions.viewOptions')}
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{t('actions.viewOptions')}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
-                  >
-                    {column.columnDef.meta?.label ?? column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Link
-            href="/administration/tests/create"
-            className="ui-button ui-button-sm h-6 px-2 text-[11px] whitespace-nowrap"
-            aria-label={t('actions.newTest')}
-          >
-            <span className="hidden lg:inline">{t('actions.newTest')}</span>
-            <span className="lg:hidden">+</span>
-          </Link>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 gap-1.5 px-2 text-[11px] whitespace-nowrap"
+              aria-label={t('actions.viewOptions')}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span className="hidden lg:inline">{t('actions.viewOptions')}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanHide())
+              .map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
+                >
+                  {column.columnDef.meta?.label ?? column.id}
+                </DropdownMenuCheckboxItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Link
+          href="/administration/tests/create"
+          className="ui-button ui-button-sm h-6 px-2 text-[11px] whitespace-nowrap"
+          aria-label={t('actions.newTest')}
+        >
+          <span className="hidden lg:inline">{t('actions.newTest')}</span>
+          <span className="lg:hidden">+</span>
+        </Link>
       </div>
     </div>
   );
