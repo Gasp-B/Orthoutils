@@ -475,11 +475,11 @@ function DataTableToolbar({
   }));
 
   return (
-    <div className="flex flex-col gap-3 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-1 flex-wrap items-center gap-2">
+    <div className="py-4">
+      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
+        <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-2">
           <Input
-            className="h-8 w-[150px] lg:w-[250px]"
+            className="h-7 w-[140px] text-xs lg:w-[220px]"
             placeholder={t('filters.searchPlaceholder')}
             value={(table.getState().globalFilter as string) ?? ''}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
@@ -488,10 +488,10 @@ function DataTableToolbar({
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 gap-2"
+            className="h-7 gap-1.5 px-2 text-xs"
             onClick={() => setFiltersOpen((prev) => !prev)}
           >
-            <Filter className="h-4 w-4" />
+            <Filter className="h-3.5 w-3.5" />
             {t('filters.filterButton')}
           </Button>
           {filtersOpen && (
@@ -510,11 +510,11 @@ function DataTableToolbar({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-nowrap items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-2">
-                <SlidersHorizontal className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="h-7 gap-1.5 px-2 text-xs">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
                 {t('actions.viewOptions')}
               </Button>
             </DropdownMenuTrigger>
@@ -535,7 +535,10 @@ function DataTableToolbar({
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Link href="/administration/tests/create" className="ui-button ui-button-sm">
+          <Link
+            href="/administration/tests/create"
+            className="ui-button ui-button-sm px-3 py-1.5 text-xs"
+          >
             {t('actions.newTest')}
           </Link>
         </div>

@@ -50,13 +50,13 @@ export function DataTableFacetedFilter<TData, TValue>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 border-dashed">
-          <PlusCircle className="h-4 w-4" />
-          <span className="ml-2">{title}</span>
+        <Button variant="outline" size="sm" className="h-7 gap-1.5 border-dashed px-2 text-xs">
+          <PlusCircle className="h-3.5 w-3.5" />
+          <span>{title}</span>
           {selectedValues.size > 0 && (
             <>
               <Separator className="mx-2 h-4 w-px" />
-              <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+              <Badge variant="secondary" className="rounded-sm px-1 text-[10px] font-normal">
                 {selectedValues.size}
               </Badge>
             </>
