@@ -51,7 +51,7 @@ export default function UpdatePasswordPage() {
     } else {
       setMessage('Mot de passe mis à jour ! Redirection...');
       setTimeout(() => {
-        router.push(`/${locale}/tests/manage`);
+        router.push(`/${locale}/administration`);
       }, 1500);
     }
   };

@@ -90,9 +90,6 @@ export default async function CataloguePage({ params }: LocalePageProps) {
               <h1 className={styles.headingTitle}>{t('headingTitle')}</h1>
               <p className={styles.headingText}>{t('headingText')}</p>
             </div>
-            <Link className="ph-header__pill" href="/tests/manage">
-              {t('ctas.addTest')}
-            </Link>
           </div>
         </div>
       </header>

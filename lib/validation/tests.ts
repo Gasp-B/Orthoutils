@@ -54,62 +54,6 @@ const taxonomyDomainSchema = z.object({
   label: z.string(),
 });
 
-export const testInputSchema = z.object({
-  locale: localeEnum.default(defaultLocale),
-  name: z.string().min(1),
-  // Ajout du champ dans l'objet envoyé au formulaire (avec défaut 'child')
-  targetAudience: targetAudienceSchema.default('child'),
-  status: validationStatusSchema.default('draft'),
-  shortDescription: z.string().nullable().optional(),
-  objective: z.string().nullable().optional(),
-  ageMinMonths: z.number().int().nullable().optional(),
-  ageMaxMonths: z.number().int().nullable().optional(),
-  population: z.string().nullable().optional(),
-  durationMinutes: z.number().int().nullable().optional(),
-  materials: z.string().nullable().optional(),
-  isStandardized: z.boolean().default(false),
-  publisher: z.string().nullable().optional(),
-  priceRange: z.string().nullable().optional(),
-  buyLink: z.string().url().nullable().optional(),
-  notes: z.string().nullable().optional(),
-  domains: z.array(z.string().min(1)).default([]),
-  tags: z.array(z.string().min(1)).default([]),
-  themes: z.array(z.string().min(1)).default([]),
-  bibliography: bibliographySchema,
-});
-
-export const updateTestInputSchema = testInputSchema.extend({
-  id: z.string().uuid(),
-});
-
-export const testsDeletionSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1),
-});
-
-const bulkTestsSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1),
-});
-
-export const bulkTestsStatusSchema = bulkTestsSchema.extend({
-  status: validationStatusSchema,
-});
-
-export const bulkTestsTagsSchema = bulkTestsSchema.extend({
-  locale: localeEnum.default(defaultLocale),
-  tags: z.array(z.string().min(1)).min(1),
-});
-
-export const bulkTestsArchiveSchema = bulkTestsSchema;
-export const bulkTestsDeleteSchema = bulkTestsSchema;
-
-export const bulkTestsActionSchema = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('status') }).merge(bulkTestsStatusSchema),
-  z.object({ action: z.literal('tags:add') }).merge(bulkTestsTagsSchema),
-  z.object({ action: z.literal('tags:remove') }).merge(bulkTestsTagsSchema),
-  z.object({ action: z.literal('archive') }).merge(bulkTestsArchiveSchema),
-  z.object({ action: z.literal('delete') }).merge(bulkTestsDeleteSchema),
-]);
-
 export const taxonomyResponseSchema = z.object({
   domains: z.array(
     z.object({

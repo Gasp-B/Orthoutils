@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Redirection par défaut (Dashboard ou URL 'next')
-      const targetPath = next ?? `/${locale}/tests/manage`;
+      const targetPath = next ?? `/${locale}/administration`;
       return NextResponse.redirect(`${requestUrl.origin}${targetPath}`);
     } else {
       console.error('[Auth Callback] Code exchange error:', error.message);
