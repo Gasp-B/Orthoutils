@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import TestDataGrid from './TestDataGrid';
+import TestDataGrid from './components/TestDataGrid';
 import { locales, type Locale } from '@/i18n/routing';
 
 type AdministrationTestsPageProps = {

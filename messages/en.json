@@ -195,6 +195,7 @@
       "columns": {
         "select": "Select all",
         "selectRow": "Select row",
+        "slug": "Slug",
         "title": "Title",
         "status": "Status",
         "domainTheme": "Domain / Theme",

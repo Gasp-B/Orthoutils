@@ -195,6 +195,7 @@
       "columns": {
         "select": "Tout sélectionner",
         "selectRow": "Sélectionner la ligne",
+        "slug": "Slug",
         "title": "Titre",
         "status": "Statut",
         "domainTheme": "Domaine / Thème",

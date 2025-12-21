@@ -1,9 +1,7 @@
 'use client';
 
 import {
-  type Dispatch,
   type KeyboardEvent,
-  type SetStateAction,
   useCallback,
   useEffect,
   useMemo,
@@ -11,9 +9,8 @@ import {
 } from 'react';
 import { useTranslations } from 'next-intl';
 import {
-  type ColumnDef,
+  type ColumnFiltersState,
   type SortingState,
-  type Table as TableInstance,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
@@ -22,25 +19,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Filter, MoreHorizontal, SlidersHorizontal } from 'lucide-react';
 import { type Locale } from '@/i18n/routing';
-import { Link } from '@/i18n/navigation';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
-import { DataTableFacetedFilter } from '@/components/ui/data-table-faceted-filter';
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -53,24 +34,10 @@ import {
   testInputSchema,
   updateTestInputSchema,
   validationStatusSchema,
-  type TaxonomyResponse,
   type TestDto,
 } from '@/lib/validation/tests';
-
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    label?: string;
-  }
-}
-
-type EditingColumnId = 'name' | 'status' | 'tags' | 'domainTheme';
-
-type EditingCell = { rowId: string; columnId: EditingColumnId } | null;
-
-type DraftDomainTheme = {
-  domains: string;
-  themes: string;
-};
+import { buildColumns, type DraftDomainTheme, type EditingCell, type EditingColumnId } from './columns';
+import { DataTableToolbar } from './data-table-toolbar';
 
 type TestDataGridProps = {
   locale: Locale;
@@ -82,35 +49,8 @@ type UpdateOverrides = Partial<
   Pick<TestDto, 'name' | 'status' | 'tags' | 'domains' | 'themes'>
 >;
 
-type ColumnBuilderParams = {
-  locale: Locale;
-  t: ReturnType<typeof useTranslations>;
-  statusT: ReturnType<typeof useTranslations>;
-  onBeginEdit: (test: TestDto, columnId: EditingColumnId) => void;
-  onSaveEdit: (test: TestDto, columnId: EditingColumnId) => void;
-  onKeyDown: (
-    event: KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
-    test: TestDto,
-    columnId: EditingColumnId,
-  ) => void;
-  draftValue: string;
-  draftDomainTheme: DraftDomainTheme;
-  setDraftValue: (value: string) => void;
-  setDraftDomainTheme: Dispatch<SetStateAction<DraftDomainTheme>>;
-  editingCell: EditingCell;
-  statusOptions: TestDto['status'][];
-  onDuplicate: (test: TestDto) => void;
-  onDelete: (test: TestDto) => void;
-};
-
 const pageSizeOptions = [20, 50];
 const statusOptions = validationStatusSchema.options;
-const statusBadgeVariants = {
-  draft: 'secondary',
-  in_review: 'warning',
-  published: 'success',
-  archived: 'outline',
-} as const;
 
 function buildCsv(values: string[]) {
   return values.join(', ');
@@ -139,411 +79,6 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   );
 }
 
-function buildColumns({
-  locale,
-  t,
-  statusT,
-  onBeginEdit,
-  onSaveEdit,
-  onKeyDown,
-  draftValue,
-  draftDomainTheme,
-  setDraftValue,
-  setDraftDomainTheme,
-  editingCell,
-  statusOptions,
-  onDuplicate,
-  onDelete,
-}: ColumnBuilderParams): ColumnDef<TestDto>[] {
-  return [
-    {
-      id: 'select',
-      enableHiding: false,
-      header: ({ table }) => (
-        <Input
-          aria-label={t('columns.select')}
-          type="checkbox"
-          className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
-          checked={table.getIsAllPageRowsSelected()}
-          onChange={table.getToggleAllPageRowsSelectedHandler()}
-        />
-      ),
-      cell: ({ row }) => (
-        <Input
-          aria-label={t('columns.selectRow')}
-          type="checkbox"
-          className="h-4 w-4 rounded border border-white/10 bg-transparent text-emerald-400 accent-emerald-400"
-          checked={row.getIsSelected()}
-          disabled={!row.getCanSelect()}
-          onChange={row.getToggleSelectedHandler()}
-        />
-      ),
-    },
-    {
-      accessorKey: 'name',
-      enableSorting: true,
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.title')} />,
-      meta: { label: t('columns.title') },
-      enableGlobalFilter: true,
-      cell: ({ row }) => {
-        const test = row.original;
-        const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'name';
-
-        if (isEditing) {
-          return (
-            <Input
-              autoFocus
-              className="h-8 w-full"
-              value={draftValue}
-              onChange={(event) => setDraftValue(event.target.value)}
-              onBlur={() => onSaveEdit(test, 'name')}
-              onKeyDown={(event) => onKeyDown(event, test, 'name')}
-            />
-          );
-        }
-
-        return (
-          <div
-            className="flex flex-col gap-1"
-            onClick={() => onBeginEdit(test, 'name')}
-            onDoubleClick={() => onBeginEdit(test, 'name')}
-          >
-            <Link
-              className="text-sm font-medium text-slate-100 hover:underline"
-              href={{ pathname: '/administration/tests/edit/[id]', params: { id: test.id } }}
-            >
-              {test.name}
-            </Link>
-            <span className="text-xs font-mono text-muted-foreground">{test.slug}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'status',
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.status')} />,
-      meta: { label: t('columns.status') },
-      filterFn: (row, columnId, filterValue) => {
-        if (!Array.isArray(filterValue) || filterValue.length === 0) {
-          return true;
-        }
-        const value = row.getValue(columnId) as string | undefined;
-        return value ? filterValue.includes(value) : false;
-      },
-      enableGlobalFilter: true,
-      cell: ({ row }) => {
-        const test = row.original;
-        const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'status';
-
-        if (isEditing) {
-          return (
-            <Select
-              autoFocus
-              className="h-8 w-full"
-              value={draftValue}
-              onChange={(event) => setDraftValue(event.target.value)}
-              onBlur={() => onSaveEdit(test, 'status')}
-              onKeyDown={(event) => onKeyDown(event, test, 'status')}
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {statusT(status)}
-                </option>
-              ))}
-            </Select>
-          );
-        }
-
-        return (
-          <button
-            type="button"
-            className="inline-flex items-center"
-            onClick={() => onBeginEdit(test, 'status')}
-            onDoubleClick={() => onBeginEdit(test, 'status')}
-          >
-            <Badge variant={statusBadgeVariants[test.status]}>{statusT(test.status)}</Badge>
-          </button>
-        );
-      },
-    },
-    {
-      accessorFn: (row) => [...row.domains, ...row.themes],
-      id: 'domainTheme',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('columns.domainTheme')} />
-      ),
-      meta: { label: t('columns.domainTheme') },
-      filterFn: (row, columnId, filterValue) => {
-        if (!Array.isArray(filterValue) || filterValue.length === 0) {
-          return true;
-        }
-        const raw = row.getValue(columnId) as string[] | undefined;
-        return (raw ?? []).some((value) => filterValue.includes(value));
-      },
-      enableGlobalFilter: true,
-      cell: ({ row }) => {
-        const test = row.original;
-        const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'domainTheme';
-
-        if (isEditing) {
-          return (
-            <div
-              className="flex flex-col gap-2"
-              onBlur={(event) => {
-                const nextTarget = event.relatedTarget as Node | null;
-                if (nextTarget && event.currentTarget.contains(nextTarget)) {
-                  return;
-                }
-                onSaveEdit(test, 'domainTheme');
-              }}
-            >
-              <Input
-                autoFocus
-                className="h-8"
-                value={draftDomainTheme.domains}
-                placeholder={t('placeholders.domains')}
-                onChange={(event) =>
-                  setDraftDomainTheme((prev) => ({ ...prev, domains: event.target.value }))
-                }
-                onKeyDown={(event) => onKeyDown(event, test, 'domainTheme')}
-              />
-              <Input
-                className="h-8"
-                value={draftDomainTheme.themes}
-                placeholder={t('placeholders.themes')}
-                onChange={(event) =>
-                  setDraftDomainTheme((prev) => ({ ...prev, themes: event.target.value }))
-                }
-                onKeyDown={(event) => onKeyDown(event, test, 'domainTheme')}
-              />
-            </div>
-          );
-        }
-
-        return (
-          <div
-            className="text-sm"
-            onClick={() => onBeginEdit(test, 'domainTheme')}
-            onDoubleClick={() => onBeginEdit(test, 'domainTheme')}
-          >
-            <div className="text-muted-foreground">
-              <span className="font-medium text-slate-200">{t('labels.domains')}:</span>{' '}
-              {test.domains.length > 0 ? test.domains.join(', ') : t('empty')}
-            </div>
-            <div className="text-muted-foreground">
-              <span className="font-medium text-slate-200">{t('labels.themes')}:</span>{' '}
-              {test.themes.length > 0 ? test.themes.join(', ') : t('empty')}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'tags',
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.tags')} />,
-      meta: { label: t('columns.tags') },
-      filterFn: (row, columnId, filterValue) => {
-        if (!Array.isArray(filterValue) || filterValue.length === 0) {
-          return true;
-        }
-        const raw = row.getValue(columnId) as string[] | undefined;
-        return (raw ?? []).some((value) => filterValue.includes(value));
-      },
-      enableGlobalFilter: true,
-      cell: ({ row }) => {
-        const test = row.original;
-        const isEditing = editingCell?.rowId === test.id && editingCell.columnId === 'tags';
-
-        if (isEditing) {
-          return (
-            <Input
-              autoFocus
-              className="h-8 w-full"
-              value={draftValue}
-              placeholder={t('placeholders.tags')}
-              onChange={(event) => setDraftValue(event.target.value)}
-              onBlur={() => onSaveEdit(test, 'tags')}
-              onKeyDown={(event) => onKeyDown(event, test, 'tags')}
-            />
-          );
-        }
-
-        return (
-          <div
-            className="flex flex-wrap gap-1"
-            onClick={() => onBeginEdit(test, 'tags')}
-            onDoubleClick={() => onBeginEdit(test, 'tags')}
-          >
-            {test.tags.length > 0 ? (
-              test.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs font-medium">
-                  {tag}
-                </Badge>
-              ))
-            ) : (
-              <span className="text-sm text-muted-foreground">{t('empty')}</span>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'updatedAt',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('columns.updatedAt')} />
-      ),
-      meta: { label: t('columns.updatedAt') },
-      cell: ({ row }) => {
-        const date = new Date(row.original.updatedAt);
-        return (
-          <span className="text-sm font-mono text-muted-foreground tabular-nums">
-            {Number.isNaN(date.getTime())
-              ? t('dateFallback')
-              : new Intl.DateTimeFormat(locale, {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                }).format(date)}
-          </span>
-        );
-      },
-    },
-    {
-      id: 'actions',
-      enableHiding: false,
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.actions')} />,
-      cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-8 w-8 p-0"
-              aria-label={t('columns.actions')}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{t('columns.actions')}</DropdownMenuLabel>
-            <DropdownMenuItem asChild>
-              <Link
-                href={{
-                  pathname: '/administration/tests/edit/[id]',
-                  params: { id: row.original.id },
-                }}
-              >
-                {t('actions.edit')}
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDuplicate(row.original)}>
-              {t('actions.duplicate')}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-red-400 focus:text-red-400"
-              onSelect={() => onDelete(row.original)}
-            >
-              {t('actions.delete')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ];
-}
-
-function DataTableToolbar({
-  table,
-  t,
-  statusT,
-  themesFilterOptions,
-}: {
-  table: TableInstance<TestDto>;
-  t: ReturnType<typeof useTranslations>;
-  statusT: ReturnType<typeof useTranslations>;
-  themesFilterOptions: string[];
-}) {
-  const [filtersOpen, setFiltersOpen] = useState(true);
-  const statusOptionsWithLabels = statusOptions.map((status) => ({
-    label: statusT(status),
-    value: status,
-  }));
-
-  const themeOptionsWithLabels = themesFilterOptions.map((theme) => ({
-    label: theme,
-    value: theme,
-  }));
-
-  return (
-    <div className="flex flex-col gap-3 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-1 flex-wrap items-center gap-2">
-          <Input
-            className="h-8 w-[150px] lg:w-[250px]"
-            placeholder={t('filters.searchPlaceholder')}
-            value={(table.getState().globalFilter as string) ?? ''}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2"
-            onClick={() => setFiltersOpen((prev) => !prev)}
-          >
-            <Filter className="h-4 w-4" />
-            {t('filters.filterButton')}
-          </Button>
-          {filtersOpen && (
-            <>
-              <DataTableFacetedFilter
-                column={table.getColumn('status')}
-                title={t('filters.status')}
-                options={statusOptionsWithLabels}
-              />
-              <DataTableFacetedFilter
-                column={table.getColumn('domainTheme')}
-                title={t('labels.themes')}
-                options={themeOptionsWithLabels}
-              />
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-2">
-                <SlidersHorizontal className="h-4 w-4" />
-                {t('actions.viewOptions')}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t('actions.viewOptions')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
-                  >
-                    {column.columnDef.meta?.label ?? column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Link href="/administration/tests/create" className="ui-button ui-button-sm">
-            {t('actions.newTest')}
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function TestDataGrid({ locale }: TestDataGridProps) {
   const t = useTranslations('AdminTests.grid');
   const statusT = useTranslations('AdminTests.status');
@@ -551,7 +86,6 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
   const toastT = useTranslations('AdminTests.toast');
 
   const [tests, setTests] = useState<TestDto[]>([]);
-  const [taxonomy, setTaxonomy] = useState<TaxonomyResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [editingCell, setEditingCell] = useState<EditingCell>(null);
@@ -563,28 +97,22 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [testsResponse, taxonomyResponse] = await Promise.all([
-        fetch(`/api/tests?locale=${locale}`, { credentials: 'include' }),
-        fetch(`/api/tests/taxonomy?locale=${locale}`, { credentials: 'include' }),
-      ]);
+      const testsResponse = await fetch(`/api/tests?locale=${locale}`, {
+        credentials: 'include',
+      });
 
       if (!testsResponse.ok) {
         throw new Error(toastT('loadError'));
       }
 
-      if (!taxonomyResponse.ok) {
-        throw new Error(toastT('loadError'));
-      }
-
       const testsJson = (await testsResponse.json()) as TestsApiResponse;
-      const taxonomyJson = (await taxonomyResponse.json()) as TaxonomyResponse;
 
       setTests(testsJson.tests ?? []);
-      setTaxonomy(taxonomyJson);
     } catch (error) {
       const message = error instanceof Error ? error.message : toastT('loadError');
       setToastMsg(message);
@@ -854,11 +382,13 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
       rowSelection,
       sorting,
       columnVisibility,
+      columnFilters,
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -934,15 +464,8 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
     }
   };
 
-  const themesFilterOptions = useMemo(() => {
-    if (!taxonomy) {
-      return [] as string[];
-    }
-    return taxonomy.themes.map((theme) => theme.label).sort((a, b) => a.localeCompare(b, locale));
-  }, [locale, taxonomy]);
-
   return (
-    <section className="mt-10 space-y-6 text-slate-100">
+    <section className="mt-10 space-y-4 text-slate-100">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-slate-100">{t('title')}</h2>
@@ -950,12 +473,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </div>
       </div>
 
-      <DataTableToolbar
-        table={table}
-        t={t}
-        statusT={statusT}
-        themesFilterOptions={themesFilterOptions}
-      />
+      <DataTableToolbar table={table} t={t} statusT={statusT} />
 
       {selectedRows.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
@@ -999,13 +517,13 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
         </div>
       )}
 
-      <div className="rounded-md border border-slate-300 bg-white/95 shadow-sm overflow-hidden">
+      <div className="rounded-md border border-white/10 bg-slate-950/60">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="border-b border-white/10">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="h-8 px-4 text-xs">
+                  <TableHead key={header.id} className="h-9 px-3 text-xs">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -1018,7 +536,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
             {loading ? (
               <TableRow>
                 <TableCell
-                  className="px-4 py-6 text-sm text-muted-foreground"
+                  className="px-3 py-6 text-sm text-muted-foreground"
                   colSpan={table.getVisibleLeafColumns().length}
                 >
                   {t('loading')}
@@ -1027,7 +545,7 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
             ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  className="px-4 py-6 text-sm text-muted-foreground"
+                  className="px-3 py-6 text-sm text-muted-foreground"
                   colSpan={table.getVisibleLeafColumns().length}
                 >
                   {t('emptyState')}
@@ -1037,11 +555,11 @@ export default function TestDataGrid({ locale }: TestDataGridProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="border-t border-white/10 hover:bg-white/5"
+                  className="border-t border-white/5 hover:bg-white/5"
                   data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3 align-top">
+                    <TableCell key={cell.id} className="px-3 py-2 align-top">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
