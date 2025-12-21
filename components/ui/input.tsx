@@ -6,5 +6,5 @@ export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTML
   { className, ...props },
   ref,
 ) {
-  return <input ref={ref} className={cn('ui-input', className)} {...props} />;
+  return <input ref={ref} className={cn('ui-input w-full', className)} {...props} />;
 });
