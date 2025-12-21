@@ -478,8 +478,8 @@ function DataTableToolbar({
     Boolean(table.getState().globalFilter);
 
   return (
-    <div className="flex items-center justify-between gap-2 py-3">
-      <div className="flex flex-1 items-center space-x-2">
+    <div className="flex flex-nowrap items-center justify-between gap-2 overflow-x-auto py-3">
+      <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-2">
         <Input
           className="h-8 w-[150px] text-[11px] lg:w-[250px]"
           placeholder={t('filters.searchPlaceholder')}
@@ -513,7 +513,7 @@ function DataTableToolbar({
         )}
       </div>
 
-      <div className="flex items-center gap-2 whitespace-nowrap">
+      <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
