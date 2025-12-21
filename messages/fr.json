@@ -241,6 +241,9 @@
     "sectionLabel": "Administration",
     "pageTitle": "Gestion des tests",
     "pageLead": "Passez en revue le catalogue, filtrez par statut et audience, et gardez des tests alignés rapidement.",
+    "actions": {
+      "create": "Créer un test"
+    },
     "nav": {
       "cardEyebrow": "Tests",
       "cardTitle": "Gestion des tests"
@@ -325,12 +328,21 @@
     "pageTitle": "Modifier {name}",
     "pageLead": "Ajustez le statut, l'audience et la taxonomie associée à ce test.",
     "form": {
+      "nameLabel": "Nom du test",
+      "namePlaceholder": "Saisissez le nom du test",
+      "slugLabel": "Slug",
+      "slugPlaceholder": "exemple-test",
+      "shortDescriptionLabel": "Description courte",
+      "shortDescriptionPlaceholder": "Résumé rapide pour le catalogue.",
+      "objectiveLabel": "Objectif clinique",
+      "objectivePlaceholder": "Décrivez l'objectif clinique.",
       "statusLabel": "Statut",
       "audienceLabel": "Audience",
       "domainsLabel": "Domaines",
       "themesLabel": "Thèmes",
       "tagsLabel": "Tags",
       "save": "Enregistrer",
+      "create": "Créer",
       "saving": "Enregistrement...",
       "success": "Les modifications ont bien été enregistrées.",
       "error": "Impossible d'enregistrer les modifications."
@@ -347,6 +359,15 @@
       "dialogTitle": "Filtrer {label}",
       "dialogHelper": "Sélectionnez les valeurs pertinentes."
     }
+  },
+  "AdminTests.create": {
+    "metadata": {
+      "title": "Créer un test | Othoutils",
+      "description": "Ajoutez un nouveau test et définissez ses éléments essentiels."
+    },
+    "sectionLabel": "Administration",
+    "pageTitle": "Créer un test",
+    "pageLead": "Renseignez l'essentiel avant d'enrichir le test."
   },
   "Footer": {
     "note": "Fait avec soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour la collaboration."

@@ -241,6 +241,9 @@
     "sectionLabel": "Administration",
     "pageTitle": "Manage tests",
     "pageLead": "Review the full catalogue, filter by status and audience, and keep tests aligned quickly.",
+    "actions": {
+      "create": "Create test"
+    },
     "nav": {
       "cardEyebrow": "Tests",
       "cardTitle": "Test management"
@@ -325,12 +328,21 @@
     "pageTitle": "Edit {name}",
     "pageLead": "Adjust the status, audience, and taxonomy linked to this test.",
     "form": {
+      "nameLabel": "Test name",
+      "namePlaceholder": "Enter the test name",
+      "slugLabel": "Slug",
+      "slugPlaceholder": "example-test",
+      "shortDescriptionLabel": "Short description",
+      "shortDescriptionPlaceholder": "Quick summary for the catalogue.",
+      "objectiveLabel": "Clinical objective",
+      "objectivePlaceholder": "Describe the clinical goal.",
       "statusLabel": "Status",
       "audienceLabel": "Audience",
       "domainsLabel": "Domains",
       "themesLabel": "Themes",
       "tagsLabel": "Tags",
       "save": "Save",
+      "create": "Create",
       "saving": "Saving...",
       "success": "Updates saved successfully.",
       "error": "Unable to save the updates."
@@ -347,6 +359,15 @@
       "dialogTitle": "Filter {label}",
       "dialogHelper": "Select the relevant values."
     }
+  },
+  "AdminTests.create": {
+    "metadata": {
+      "title": "Create a test | Othoutils",
+      "description": "Add a new test and define its main details."
+    },
+    "sectionLabel": "Administration",
+    "pageTitle": "Create a test",
+    "pageLead": "Enter the essentials before enriching the test later."
   },
   "Footer": {
     "note": "Made with care for speech-language pathology teams. Mobile-first, adaptive, and built for collaboration."

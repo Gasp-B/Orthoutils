@@ -104,6 +104,7 @@ function DataTableViewOptions({ table }: { table: ReturnType<typeof useReactTabl
 
 export default function TestsTable({ tests }: TestsTableProps) {
   const t = useTranslations('AdminTests.grid');
+  const pageT = useTranslations('AdminTests');
   const locale = useLocale();
 
   const [tableData, setTableData] = useState<AdminTestRow[]>(() => tests.map(toAdminRow));
@@ -707,6 +708,9 @@ export default function TestsTable({ tests }: TestsTableProps) {
         </div>
         <div className={styles.toolbarActions}>
           <DataTableViewOptions table={table} />
+          <Button asChild size="sm">
+            <Link href="/administration/tests/create">{pageT('actions.create')}</Link>
+          </Button>
         </div>
       </div>
 

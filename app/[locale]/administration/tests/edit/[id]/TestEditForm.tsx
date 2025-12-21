@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import type { Locale } from '@/i18n/routing';
 import type { TaxonomyResponse, TestDto } from '@/lib/validation/tests';
 import styles from './tests-edit.module.css';
@@ -12,13 +14,29 @@ import styles from './tests-edit.module.css';
 type TestEditFormProps = {
   test: TestDto;
   locale: Locale;
+  mode: 'edit' | 'create';
 };
 
-type FormState = Pick<TestDto, 'status' | 'targetAudience' | 'domains' | 'themes' | 'tags'>;
+type FormState = Pick<
+  TestDto,
+  | 'name'
+  | 'slug'
+  | 'shortDescription'
+  | 'objective'
+  | 'status'
+  | 'targetAudience'
+  | 'domains'
+  | 'themes'
+  | 'tags'
+>;
 
 type FeedbackState = 'success' | 'error' | null;
 
 const toFormState = (test: TestDto): FormState => ({
+  name: test.name,
+  slug: test.slug,
+  shortDescription: test.shortDescription,
+  objective: test.objective,
   status: test.status,
   targetAudience: test.targetAudience,
   domains: test.domains,
@@ -26,7 +44,7 @@ const toFormState = (test: TestDto): FormState => ({
   tags: test.tags,
 });
 
-export default function TestEditForm({ test, locale }: TestEditFormProps) {
+export default function TestEditForm({ test, locale, mode }: TestEditFormProps) {
   const t = useTranslations('AdminTests.edit.form');
   const gridT = useTranslations('AdminTests.grid');
   const multiSelectT = useTranslations('AdminTests.edit.multiSelect');
@@ -97,12 +115,16 @@ export default function TestEditForm({ test, locale }: TestEditFormProps) {
 
     try {
       const response = await fetch('/api/tests', {
-        method: 'PATCH',
+        method: mode === 'create' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          id: test.id,
+          id: mode === 'edit' ? test.id : undefined,
           locale,
+          name: formState.name,
+          slug: formState.slug,
+          shortDescription: formState.shortDescription,
+          objective: formState.objective,
           status: formState.status,
           targetAudience: formState.targetAudience,
           domains: formState.domains,
@@ -128,45 +150,109 @@ export default function TestEditForm({ test, locale }: TestEditFormProps) {
 
   return (
     <form className={styles.form} onSubmit={(event) => void handleSave(event)}>
-      <div className={styles.formRow}>
-        <label className={styles.formLabel} htmlFor="status">
-          {t('statusLabel')}
-        </label>
-        <Select
-          id="status"
-          value={formState.status}
-          onChange={(event) =>
-            setFormState((prev) => ({ ...prev, status: event.target.value as TestDto['status'] }))
-          }
-        >
-          {statusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+      <div className={styles.formGrid}>
+        <div className={styles.formRow}>
+          <label className={styles.formLabel} htmlFor="name">
+            {t('nameLabel')}
+          </label>
+          <Input
+            id="name"
+            value={formState.name}
+            onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
+            placeholder={t('namePlaceholder')}
+            required
+          />
+        </div>
+
+        <div className={styles.formRow}>
+          <label className={styles.formLabel} htmlFor="slug">
+            {t('slugLabel')}
+          </label>
+          <Input
+            id="slug"
+            value={formState.slug}
+            onChange={(event) => setFormState((prev) => ({ ...prev, slug: event.target.value }))}
+            placeholder={t('slugPlaceholder')}
+            required
+          />
+        </div>
+
+        <div className={styles.formRow}>
+          <label className={styles.formLabel} htmlFor="status">
+            {t('statusLabel')}
+          </label>
+          <Select
+            id="status"
+            value={formState.status}
+            onChange={(event) =>
+              setFormState((prev) => ({ ...prev, status: event.target.value as TestDto['status'] }))
+            }
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className={styles.formRow}>
+          <label className={styles.formLabel} htmlFor="audience">
+            {t('audienceLabel')}
+          </label>
+          <Select
+            id="audience"
+            value={formState.targetAudience}
+            onChange={(event) =>
+              setFormState((prev) => ({
+                ...prev,
+                targetAudience: event.target.value as TestDto['targetAudience'],
+              }))
+            }
+          >
+            {audienceOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       <div className={styles.formRow}>
-        <label className={styles.formLabel} htmlFor="audience">
-          {t('audienceLabel')}
+        <label className={styles.formLabel} htmlFor="shortDescription">
+          {t('shortDescriptionLabel')}
         </label>
-        <Select
-          id="audience"
-          value={formState.targetAudience}
+        <Textarea
+          id="shortDescription"
+          value={formState.shortDescription ?? ''}
           onChange={(event) =>
             setFormState((prev) => ({
               ...prev,
-              targetAudience: event.target.value as TestDto['targetAudience'],
+              shortDescription: event.target.value ? event.target.value : null,
             }))
           }
-        >
-          {audienceOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+          placeholder={t('shortDescriptionPlaceholder')}
+          rows={3}
+        />
+      </div>
+
+      <div className={styles.formRow}>
+        <label className={styles.formLabel} htmlFor="objective">
+          {t('objectiveLabel')}
+        </label>
+        <Textarea
+          id="objective"
+          value={formState.objective ?? ''}
+          onChange={(event) =>
+            setFormState((prev) => ({
+              ...prev,
+              objective: event.target.value ? event.target.value : null,
+            }))
+          }
+          placeholder={t('objectivePlaceholder')}
+          rows={4}
+        />
       </div>
 
       <div className={styles.formRow}>
@@ -204,7 +290,7 @@ export default function TestEditForm({ test, locale }: TestEditFormProps) {
 
       <div className={styles.formActions}>
         <Button type="submit" disabled={isSaving}>
-          {isSaving ? t('saving') : t('save')}
+          {isSaving ? t('saving') : mode === 'create' ? t('create') : t('save')}
         </Button>
         {feedback === 'success' && <p className={styles.successMessage}>{t('success')}</p>}
         {feedback === 'error' && <p className={styles.errorMessage}>{t('error')}</p>}
