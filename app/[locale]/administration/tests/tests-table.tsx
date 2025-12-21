@@ -229,7 +229,7 @@ export default function TestsTable({ tests }: TestsTableProps) {
           return (
             <div className={styles.nameCell}>
               <Link
-                href={`/administration/tests/${row.original.id}`}
+                href={{ pathname: '/administration/tests/[id]', params: { id: row.original.id } }}
                 className={styles.nameLink}
                 aria-label={t('actions.editTest', { name: row.original.name })}
               >
