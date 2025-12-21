@@ -133,12 +133,6 @@ export default function TestsTable({ tests }: TestsTableProps) {
   const columns = useMemo<ColumnDef<AdminTestRow>[]>(
     () => [
       {
-        accessorKey: 'slug',
-        header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.slug')} />,
-        cell: ({ row }) => <span className={styles.codeCell}>{row.getValue('slug')}</span>,
-        enableSorting: false,
-      },
-      {
         accessorKey: 'name',
         header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.name')} />,
         cell: ({ row }) => {
@@ -146,7 +140,7 @@ export default function TestsTable({ tests }: TestsTableProps) {
           return (
             <div className={styles.nameCell}>
               <span className={styles.nameTitle}>{row.getValue('name')}</span>
-              <span className={styles.mutedText}>{description}</span>
+              <span className={styles.descriptionText}>{description}</span>
             </div>
           );
         },
