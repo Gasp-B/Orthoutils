@@ -463,7 +463,7 @@ function DataTableToolbar({
   statusT: ReturnType<typeof useTranslations>;
   themesFilterOptions: string[];
 }) {
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const statusOptionsWithLabels = statusOptions.map((status) => ({
     label: statusT(status),
     value: status,
@@ -475,11 +475,11 @@ function DataTableToolbar({
   }));
 
   return (
-    <div className="py-4">
+    <div className="py-3">
       <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
         <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-2">
           <Input
-            className="h-7 w-[140px] text-xs lg:w-[220px]"
+            className="h-6 w-[120px] text-[11px] lg:w-[180px]"
             placeholder={t('filters.searchPlaceholder')}
             value={(table.getState().globalFilter as string) ?? ''}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
@@ -488,11 +488,12 @@ function DataTableToolbar({
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 gap-1.5 px-2 text-xs"
+            className="h-6 gap-1.5 px-2 text-[11px]"
             onClick={() => setFiltersOpen((prev) => !prev)}
+            aria-label={t('filters.filterButton')}
           >
             <Filter className="h-3.5 w-3.5" />
-            {t('filters.filterButton')}
+            <span className="hidden lg:inline">{t('filters.filterButton')}</span>
           </Button>
           {filtersOpen && (
             <>
@@ -513,9 +514,14 @@ function DataTableToolbar({
         <div className="flex flex-nowrap items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 gap-1.5 px-2 text-xs">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 gap-1.5 px-2 text-[11px]"
+                aria-label={t('actions.viewOptions')}
+              >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
-                {t('actions.viewOptions')}
+                <span className="hidden lg:inline">{t('actions.viewOptions')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -537,9 +543,11 @@ function DataTableToolbar({
           </DropdownMenu>
           <Link
             href="/administration/tests/create"
-            className="ui-button ui-button-sm px-3 py-1.5 text-xs"
+            className="ui-button ui-button-sm h-6 px-2 text-[11px]"
+            aria-label={t('actions.newTest')}
           >
-            {t('actions.newTest')}
+            <span className="hidden lg:inline">{t('actions.newTest')}</span>
+            <span className="lg:hidden">+</span>
           </Link>
         </div>
       </div>
