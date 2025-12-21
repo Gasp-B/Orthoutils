@@ -264,6 +264,7 @@
         "slug": "Code",
         "name": "Test",
         "status": "Statut",
+        "domains": "Domaines",
         "targetAudience": "Audience",
         "isStandardized": "Standardisation",
         "themes": "Thèmes",
@@ -285,6 +286,9 @@
         "no": "Non standardisé"
       },
       "themes": {
+        "more": "+{count}"
+      },
+      "domains": {
         "more": "+{count}"
       },
       "emptyDescription": "Description manquante",

@@ -42,6 +42,7 @@ type AdminTestRow = {
   status: TestDto['status'];
   targetAudience: TestDto['targetAudience'];
   isStandardized: boolean;
+  domains: string[];
   themes: string[];
   updatedAt: string;
 };
@@ -89,6 +90,7 @@ export default function TestsTable({ tests }: TestsTableProps) {
         status: test.status,
         targetAudience: test.targetAudience,
         isStandardized: test.isStandardized,
+        domains: test.domains,
         themes: test.themes,
         updatedAt: test.updatedAt,
       })),
@@ -128,7 +130,9 @@ export default function TestsTable({ tests }: TestsTableProps) {
     },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    isStandardized: false,
+  });
 
   const columns = useMemo<ColumnDef<AdminTestRow>[]>(
     () => [
@@ -163,6 +167,48 @@ export default function TestsTable({ tests }: TestsTableProps) {
         filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
       },
       {
+        accessorKey: 'domains',
+        header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.domains')} />,
+        cell: ({ row }) => {
+          const domains = row.getValue('domains') as string[];
+          const visibleDomains = domains.slice(0, 2);
+          const remaining = domains.length - visibleDomains.length;
+          return (
+            <div className={styles.themeCell}>
+              {visibleDomains.map((domain) => (
+                <Badge key={domain} variant="outline">
+                  {domain}
+                </Badge>
+              ))}
+              {remaining > 0 && (
+                <span className={styles.mutedText}>{t('domains.more', { count: remaining })}</span>
+              )}
+            </div>
+          );
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'themes',
+        header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.themes')} />,
+        cell: ({ row }) => {
+          const themes = row.getValue('themes') as string[];
+          const visibleThemes = themes.slice(0, 2);
+          const remaining = themes.length - visibleThemes.length;
+          return (
+            <div className={styles.themeCell}>
+              {visibleThemes.map((theme) => (
+                <Badge key={theme} variant="outline">
+                  {theme}
+                </Badge>
+              ))}
+              {remaining > 0 && <span className={styles.mutedText}>{t('themes.more', { count: remaining })}</span>}
+            </div>
+          );
+        },
+        enableSorting: false,
+      },
+      {
         accessorKey: 'targetAudience',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title={t('columns.targetAudience')} />
@@ -190,26 +236,6 @@ export default function TestsTable({ tests }: TestsTableProps) {
           const standardizedValue = row.getValue(id) ? 'standardized' : 'non_standardized';
           return value.includes(standardizedValue);
         },
-      },
-      {
-        accessorKey: 'themes',
-        header: ({ column }) => <DataTableColumnHeader column={column} title={t('columns.themes')} />,
-        cell: ({ row }) => {
-          const themes = row.getValue('themes') as string[];
-          const visibleThemes = themes.slice(0, 2);
-          const remaining = themes.length - visibleThemes.length;
-          return (
-            <div className={styles.themeCell}>
-              {visibleThemes.map((theme) => (
-                <Badge key={theme} variant="outline">
-                  {theme}
-                </Badge>
-              ))}
-              {remaining > 0 && <span className={styles.mutedText}>{t('themes.more', { count: remaining })}</span>}
-            </div>
-          );
-        },
-        enableSorting: false,
       },
       {
         accessorKey: 'updatedAt',
