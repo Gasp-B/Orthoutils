@@ -233,6 +233,77 @@
       }
     }
   },
+  "AdminTests": {
+    "metadata": {
+      "title": "Gérer les tests | Othoutils",
+      "description": "Consultez, filtrez et pilotez l'ensemble des tests du catalogue."
+    },
+    "sectionLabel": "Administration",
+    "pageTitle": "Gestion des tests",
+    "pageLead": "Passez en revue le catalogue, filtrez par statut et audience, et gardez des tests alignés rapidement.",
+    "nav": {
+      "cardEyebrow": "Tests",
+      "cardTitle": "Gestion des tests"
+    },
+    "grid": {
+      "columnHeader": {
+        "sortAsc": "Trier par ordre croissant",
+        "sortDesc": "Trier par ordre décroissant",
+        "hide": "Masquer la colonne"
+      },
+      "filters": {
+        "searchPlaceholder": "Filtrer les tests...",
+        "statusLabel": "Statut",
+        "audienceLabel": "Audience",
+        "standardizationLabel": "Standardisation",
+        "reset": "Réinitialiser",
+        "view": "Vue",
+        "pageSize": "Lignes"
+      },
+      "columns": {
+        "slug": "Code",
+        "name": "Test",
+        "status": "Statut",
+        "targetAudience": "Audience",
+        "isStandardized": "Standardisation",
+        "themes": "Thèmes",
+        "updatedAt": "Mise à jour",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Brouillon",
+        "in_review": "En revue",
+        "published": "Publié",
+        "archived": "Archivé"
+      },
+      "audience": {
+        "child": "Enfant",
+        "adult": "Adulte"
+      },
+      "standardized": {
+        "yes": "Standardisé",
+        "no": "Non standardisé"
+      },
+      "themes": {
+        "more": "+{count}"
+      },
+      "emptyDescription": "Description manquante",
+      "table": {
+        "empty": "Aucun test ne correspond à vos filtres."
+      },
+      "pagination": {
+        "summary": "Page {page} sur {total}",
+        "previous": "Précédent",
+        "next": "Suivant"
+      },
+      "actions": {
+        "label": "Ouvrir les actions",
+        "copyId": "Copier l'identifiant",
+        "copySlug": "Copier le slug",
+        "quickEdit": "Modification rapide (bientôt disponible)"
+      }
+    }
+  },
   "Footer": {
     "note": "Fait avec soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour la collaboration."
   },

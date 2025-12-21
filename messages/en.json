@@ -233,6 +233,77 @@
       }
     }
   },
+  "AdminTests": {
+    "metadata": {
+      "title": "Manage tests | Othoutils",
+      "description": "Review, filter, and manage all tests in the catalogue."
+    },
+    "sectionLabel": "Administration",
+    "pageTitle": "Manage tests",
+    "pageLead": "Review the full catalogue, filter by status and audience, and keep tests aligned quickly.",
+    "nav": {
+      "cardEyebrow": "Tests",
+      "cardTitle": "Test management"
+    },
+    "grid": {
+      "columnHeader": {
+        "sortAsc": "Sort ascending",
+        "sortDesc": "Sort descending",
+        "hide": "Hide column"
+      },
+      "filters": {
+        "searchPlaceholder": "Filter tests...",
+        "statusLabel": "Status",
+        "audienceLabel": "Audience",
+        "standardizationLabel": "Standardization",
+        "reset": "Reset",
+        "view": "View",
+        "pageSize": "Rows"
+      },
+      "columns": {
+        "slug": "Code",
+        "name": "Test",
+        "status": "Status",
+        "targetAudience": "Audience",
+        "isStandardized": "Standardization",
+        "themes": "Themes",
+        "updatedAt": "Updated",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Draft",
+        "in_review": "In review",
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "audience": {
+        "child": "Child",
+        "adult": "Adult"
+      },
+      "standardized": {
+        "yes": "Standardized",
+        "no": "Non-standardized"
+      },
+      "themes": {
+        "more": "{count} more"
+      },
+      "emptyDescription": "No description",
+      "table": {
+        "empty": "No tests match your filters."
+      },
+      "pagination": {
+        "summary": "Page {page} of {total}",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "actions": {
+        "label": "Open actions",
+        "copyId": "Copy ID",
+        "copySlug": "Copy slug",
+        "quickEdit": "Quick edit (coming soon)"
+      }
+    }
+  },
   "Footer": {
     "note": "Made with care for speech-language pathology teams. Mobile-first, adaptive, and built for collaboration."
   },
