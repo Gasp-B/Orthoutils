@@ -93,11 +93,25 @@
   font-size: 0.9rem;
 }
 
+.descriptionText {
+  color: #64748b;
+  font-size: 0.9rem;
+  max-width: 360px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .themeCell {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: center;
+}
+
+.pill {
+  font-size: 0.78rem;
 }
 
 .actionButton {
