@@ -2,8 +2,10 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { defaultLocale, type Locale } from '@/i18n/routing';
 import { getDb } from '@/lib/db/client';
 import {
+  clinicalProfileTranslations,
   domainsTranslations,
   tagsTranslations,
+  testClinicalProfiles,
   testDomains,
   testTags,
   testThemes,
@@ -95,6 +97,34 @@ async function resolveThemeIdsByLabels(db: DbExecutor, labels: string[], locale:
   });
 }
 
+async function resolveClinicalProfileIdsByLabels(db: DbExecutor, labels: string[], locale: Locale) {
+  const normalized = normalizeLabels(labels);
+  if (normalized.length === 0) return [] as string[];
+
+  const rows = await db
+    .select({
+      id: clinicalProfileTranslations.clinicalProfileId,
+      label: clinicalProfileTranslations.label,
+      locale: clinicalProfileTranslations.locale,
+    })
+    .from(clinicalProfileTranslations)
+    .where(
+      and(
+        inArray(clinicalProfileTranslations.label, normalized),
+        inArray(clinicalProfileTranslations.locale, [locale, defaultLocale]),
+      ),
+    );
+
+  return normalized.map((label) => {
+    const preferred = rows.find((row) => row.label === label && row.locale === locale);
+    const fallback = preferred ?? rows.find((row) => row.label === label);
+    if (!fallback) {
+      throw new Error('Certains profils cliniques sélectionnés sont introuvables.');
+    }
+    return fallback.id;
+  });
+}
+
 export async function updateTestAdminFields(input: unknown) {
   const payload = testAdminUpdateSchema.parse(input);
   const locale = payload.locale ?? defaultLocale;
@@ -106,6 +136,7 @@ export async function updateTestAdminFields(input: unknown) {
       payload.domains !== undefined ||
       payload.tags !== undefined ||
       payload.themes !== undefined ||
+      payload.clinicalProfiles !== undefined ||
       payload.name !== undefined ||
       payload.shortDescription !== undefined ||
       payload.objective !== undefined ||
@@ -178,15 +209,15 @@ export async function updateTestAdminFields(input: unknown) {
           shortDescription,
           objective,
         })
-      .onConflictDoUpdate({
-        target: [testsTranslations.testId, testsTranslations.locale],
-        set: {
-          name,
-          slug,
-          shortDescription,
-          objective,
-        },
-      });
+        .onConflictDoUpdate({
+          target: [testsTranslations.testId, testsTranslations.locale],
+          set: {
+            name,
+            slug,
+            shortDescription,
+            objective,
+          },
+        });
     }
 
     if (payload.domains !== undefined) {
@@ -210,6 +241,16 @@ export async function updateTestAdminFields(input: unknown) {
       await tx.delete(testThemes).where(eq(testThemes.testId, payload.id));
       if (themeIds.length) {
         await tx.insert(testThemes).values(themeIds.map((id) => ({ testId: payload.id, themeId: id })));
+      }
+    }
+
+    if (payload.clinicalProfiles !== undefined) {
+      const profileIds = await resolveClinicalProfileIdsByLabels(tx, payload.clinicalProfiles, locale);
+      await tx.delete(testClinicalProfiles).where(eq(testClinicalProfiles.testId, payload.id));
+      if (profileIds.length) {
+        await tx
+          .insert(testClinicalProfiles)
+          .values(profileIds.map((id) => ({ testId: payload.id, clinicalProfileId: id })));
       }
     }
   });
@@ -261,6 +302,7 @@ export async function createTestAdminFields(input: unknown) {
     const domainIds = await resolveDomainIdsByLabels(tx, payload.domains ?? [], locale);
     const tagIds = await resolveTagIdsByLabels(tx, payload.tags ?? [], locale);
     const themeIds = await resolveThemeIdsByLabels(tx, payload.themes ?? [], locale);
+    const clinicalProfileIds = await resolveClinicalProfileIdsByLabels(tx, payload.clinicalProfiles ?? [], locale);
 
     if (domainIds.length) {
       await tx.insert(testDomains).values(domainIds.map((id) => ({ testId: createdTest.id, domainId: id })));
@@ -270,6 +312,11 @@ export async function createTestAdminFields(input: unknown) {
     }
     if (themeIds.length) {
       await tx.insert(testThemes).values(themeIds.map((id) => ({ testId: createdTest.id, themeId: id })));
+    }
+    if (clinicalProfileIds.length) {
+      await tx
+        .insert(testClinicalProfiles)
+        .values(clinicalProfileIds.map((id) => ({ testId: createdTest.id, clinicalProfileId: id })));
     }
 
     return createdTest.id;
