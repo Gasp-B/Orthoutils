@@ -280,7 +280,10 @@ export default function TestsTable({ tests }: TestsTableProps) {
                   <DropdownMenuRadioGroup
                     value={status}
                     onValueChange={(value) =>
-                      updateTest({ id: row.original.id, field: 'status' }, { status: value })
+                      updateTest(
+                        { id: row.original.id, field: 'status' },
+                        { status: value as AdminTestRow['status'] },
+                      )
                     }
                   >
                     {statusOptions.map((option) => (
