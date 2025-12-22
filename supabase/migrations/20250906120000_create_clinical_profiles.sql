@@ -57,9 +57,9 @@ SELECT 1;
 INSERT INTO public.test_clinical_profiles (test_id, clinical_profile_id)
 SELECT DISTINCT tt.test_id, cpt.clinical_profile_id
 FROM public.tests_translations tt
-JOIN LATERAL unnest(tt.population_characteristics) AS label ON true
+JOIN LATERAL unnest(tt.population_characteristics) AS raw_label ON true
 JOIN public.clinical_profile_translations cpt
-  ON cpt.label = trim(label) AND cpt.locale = tt.locale
+  ON cpt.label = trim(raw_label) AND cpt.locale = tt.locale
 ON CONFLICT DO NOTHING;
 
 ALTER TABLE IF EXISTS public.tests_translations
