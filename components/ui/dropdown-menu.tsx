@@ -61,10 +61,26 @@ export const DropdownMenuItem = forwardRef<
   );
 });
 
+type DropdownMenuCheckboxItemProps = React.ComponentPropsWithoutRef<
+  typeof DropdownMenuPrimitive.CheckboxItem
+> & {
+  closeOnSelect?: boolean;
+};
+
 export const DropdownMenuCheckboxItem = forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(function DropdownMenuCheckboxItem({ className, children, checked, ...props }, ref) {
+  DropdownMenuCheckboxItemProps
+>(function DropdownMenuCheckboxItem(
+  { className, children, checked, closeOnSelect = false, onSelect, ...props },
+  ref,
+) {
+  const handleSelect = (event: Event) => {
+    onSelect?.(event);
+    if (!closeOnSelect) {
+      event.preventDefault();
+    }
+  };
+
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
@@ -73,6 +89,7 @@ export const DropdownMenuCheckboxItem = forwardRef<
         'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-slate-100 focus:text-slate-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
+      onSelect={handleSelect}
       {...props}
     >
       <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
