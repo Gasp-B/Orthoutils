@@ -22,11 +22,12 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Link } from '@/i18n/navigation';
 import type { TaxonomyResponse, TestDto } from '@/lib/validation/tests';
@@ -93,6 +94,7 @@ function DataTableViewOptions({ table }: { table: ReturnType<typeof useReactTabl
               key={column.id}
               checked={column.getIsVisible()}
               onCheckedChange={(value) => column.toggleVisibility(Boolean(value))}
+              onSelect={(event) => event.preventDefault()}
             >
               {t(`columns.${column.id}`)}
             </DropdownMenuCheckboxItem>
@@ -259,25 +261,36 @@ export default function TestsTable({ tests }: TestsTableProps) {
 
           if (isEditing) {
             return (
-              <Select
-                className={styles.inlineSelect}
-                value={status}
-                onChange={(event) =>
-                  updateTest(
-                    { id: row.original.id, field: 'status' },
-                    { status: event.target.value as AdminTestRow['status'] },
-                  )
-                }
-                onBlur={() => setInlineEdit(null)}
-                aria-label={t('columns.status')}
-                disabled={isSaving}
+              <DropdownMenu
+                open
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setInlineEdit(null);
+                  }
+                }}
               >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className={styles.inlineEditTrigger} disabled={isSaving}>
+                    <Badge variant={variant} className={styles.pill}>
+                      {t(`status.${status}`)}
+                    </Badge>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={styles.inlineEditMenu}>
+                  <DropdownMenuRadioGroup
+                    value={status}
+                    onValueChange={(value) =>
+                      updateTest({ id: row.original.id, field: 'status' }, { status: value })
+                    }
+                  >
+                    {statusOptions.map((option) => (
+                      <DropdownMenuRadioItem key={option.value} value={option.value}>
+                        {option.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             );
           }
 
@@ -349,6 +362,7 @@ export default function TestsTable({ tests }: TestsTableProps) {
                             false,
                           );
                         }}
+                        onSelect={(event) => event.preventDefault()}
                       >
                         {option.label}
                       </DropdownMenuCheckboxItem>
@@ -431,6 +445,7 @@ export default function TestsTable({ tests }: TestsTableProps) {
                             false,
                           );
                         }}
+                        onSelect={(event) => event.preventDefault()}
                       >
                         {option.label}
                       </DropdownMenuCheckboxItem>
@@ -511,6 +526,7 @@ export default function TestsTable({ tests }: TestsTableProps) {
                             false,
                           );
                         }}
+                        onSelect={(event) => event.preventDefault()}
                       >
                         {option.label}
                       </DropdownMenuCheckboxItem>
@@ -548,25 +564,39 @@ export default function TestsTable({ tests }: TestsTableProps) {
 
           if (isEditing) {
             return (
-              <Select
-                className={styles.inlineSelect}
-                value={audience}
-                onChange={(event) =>
-                  updateTest(
-                    { id: row.original.id, field: 'targetAudience' },
-                    { targetAudience: event.target.value as AdminTestRow['targetAudience'] },
-                  )
-                }
-                onBlur={() => setInlineEdit(null)}
-                aria-label={t('columns.targetAudience')}
-                disabled={isSaving}
+              <DropdownMenu
+                open
+                onOpenChange={(open) => {
+                  if (!open) {
+                    setInlineEdit(null);
+                  }
+                }}
               >
-                {audienceOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className={styles.inlineEditTrigger} disabled={isSaving}>
+                    <Badge variant="secondary" className={styles.pill}>
+                      {t(`audience.${audience}`)}
+                    </Badge>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={styles.inlineEditMenu}>
+                  <DropdownMenuRadioGroup
+                    value={audience}
+                    onValueChange={(value) =>
+                      updateTest(
+                        { id: row.original.id, field: 'targetAudience' },
+                        { targetAudience: value as AdminTestRow['targetAudience'] },
+                      )
+                    }
+                  >
+                    {audienceOptions.map((option) => (
+                      <DropdownMenuRadioItem key={option.value} value={option.value}>
+                        {option.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             );
           }
 

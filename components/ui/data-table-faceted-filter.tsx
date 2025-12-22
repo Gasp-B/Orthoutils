@@ -71,6 +71,7 @@ export function DataTableFacetedFilter<TData, TValue>({
               key={option.value}
               checked={isSelected}
               onCheckedChange={() => toggleValue(option.value)}
+              onSelect={(event) => event.preventDefault()}
               className="gap-2"
             >
               <span className="flex h-4 w-4 items-center justify-center">
