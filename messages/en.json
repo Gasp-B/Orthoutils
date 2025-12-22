@@ -329,9 +329,9 @@
       "form": {
         "nameLabel": "Test name",
         "namePlaceholder": "Enter the test name",
-        "ageMinLabel": "Minimum age (months)",
+        "ageMinLabel": "Minimum age",
         "ageMinPlaceholder": "e.g. 36",
-        "ageMaxLabel": "Maximum age (months)",
+        "ageMaxLabel": "Maximum age",
         "ageMaxPlaceholder": "e.g. 144",
         "ageMinAdultLabel": "Minimum age (years)",
         "ageMinAdultPlaceholder": "e.g. 18",

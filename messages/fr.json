@@ -329,9 +329,9 @@
       "form": {
         "nameLabel": "Nom du test",
         "namePlaceholder": "Saisissez le nom du test",
-        "ageMinLabel": "Âge minimum (mois)",
+        "ageMinLabel": "Âge minimum",
         "ageMinPlaceholder": "ex : 36",
-        "ageMaxLabel": "Âge maximum (mois)",
+        "ageMaxLabel": "Âge maximum",
         "ageMaxPlaceholder": "ex : 144",
         "ageMinAdultLabel": "Âge minimum (ans)",
         "ageMinAdultPlaceholder": "ex : 18",
