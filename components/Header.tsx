@@ -166,6 +166,7 @@ function Header() {
               </button>
               <div className="ph-header__submenu" aria-label={t('adminMenuLabel')}>
                 <Link className="ph-header__submenu-link" href="/administration">{t('dashboard')}</Link>
+                <Link className="ph-header__submenu-link" href="/administration/tests">{t('testsManagement')}</Link>
                 <Link className="ph-header__submenu-link" href="/administration/TaxonomyManagement">{t('taxonomy')}</Link>
                 <Link className="ph-header__submenu-link" href="/administration/resources">{t('resources')}</Link>
               </div>

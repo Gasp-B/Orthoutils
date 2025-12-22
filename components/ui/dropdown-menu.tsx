@@ -23,7 +23,7 @@ export const DropdownMenuContent = forwardRef<
         ref={ref}
         sideOffset={sideOffset}
         className={cn(
-          'z-50 min-w-[8rem] rounded-md border border-white/10 bg-slate-950 p-1 text-slate-100 shadow-md shadow-black/40',
+          'ui-dropdown z-50 min-w-[8rem]',
           className,
         )}
         {...props}
@@ -53,7 +53,7 @@ export const DropdownMenuItem = forwardRef<
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
-        'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-white/10 focus:text-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-default select-none items-center rounded-md px-3 py-2 text-sm outline-none transition-colors focus:bg-slate-100 focus:text-slate-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}
@@ -61,18 +61,35 @@ export const DropdownMenuItem = forwardRef<
   );
 });
 
+type DropdownMenuCheckboxItemProps = React.ComponentPropsWithoutRef<
+  typeof DropdownMenuPrimitive.CheckboxItem
+> & {
+  closeOnSelect?: boolean;
+};
+
 export const DropdownMenuCheckboxItem = forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(function DropdownMenuCheckboxItem({ className, children, checked, ...props }, ref) {
+  DropdownMenuCheckboxItemProps
+>(function DropdownMenuCheckboxItem(
+  { className, children, checked, closeOnSelect = false, onSelect, ...props },
+  ref,
+) {
+  const handleSelect = (event: Event) => {
+    onSelect?.(event);
+    if (!closeOnSelect) {
+      event.preventDefault();
+    }
+  };
+
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       checked={checked}
       className={cn(
-        'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-white/10 focus:text-slate-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-default select-none items-center rounded-md py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:bg-slate-100 focus:text-slate-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
+      onSelect={handleSelect}
       {...props}
     >
       <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
@@ -85,6 +102,29 @@ export const DropdownMenuCheckboxItem = forwardRef<
   );
 });
 
+export const DropdownMenuRadioItem = forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
+>(function DropdownMenuRadioItem({ className, children, ...props }, ref) {
+  return (
+    <DropdownMenuPrimitive.RadioItem
+      ref={ref}
+      className={cn(
+        'relative flex cursor-default select-none items-center rounded-md py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:bg-slate-100 focus:text-slate-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        className,
+      )}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <Check className="h-4 w-4" />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.RadioItem>
+  );
+});
+
 export const DropdownMenuSeparator = forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
@@ -92,7 +132,7 @@ export const DropdownMenuSeparator = forwardRef<
   return (
     <DropdownMenuPrimitive.Separator
       ref={ref}
-      className={cn('my-1 h-px bg-white/10', className)}
+      className={cn('my-1 h-px bg-slate-200', className)}
       {...props}
     />
   );
