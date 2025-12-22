@@ -26,7 +26,6 @@ type TaxonomyEntry =
   | TaxonomyResponse['domains'][number]
   | TaxonomyResponse['tags'][number]
   | TaxonomyResponse['resourceTypes'][number];
-type PopulationEntry = PopulationCharacteristicsResponse['populations'][number];
 
 type FormState = {
   label: string;
@@ -131,14 +130,17 @@ export default function TaxonomyManagementPanel() {
 
   const availableDomains = taxonomyQuery.data?.domains ?? [];
   const populationItems = populationQuery.data?.populations ?? [];
+  const totalPopulationCharacteristics = useMemo(() => (
+    populationItems.reduce((total, population) => total + population.characteristics.length, 0)
+  ), [populationItems]);
 
   const typeCounts = useMemo(() => ({
     themes: taxonomyQuery.data?.themes.length ?? 0,
     domains: taxonomyQuery.data?.domains.length ?? 0,
     tags: taxonomyQuery.data?.tags.length ?? 0,
     resourceTypes: taxonomyQuery.data?.resourceTypes.length ?? 0,
-    populations: populationItems.length,
-  }), [taxonomyQuery.data, populationItems.length]);
+    populations: totalPopulationCharacteristics,
+  }), [taxonomyQuery.data, totalPopulationCharacteristics]);
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -151,17 +153,14 @@ export default function TaxonomyManagementPanel() {
     });
   }, [items, searchTerm]);
 
-  const filteredPopulations = useMemo(() => {
+  const selectedPopulation = populationItems.find((population) => population.id === selectedPopulationId);
+  const filteredCharacteristics = useMemo(() => {
+    if (!selectedPopulation) return [];
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return populationItems;
-    return populationItems.filter((population) => {
-      const labelMatch = population.label.toLowerCase().includes(term);
-      const characteristicMatch = population.characteristics.some((value) =>
-        value.toLowerCase().includes(term),
-      );
-      return labelMatch || characteristicMatch;
-    });
-  }, [populationItems, searchTerm]);
+    const list = selectedPopulation.characteristics;
+    if (!term) return list;
+    return list.filter((value) => value.toLowerCase().includes(term));
+  }, [selectedPopulation, searchTerm]);
 
   // Logique de regroupement des thèmes par domaines
   const themesGroups = useMemo(() => {
@@ -396,29 +395,12 @@ export default function TaxonomyManagementPanel() {
     </div>
   );
 
-  const renderPopulationItem = (population: PopulationEntry) => (
-    <div
-      key={population.id}
-      className={`${styles.listItem} ${selectedPopulationId === population.id ? styles.listItemActive : ''}`}
-    >
-      <div className={styles.itemMeta}>
-        <p className={styles.itemLabel}>{population.label}</p>
-        <p className={styles.itemDescription}>
-          {t('populationForm.labels.characteristicsCount', { count: population.characteristics.length })}
-        </p>
-      </div>
-      <div className={styles.actions}>
-        <button
-          className={styles.actionButton}
-          onClick={() => handlePopulationSelect(population.id)}
-        >
-          {t('actions.edit')}
-        </button>
-      </div>
-    </div>
-  );
-
-  const selectedPopulation = populationItems.find((population) => population.id === selectedPopulationId);
+  useEffect(() => {
+    if (activeType !== 'populations') return;
+    if (selectedPopulationId) return;
+    if (populationItems.length === 0) return;
+    setSelectedPopulationId(populationItems[0]?.id ?? null);
+  }, [activeType, populationItems, selectedPopulationId]);
 
   return (
     <section className={styles.panel}>
@@ -462,10 +444,35 @@ export default function TaxonomyManagementPanel() {
             <div className={styles.list}>
               {activeType === 'populations' ? (
                 <>
-                  {filteredPopulations.length === 0 && (
+                  {!selectedPopulation && (
+                    <p className={styles.emptyListMessage}>
+                      {t('populationForm.messages.selectPopulation')}
+                    </p>
+                  )}
+                  {selectedPopulation && filteredCharacteristics.length === 0 && (
                     <p className={styles.emptyListMessage}>{t('list.noResults')}</p>
                   )}
-                  {filteredPopulations.map((population) => renderPopulationItem(population))}
+                  {selectedPopulation && filteredCharacteristics.map((value) => (
+                    <div key={value} className={styles.characteristicItem}>
+                      <span className={styles.characteristicLabel}>{value}</span>
+                      <div className={styles.actions}>
+                        <button
+                          type="button"
+                          className={styles.actionButton}
+                          onClick={() => handleCharacteristicEdit(value)}
+                        >
+                          {t('actions.edit')}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.deleteButton}
+                          onClick={() => handleCharacteristicDelete(value)}
+                        >
+                          {t('actions.delete')}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </>
               ) : activeType === 'themes' ? (
                 <>
@@ -554,47 +561,6 @@ export default function TaxonomyManagementPanel() {
                     >
                       {t('populationForm.actions.reset')}
                     </button>
-                  </div>
-
-                  <div className={styles.characteristicsSection}>
-                    <p className={styles.characteristicsTitle}>
-                      {t('populationForm.labels.characteristicsTitle')}
-                    </p>
-                    {!selectedPopulation && (
-                      <p className={styles.emptyListMessage}>
-                        {t('populationForm.messages.selectPopulation')}
-                      </p>
-                    )}
-                    {selectedPopulation && selectedPopulation.characteristics.length === 0 && (
-                      <p className={styles.emptyListMessage}>
-                        {t('populationForm.messages.noCharacteristics')}
-                      </p>
-                    )}
-                    {selectedPopulation && selectedPopulation.characteristics.length > 0 && (
-                      <div className={styles.characteristicsList}>
-                        {selectedPopulation.characteristics.map((value) => (
-                          <div key={value} className={styles.characteristicItem}>
-                            <span className={styles.characteristicLabel}>{value}</span>
-                            <div className={styles.actions}>
-                              <button
-                                type="button"
-                                className={styles.actionButton}
-                                onClick={() => handleCharacteristicEdit(value)}
-                              >
-                                {t('actions.edit')}
-                              </button>
-                              <button
-                                type="button"
-                                className={styles.deleteButton}
-                                onClick={() => handleCharacteristicDelete(value)}
-                              >
-                                {t('actions.delete')}
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </>
               ) : (

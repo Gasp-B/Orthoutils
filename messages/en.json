@@ -698,13 +698,13 @@
       "domains": "Domains",
       "tags": "Tags",
       "resourceTypes": "Resource types",
-      "populations": "Populations",
+      "populations": "Population characteristics",
       "hints": {
         "themes": "Description and synonyms available",
         "domains": "Used to structure the catalog and searchable via synonyms",
         "tags": "Localized synonyms plus optional color",
         "resourceTypes": "Shared list for resource creation",
-        "populations": "Manage population characteristics per locale"
+        "populations": "Independent characteristics used to qualify tests"
       }
     },
     "descriptions": {
@@ -712,7 +712,7 @@
       "domains": "Domains help structure the catalog hierarchy, group tools, and can store synonyms to speed up discovery.",
       "tags": "Tags add lightweight labels. Add localized synonyms and an optional color to highlight them.",
       "resourceTypes": "Resource types keep resource sheets consistent and are reused in the admin form.",
-      "populations": "Maintain population characteristics to refine population targeting per locale."
+      "populations": "Define the characteristics you can assign to tests, independently of the target audience."
     },
     "aria": {
       "panel": "Taxonomy management",
