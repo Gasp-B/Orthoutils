@@ -82,7 +82,7 @@ update_tests AS (
   UPDATE public.tests t
   SET population_id = population_seed.id
   FROM population_seed
-  WHERE t.target_audience = population_seed.audience
+  WHERE t.target_audience::text = population_seed.audience
 ),
 delete_old AS (
   DELETE FROM public.population p
