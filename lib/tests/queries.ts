@@ -3,11 +3,14 @@ import { alias } from 'drizzle-orm/pg-core';
 import { defaultLocale, type Locale } from '@/i18n/routing';
 import { getDb } from '@/lib/db/client';
 import {
+  clinicalProfileTranslations,
+  clinicalProfiles,
   domains,
   domainsTranslations,
   populationTranslations,
   tags,
   tagsTranslations,
+  testClinicalProfiles,
   testDomains,
   testTags,
   tests,
@@ -39,6 +42,8 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
   const fallbackTheme = alias(themeTranslations, 'fallback_theme');
   const localizedTag = alias(tagsTranslations, 'localized_tag');
   const fallbackTag = alias(tagsTranslations, 'fallback_tag');
+  const localizedClinicalProfile = alias(clinicalProfileTranslations, 'localized_clinical_profile');
+  const fallbackClinicalProfile = alias(clinicalProfileTranslations, 'fallback_clinical_profile');
   const localizedPopulation = alias(populationTranslations, 'localized_population');
   const fallbackPopulation = alias(populationTranslations, 'fallback_population');
 
@@ -54,6 +59,7 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
   const domainLabelExpression = sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`;
   const themeLabelExpression = sql<string>`COALESCE(${localizedTheme.label}, ${fallbackTheme.label}, '')`;
   const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
+  const clinicalProfileLabelExpression = sql<string>`COALESCE(${localizedClinicalProfile.label}, ${fallbackClinicalProfile.label}, '')`;
 
   const rows = await getDb()
     .select({
@@ -80,6 +86,7 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domainLabelExpression}) FILTER (WHERE ${domainLabelExpression} IS NOT NULL), '{}')`,
       themes: sql<string[]>`COALESCE(array_agg(DISTINCT ${themeLabelExpression}) FILTER (WHERE ${themeLabelExpression} IS NOT NULL), '{}')`,
       tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tagLabelExpression}) FILTER (WHERE ${tagLabelExpression} IS NOT NULL), '{}')`,
+      clinicalProfiles: sql<string[]>`COALESCE(array_agg(DISTINCT ${clinicalProfileLabelExpression}) FILTER (WHERE ${clinicalProfileLabelExpression} IS NOT NULL), '{}')`,
     })
     .from(tests)
     .leftJoin(localizedTest, and(eq(localizedTest.testId, tests.id), eq(localizedTest.locale, locale)))
@@ -113,6 +120,19 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
     .leftJoin(tags, eq(testTags.tagId, tags.id))
     .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
     .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
+    .leftJoin(testClinicalProfiles, eq(tests.id, testClinicalProfiles.testId))
+    .leftJoin(clinicalProfiles, eq(testClinicalProfiles.clinicalProfileId, clinicalProfiles.id))
+    .leftJoin(
+      localizedClinicalProfile,
+      and(eq(localizedClinicalProfile.clinicalProfileId, clinicalProfiles.id), eq(localizedClinicalProfile.locale, locale)),
+    )
+    .leftJoin(
+      fallbackClinicalProfile,
+      and(
+        eq(fallbackClinicalProfile.clinicalProfileId, clinicalProfiles.id),
+        eq(fallbackClinicalProfile.locale, defaultLocale),
+      ),
+    )
     .groupBy(
       tests.id,
       tests.targetAudience,
@@ -140,6 +160,7 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
       themes: row.themes ?? [],
       tags: row.tags ?? [],
       bibliography: row.bibliography ?? [],
+      clinicalProfiles: row.clinicalProfiles ?? [],
     })),
   });
 
@@ -158,6 +179,8 @@ export async function getTestWithMetadata(
   const fallbackTheme = alias(themeTranslations, 'fallback_theme');
   const localizedTag = alias(tagsTranslations, 'localized_tag');
   const fallbackTag = alias(tagsTranslations, 'fallback_tag');
+  const localizedClinicalProfile = alias(clinicalProfileTranslations, 'localized_clinical_profile');
+  const fallbackClinicalProfile = alias(clinicalProfileTranslations, 'fallback_clinical_profile');
   const localizedPopulation = alias(populationTranslations, 'localized_population');
   const fallbackPopulation = alias(populationTranslations, 'fallback_population');
 
@@ -173,6 +196,7 @@ export async function getTestWithMetadata(
   const domainLabelExpression = sql<string>`COALESCE(${localizedDomain.label}, ${fallbackDomain.label}, '')`;
   const themeLabelExpression = sql<string>`COALESCE(${localizedTheme.label}, ${fallbackTheme.label}, '')`;
   const tagLabelExpression = sql<string>`COALESCE(${localizedTag.label}, ${fallbackTag.label}, '')`;
+  const clinicalProfileLabelExpression = sql<string>`COALESCE(${localizedClinicalProfile.label}, ${fallbackClinicalProfile.label}, '')`;
 
   const rows = await getDb()
     .select({
@@ -199,6 +223,7 @@ export async function getTestWithMetadata(
       domains: sql<string[]>`COALESCE(array_agg(DISTINCT ${domainLabelExpression}) FILTER (WHERE ${domainLabelExpression} IS NOT NULL), '{}')`,
       themes: sql<string[]>`COALESCE(array_agg(DISTINCT ${themeLabelExpression}) FILTER (WHERE ${themeLabelExpression} IS NOT NULL), '{}')`,
       tags: sql<string[]>`COALESCE(array_agg(DISTINCT ${tagLabelExpression}) FILTER (WHERE ${tagLabelExpression} IS NOT NULL), '{}')`,
+      clinicalProfiles: sql<string[]>`COALESCE(array_agg(DISTINCT ${clinicalProfileLabelExpression}) FILTER (WHERE ${clinicalProfileLabelExpression} IS NOT NULL), '{}')`,
     })
     .from(tests)
     .leftJoin(localizedTest, and(eq(localizedTest.testId, tests.id), eq(localizedTest.locale, locale)))
@@ -232,6 +257,19 @@ export async function getTestWithMetadata(
     .leftJoin(tags, eq(testTags.tagId, tags.id))
     .leftJoin(localizedTag, and(eq(localizedTag.tagId, tags.id), eq(localizedTag.locale, locale)))
     .leftJoin(fallbackTag, and(eq(fallbackTag.tagId, tags.id), eq(fallbackTag.locale, defaultLocale)))
+    .leftJoin(testClinicalProfiles, eq(tests.id, testClinicalProfiles.testId))
+    .leftJoin(clinicalProfiles, eq(testClinicalProfiles.clinicalProfileId, clinicalProfiles.id))
+    .leftJoin(
+      localizedClinicalProfile,
+      and(eq(localizedClinicalProfile.clinicalProfileId, clinicalProfiles.id), eq(localizedClinicalProfile.locale, locale)),
+    )
+    .leftJoin(
+      fallbackClinicalProfile,
+      and(
+        eq(fallbackClinicalProfile.clinicalProfileId, clinicalProfiles.id),
+        eq(fallbackClinicalProfile.locale, defaultLocale),
+      ),
+    )
     .where(eq(tests.id, id))
     .groupBy(
       tests.id,
@@ -260,6 +298,7 @@ export async function getTestWithMetadata(
       themes: row.themes ?? [],
       tags: row.tags ?? [],
       bibliography: row.bibliography ?? [],
+      clinicalProfiles: row.clinicalProfiles ?? [],
     })),
   });
 
