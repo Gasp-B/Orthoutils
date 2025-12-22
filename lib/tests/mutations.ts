@@ -110,7 +110,8 @@ export async function updateTestAdminFields(input: unknown) {
       payload.shortDescription !== undefined ||
       payload.objective !== undefined ||
       payload.ageMinMonths !== undefined ||
-      payload.ageMaxMonths !== undefined;
+      payload.ageMaxMonths !== undefined ||
+      payload.bibliography !== undefined;
 
     if (shouldTouchTest) {
       const updates: Partial<typeof tests.$inferInsert> = {
@@ -121,6 +122,7 @@ export async function updateTestAdminFields(input: unknown) {
       if (payload.targetAudience !== undefined) updates.targetAudience = payload.targetAudience;
       if (payload.ageMinMonths !== undefined) updates.ageMinMonths = payload.ageMinMonths;
       if (payload.ageMaxMonths !== undefined) updates.ageMaxMonths = payload.ageMaxMonths;
+      if (payload.bibliography !== undefined) updates.bibliography = payload.bibliography;
 
       await tx.update(tests).set(updates).where(eq(tests.id, payload.id));
     }
@@ -242,6 +244,7 @@ export async function createTestAdminFields(input: unknown) {
         targetAudience: payload.targetAudience ?? 'child',
         ageMinMonths: payload.ageMinMonths ?? null,
         ageMaxMonths: payload.ageMaxMonths ?? null,
+        bibliography: payload.bibliography ?? [],
         updatedAt: new Date(),
       })
       .returning({ id: tests.id });

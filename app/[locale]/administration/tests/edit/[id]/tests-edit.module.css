@@ -30,6 +30,43 @@
   gap: 1.5rem;
 }
 
+.formSections {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.formSection {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(248, 250, 252, 0.65);
+  padding: 1.25rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sectionHeader {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sectionLead {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.sectionBody {
+  display: grid;
+  gap: 1rem;
+}
+
 .formGrid {
   display: grid;
   gap: 1.5rem;
@@ -46,10 +83,41 @@
   color: #0f172a;
 }
 
+.bibliographyList {
+  display: grid;
+  gap: 1rem;
+}
+
+.bibliographyRow {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.removeButton {
+  justify-self: flex-start;
+}
+
+.emptyText {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
 .formActions {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .formSections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
 }
 
 .successMessage {
