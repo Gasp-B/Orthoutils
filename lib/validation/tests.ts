@@ -114,7 +114,6 @@ export const testAdminUpdateSchema = z.object({
   id: z.string().uuid(),
   locale: localeEnum.default(defaultLocale),
   name: z.string().trim().min(1).optional(),
-  slug: z.string().trim().min(1).optional(),
   shortDescription: z.string().trim().nullable().optional(),
   objective: z.string().trim().nullable().optional(),
   ageMinMonths: z.number().int().min(0).nullable().optional(),
@@ -131,7 +130,6 @@ export type TestAdminUpdateInput = z.infer<typeof testAdminUpdateSchema>;
 export const testAdminCreateSchema = z.object({
   locale: localeEnum.default(defaultLocale),
   name: z.string().trim().min(1),
-  slug: z.string().trim().min(1),
   shortDescription: z.string().trim().nullable().optional(),
   objective: z.string().trim().nullable().optional(),
   ageMinMonths: z.number().int().min(0).nullable().optional(),

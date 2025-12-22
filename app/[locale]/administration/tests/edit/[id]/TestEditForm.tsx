@@ -20,7 +20,6 @@ type TestEditFormProps = {
 type FormState = Pick<
   TestDto,
   | 'name'
-  | 'slug'
   | 'shortDescription'
   | 'objective'
   | 'ageMinMonths'
@@ -36,7 +35,6 @@ type FeedbackState = 'success' | 'error' | null;
 
 const toFormState = (test: TestDto): FormState => ({
   name: test.name,
-  slug: test.slug,
   shortDescription: test.shortDescription,
   objective: test.objective,
   ageMinMonths: test.ageMinMonths,
@@ -54,12 +52,16 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
   const multiSelectT = useTranslations('AdminTests.edit.multiSelect');
 
   const [formState, setFormState] = useState<FormState>(() => toFormState(test));
+  const [ageUnit, setAgeUnit] = useState<'weeks' | 'months' | 'years'>(
+    test.targetAudience === 'adult' ? 'years' : 'months',
+  );
   const [taxonomy, setTaxonomy] = useState<TaxonomyResponse | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
   useEffect(() => {
     setFormState(toFormState(test));
+    setAgeUnit(test.targetAudience === 'adult' ? 'years' : 'months');
   }, [test]);
 
   useEffect(() => {
@@ -96,6 +98,36 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
     [gridT],
   );
 
+  const ageUnitOptions = useMemo(
+    () => [
+      { label: t('ageUnitWeeks'), value: 'weeks' },
+      { label: t('ageUnitMonths'), value: 'months' },
+    ],
+    [t],
+  );
+
+  useEffect(() => {
+    if (formState.targetAudience === 'adult') {
+      setAgeUnit('years');
+    } else if (ageUnit === 'years') {
+      setAgeUnit('months');
+    }
+  }, [formState.targetAudience, ageUnit]);
+
+  const toDisplayValue = (valueMonths: number | null, unit: 'weeks' | 'months' | 'years') => {
+    if (valueMonths === null) return '';
+    if (unit === 'weeks') return Math.round(valueMonths * 4);
+    if (unit === 'years') return Number((valueMonths / 12).toFixed(1));
+    return valueMonths;
+  };
+
+  const toMonthsValue = (value: number | null, unit: 'weeks' | 'months' | 'years') => {
+    if (value === null) return null;
+    if (unit === 'weeks') return Math.round(value / 4);
+    if (unit === 'years') return Math.round(value * 12);
+    return Math.round(value);
+  };
+
   const multiSelectTranslations = useMemo(
     () => ({
       add: multiSelectT('add'),
@@ -126,7 +158,6 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
           id: mode === 'edit' ? test.id : undefined,
           locale,
           name: formState.name,
-          slug: formState.slug,
           shortDescription: formState.shortDescription,
           objective: formState.objective,
           ageMinMonths: formState.ageMinMonths,
@@ -166,19 +197,6 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
             value={formState.name}
             onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
             placeholder={t('namePlaceholder')}
-            required
-          />
-        </div>
-
-        <div className={styles.formRow}>
-          <label className={styles.formLabel} htmlFor="slug">
-            {t('slugLabel')}
-          </label>
-          <Input
-            id="slug"
-            value={formState.slug}
-            onChange={(event) => setFormState((prev) => ({ ...prev, slug: event.target.value }))}
-            placeholder={t('slugPlaceholder')}
             required
           />
         </div>
@@ -226,41 +244,68 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
 
         <div className={styles.formRow}>
           <label className={styles.formLabel} htmlFor="ageMinMonths">
-            {t('ageMinLabel')}
+            {formState.targetAudience === 'adult' ? t('ageMinAdultLabel') : t('ageMinLabel')}
           </label>
           <Input
             id="ageMinMonths"
             type="number"
             min={0}
-            value={formState.ageMinMonths ?? ''}
+            step={formState.targetAudience === 'adult' ? 0.5 : 1}
+            value={toDisplayValue(formState.ageMinMonths, ageUnit)}
             onChange={(event) =>
               setFormState((prev) => ({
                 ...prev,
-                ageMinMonths: event.target.value === '' ? null : Number(event.target.value),
+                ageMinMonths: toMonthsValue(
+                  event.target.value === '' ? null : Number(event.target.value),
+                  ageUnit,
+                ),
               }))
             }
-            placeholder={t('ageMinPlaceholder')}
+            placeholder={formState.targetAudience === 'adult' ? t('ageMinAdultPlaceholder') : t('ageMinPlaceholder')}
           />
         </div>
 
         <div className={styles.formRow}>
           <label className={styles.formLabel} htmlFor="ageMaxMonths">
-            {t('ageMaxLabel')}
+            {formState.targetAudience === 'adult' ? t('ageMaxAdultLabel') : t('ageMaxLabel')}
           </label>
           <Input
             id="ageMaxMonths"
             type="number"
             min={0}
-            value={formState.ageMaxMonths ?? ''}
+            step={formState.targetAudience === 'adult' ? 0.5 : 1}
+            value={toDisplayValue(formState.ageMaxMonths, ageUnit)}
             onChange={(event) =>
               setFormState((prev) => ({
                 ...prev,
-                ageMaxMonths: event.target.value === '' ? null : Number(event.target.value),
+                ageMaxMonths: toMonthsValue(
+                  event.target.value === '' ? null : Number(event.target.value),
+                  ageUnit,
+                ),
               }))
             }
-            placeholder={t('ageMaxPlaceholder')}
+            placeholder={formState.targetAudience === 'adult' ? t('ageMaxAdultPlaceholder') : t('ageMaxPlaceholder')}
           />
         </div>
+
+        {formState.targetAudience === 'child' && (
+          <div className={styles.formRow}>
+            <label className={styles.formLabel} htmlFor="ageUnit">
+              {t('ageUnitLabel')}
+            </label>
+            <Select
+              id="ageUnit"
+              value={ageUnit}
+              onChange={(event) => setAgeUnit(event.target.value as 'weeks' | 'months')}
+            >
+              {ageUnitOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className={styles.formRow}>

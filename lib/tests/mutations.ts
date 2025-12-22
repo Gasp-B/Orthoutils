@@ -107,7 +107,6 @@ export async function updateTestAdminFields(input: unknown) {
       payload.tags !== undefined ||
       payload.themes !== undefined ||
       payload.name !== undefined ||
-      payload.slug !== undefined ||
       payload.shortDescription !== undefined ||
       payload.objective !== undefined ||
       payload.ageMinMonths !== undefined ||
@@ -128,7 +127,6 @@ export async function updateTestAdminFields(input: unknown) {
 
     const shouldTouchTranslation =
       payload.name !== undefined ||
-      payload.slug !== undefined ||
       payload.shortDescription !== undefined ||
       payload.objective !== undefined;
 
@@ -151,20 +149,18 @@ export async function updateTestAdminFields(input: unknown) {
         throw new Error('Le nom du test est requis.');
       }
 
-      const slugSeed = payload.slug?.trim() || name;
-      const slug =
-        payload.slug !== undefined
-          ? await generateUniqueSlug({
-              db: tx,
-              name: slugSeed,
-              table: testsTranslations,
-              slugColumn: testsTranslations.slug,
-              idColumn: testsTranslations.testId,
-              excludeId: payload.id,
-              localeColumn: testsTranslations.locale,
-              locale,
-            })
-          : current?.slug || slugSeed;
+      const slug = payload.name
+        ? await generateUniqueSlug({
+            db: tx,
+            name,
+            table: testsTranslations,
+            slugColumn: testsTranslations.slug,
+            idColumn: testsTranslations.testId,
+            excludeId: payload.id,
+            localeColumn: testsTranslations.locale,
+            locale,
+          })
+        : current?.slug || name;
 
       const shortDescription =
         payload.shortDescription !== undefined ? payload.shortDescription : current?.shortDescription ?? null;
@@ -229,10 +225,10 @@ export async function createTestAdminFields(input: unknown) {
   const locale = payload.locale ?? defaultLocale;
 
   const createdId = await getDb().transaction(async (tx) => {
-    const slugSeed = payload.slug.trim() || payload.name.trim();
+    const name = payload.name.trim();
     const slug = await generateUniqueSlug({
       db: tx,
-      name: slugSeed,
+      name,
       table: testsTranslations,
       slugColumn: testsTranslations.slug,
       localeColumn: testsTranslations.locale,
@@ -253,7 +249,7 @@ export async function createTestAdminFields(input: unknown) {
     await tx.insert(testsTranslations).values({
       testId: createdTest.id,
       locale,
-      name: payload.name.trim(),
+      name,
       slug,
       shortDescription: payload.shortDescription?.trim() || null,
       objective: payload.objective?.trim() || null,
