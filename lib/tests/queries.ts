@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db/client';
 import {
   domains,
   domainsTranslations,
+  populationTranslations,
   tags,
   tagsTranslations,
   testDomains,
@@ -38,12 +39,14 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
   const fallbackTheme = alias(themeTranslations, 'fallback_theme');
   const localizedTag = alias(tagsTranslations, 'localized_tag');
   const fallbackTag = alias(tagsTranslations, 'fallback_tag');
+  const localizedPopulation = alias(populationTranslations, 'localized_population');
+  const fallbackPopulation = alias(populationTranslations, 'fallback_population');
 
   const nameExpression = sql<string>`COALESCE(MAX(${localizedTest.name}), MAX(${fallbackTest.name}), '')`;
   const slugExpression = sql<string>`COALESCE(MAX(${localizedTest.slug}), MAX(${fallbackTest.slug}), '')`;
   const shortDescriptionExpression = sql<string | null>`COALESCE(MAX(${localizedTest.shortDescription}), MAX(${fallbackTest.shortDescription}))`;
   const objectiveExpression = sql<string | null>`COALESCE(MAX(${localizedTest.objective}), MAX(${fallbackTest.objective}))`;
-  const populationExpression = sql<string | null>`COALESCE(MAX(${localizedTest.population}), MAX(${fallbackTest.population}))`;
+  const populationExpression = sql<string | null>`COALESCE(MAX(${localizedPopulation.label}), MAX(${fallbackPopulation.label}))`;
   const materialsExpression = sql<string | null>`COALESCE(MAX(${localizedTest.materials}), MAX(${fallbackTest.materials}))`;
   const publisherExpression = sql<string | null>`COALESCE(MAX(${localizedTest.publisher}), MAX(${fallbackTest.publisher}))`;
   const priceRangeExpression = sql<string | null>`COALESCE(MAX(${localizedTest.priceRange}), MAX(${fallbackTest.priceRange}))`;
@@ -81,6 +84,17 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
     .from(tests)
     .leftJoin(localizedTest, and(eq(localizedTest.testId, tests.id), eq(localizedTest.locale, locale)))
     .leftJoin(fallbackTest, and(eq(fallbackTest.testId, tests.id), eq(fallbackTest.locale, defaultLocale)))
+    .leftJoin(
+      localizedPopulation,
+      and(eq(localizedPopulation.populationId, tests.populationId), eq(localizedPopulation.locale, locale)),
+    )
+    .leftJoin(
+      fallbackPopulation,
+      and(
+        eq(fallbackPopulation.populationId, tests.populationId),
+        eq(fallbackPopulation.locale, defaultLocale),
+      ),
+    )
     .leftJoin(testDomains, eq(tests.id, testDomains.testId))
     .leftJoin(domains, eq(testDomains.domainId, domains.id))
     .leftJoin(localizedDomain, and(eq(localizedDomain.domainId, domains.id), eq(localizedDomain.locale, locale)))
@@ -102,6 +116,7 @@ export async function getTestsWithMetadata(locale: Locale = defaultLocale): Prom
     .groupBy(
       tests.id,
       tests.targetAudience,
+      tests.populationId,
       tests.status,
       tests.ageMinMonths,
       tests.ageMaxMonths,
@@ -143,12 +158,14 @@ export async function getTestWithMetadata(
   const fallbackTheme = alias(themeTranslations, 'fallback_theme');
   const localizedTag = alias(tagsTranslations, 'localized_tag');
   const fallbackTag = alias(tagsTranslations, 'fallback_tag');
+  const localizedPopulation = alias(populationTranslations, 'localized_population');
+  const fallbackPopulation = alias(populationTranslations, 'fallback_population');
 
   const nameExpression = sql<string>`COALESCE(MAX(${localizedTest.name}), MAX(${fallbackTest.name}), '')`;
   const slugExpression = sql<string>`COALESCE(MAX(${localizedTest.slug}), MAX(${fallbackTest.slug}), '')`;
   const shortDescriptionExpression = sql<string | null>`COALESCE(MAX(${localizedTest.shortDescription}), MAX(${fallbackTest.shortDescription}))`;
   const objectiveExpression = sql<string | null>`COALESCE(MAX(${localizedTest.objective}), MAX(${fallbackTest.objective}))`;
-  const populationExpression = sql<string | null>`COALESCE(MAX(${localizedTest.population}), MAX(${fallbackTest.population}))`;
+  const populationExpression = sql<string | null>`COALESCE(MAX(${localizedPopulation.label}), MAX(${fallbackPopulation.label}))`;
   const materialsExpression = sql<string | null>`COALESCE(MAX(${localizedTest.materials}), MAX(${fallbackTest.materials}))`;
   const publisherExpression = sql<string | null>`COALESCE(MAX(${localizedTest.publisher}), MAX(${fallbackTest.publisher}))`;
   const priceRangeExpression = sql<string | null>`COALESCE(MAX(${localizedTest.priceRange}), MAX(${fallbackTest.priceRange}))`;
@@ -186,6 +203,17 @@ export async function getTestWithMetadata(
     .from(tests)
     .leftJoin(localizedTest, and(eq(localizedTest.testId, tests.id), eq(localizedTest.locale, locale)))
     .leftJoin(fallbackTest, and(eq(fallbackTest.testId, tests.id), eq(fallbackTest.locale, defaultLocale)))
+    .leftJoin(
+      localizedPopulation,
+      and(eq(localizedPopulation.populationId, tests.populationId), eq(localizedPopulation.locale, locale)),
+    )
+    .leftJoin(
+      fallbackPopulation,
+      and(
+        eq(fallbackPopulation.populationId, tests.populationId),
+        eq(fallbackPopulation.locale, defaultLocale),
+      ),
+    )
     .leftJoin(testDomains, eq(tests.id, testDomains.testId))
     .leftJoin(domains, eq(testDomains.domainId, domains.id))
     .leftJoin(localizedDomain, and(eq(localizedDomain.domainId, domains.id), eq(localizedDomain.locale, locale)))
@@ -208,6 +236,7 @@ export async function getTestWithMetadata(
     .groupBy(
       tests.id,
       tests.targetAudience,
+      tests.populationId,
       tests.status,
       tests.ageMinMonths,
       tests.ageMaxMonths,
