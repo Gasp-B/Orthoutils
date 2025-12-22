@@ -11,14 +11,22 @@ import {
   taxonomyResponseSchema,
   type TaxonomyResponse,
 } from '@/lib/validation/tests';
+import {
+  populationCharacteristicCreateSchema,
+  populationCharacteristicDeleteSchema,
+  populationCharacteristicUpdateSchema,
+  populationCharacteristicsResponseSchema,
+  type PopulationCharacteristicsResponse,
+} from '@/lib/validation/population';
 import { type Locale } from '@/i18n/routing';
 
-type TaxonomyType = 'themes' | 'domains' | 'tags' | 'resourceTypes';
+type TaxonomyType = 'themes' | 'domains' | 'tags' | 'resourceTypes' | 'populations';
 type TaxonomyEntry =
   | TaxonomyResponse['themes'][number]
   | TaxonomyResponse['domains'][number]
   | TaxonomyResponse['tags'][number]
   | TaxonomyResponse['resourceTypes'][number];
+type PopulationEntry = PopulationCharacteristicsResponse['populations'][number];
 
 type FormState = {
   label: string;
@@ -68,6 +76,9 @@ export default function TaxonomyManagementPanel() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedPopulationId, setSelectedPopulationId] = useState<string | null>(null);
+  const [selectedCharacteristic, setSelectedCharacteristic] = useState<string | null>(null);
+  const [populationCharacteristic, setPopulationCharacteristic] = useState('');
 
   const taxonomyQuery = useQuery<TaxonomyResponse>({
     queryKey: ['taxonomy-management', locale],
@@ -79,6 +90,16 @@ export default function TaxonomyManagementPanel() {
     },
   });
 
+  const populationQuery = useQuery<PopulationCharacteristicsResponse>({
+    queryKey: ['population-management', locale],
+    queryFn: async () => {
+      const response = await fetch(`/api/tests/populations?locale=${locale}`);
+      if (!response.ok) throw new Error(t('messages.loadError'));
+      const json = await response.json();
+      return populationCharacteristicsResponseSchema.parse(json);
+    },
+  });
+
   const resetForm = () => {
     setSelectedId(null);
     setFormState(initialFormState);
@@ -87,6 +108,11 @@ export default function TaxonomyManagementPanel() {
   useEffect(() => {
     resetForm();
     setSearchTerm('');
+    setStatusMessage(null);
+    setErrorMessage(null);
+    setSelectedPopulationId(null);
+    setSelectedCharacteristic(null);
+    setPopulationCharacteristic('');
   }, [activeType]);
 
   const typeDetails = useMemo(() => ({
@@ -94,14 +120,25 @@ export default function TaxonomyManagementPanel() {
     domains: { label: t('types.domains'), hint: t('types.hints.domains'), lead: t('descriptions.domains') },
     tags: { label: t('types.tags'), hint: t('types.hints.tags'), lead: t('descriptions.tags') },
     resourceTypes: { label: t('types.resourceTypes'), hint: t('types.hints.resourceTypes'), lead: t('descriptions.resourceTypes') },
+    populations: { label: t('types.populations'), hint: t('types.hints.populations'), lead: t('descriptions.populations') },
   }), [t]);
 
   const items: TaxonomyEntry[] = useMemo(() => {
     if (!taxonomyQuery.data) return [];
+    if (activeType === 'populations') return [];
     return taxonomyQuery.data[activeType] || [];
   }, [taxonomyQuery.data, activeType]);
 
   const availableDomains = taxonomyQuery.data?.domains ?? [];
+  const populationItems = populationQuery.data?.populations ?? [];
+
+  const typeCounts = useMemo(() => ({
+    themes: taxonomyQuery.data?.themes.length ?? 0,
+    domains: taxonomyQuery.data?.domains.length ?? 0,
+    tags: taxonomyQuery.data?.tags.length ?? 0,
+    resourceTypes: taxonomyQuery.data?.resourceTypes.length ?? 0,
+    populations: populationItems.length,
+  }), [taxonomyQuery.data, populationItems.length]);
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -113,6 +150,18 @@ export default function TaxonomyManagementPanel() {
       return labelMatch || descMatch || synMatch;
     });
   }, [items, searchTerm]);
+
+  const filteredPopulations = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return populationItems;
+    return populationItems.filter((population) => {
+      const labelMatch = population.label.toLowerCase().includes(term);
+      const characteristicMatch = population.characteristics.some((value) =>
+        value.toLowerCase().includes(term),
+      );
+      return labelMatch || characteristicMatch;
+    });
+  }, [populationItems, searchTerm]);
 
   // Logique de regroupement des thèmes par domaines
   const themesGroups = useMemo(() => {
@@ -178,6 +227,48 @@ export default function TaxonomyManagementPanel() {
     onError: (err) => { setErrorMessage(err.message); setStatusMessage(null); },
   });
 
+  const populationSaveMutation = useMutation({
+    mutationFn: async (input: { method: 'POST' | 'PUT'; payload: any }) => {
+      const res = await fetch('/api/tests/populations', {
+        method: input.method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input.payload),
+      });
+      if (!res.ok) throw new Error(t('messages.saveError'));
+      return res.json();
+    },
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['population-management', locale] });
+      setStatusMessage(
+        variables.method === 'PUT' ? t('messages.updated') : t('messages.created'),
+      );
+      setErrorMessage(null);
+      setSelectedCharacteristic(null);
+      setPopulationCharacteristic('');
+    },
+    onError: (err) => { setErrorMessage(err.message); setStatusMessage(null); },
+  });
+
+  const populationDeleteMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await fetch('/api/tests/populations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(t('messages.deleteError'));
+      return res.json();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['population-management', locale] });
+      setStatusMessage(t('messages.deleted'));
+      setErrorMessage(null);
+      setSelectedCharacteristic(null);
+      setPopulationCharacteristic('');
+    },
+    onError: (err) => { setErrorMessage(err.message); setStatusMessage(null); },
+  });
+
   const handleSelect = (id: string) => {
     const entry = items.find((i) => i.id === id);
     if (!entry) return;
@@ -202,6 +293,33 @@ export default function TaxonomyManagementPanel() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (activeType === 'populations') {
+      if (!selectedPopulationId) {
+        setErrorMessage(t('populationForm.messages.populationRequired'));
+        return;
+      }
+      const payload = {
+        populationId: selectedPopulationId,
+        locale,
+        value: populationCharacteristic.trim(),
+      };
+      const parsed = selectedCharacteristic
+        ? populationCharacteristicUpdateSchema.safeParse({
+            ...payload,
+            previousValue: selectedCharacteristic,
+          })
+        : populationCharacteristicCreateSchema.safeParse(payload);
+      if (!parsed.success) {
+        setErrorMessage(parsed.error.issues[0]?.message ?? t('messages.validationError'));
+        return;
+      }
+      await populationSaveMutation.mutateAsync({
+        method: selectedCharacteristic ? 'PUT' : 'POST',
+        payload: parsed.data,
+      });
+      return;
+    }
+
     const payload = {
       type: typeToApi[activeType],
       locale,
@@ -223,6 +341,32 @@ export default function TaxonomyManagementPanel() {
     const confirmed = window.confirm(t('messages.deleteConfirm'));
     if (!confirmed) return;
     await deleteMutation.mutateAsync({ type: typeToApi[activeType], id, locale });
+  };
+
+  const handlePopulationSelect = (id: string) => {
+    setSelectedPopulationId(id);
+    setSelectedCharacteristic(null);
+    setPopulationCharacteristic('');
+  };
+
+  const handleCharacteristicEdit = (value: string) => {
+    setSelectedCharacteristic(value);
+    setPopulationCharacteristic(value);
+  };
+
+  const handleCharacteristicDelete = async (value: string) => {
+    const confirmed = window.confirm(t('populationForm.messages.deleteConfirm'));
+    if (!confirmed || !selectedPopulationId) return;
+    const parsed = populationCharacteristicDeleteSchema.safeParse({
+      populationId: selectedPopulationId,
+      locale,
+      value,
+    });
+    if (!parsed.success) {
+      setErrorMessage(parsed.error.issues[0]?.message ?? t('messages.validationError'));
+      return;
+    }
+    await populationDeleteMutation.mutateAsync(parsed.data);
   };
 
   // Helper pour rendre un item de la liste afin d'éviter la duplication de code
@@ -248,6 +392,30 @@ export default function TaxonomyManagementPanel() {
     </div>
   );
 
+  const renderPopulationItem = (population: PopulationEntry) => (
+    <div
+      key={population.id}
+      className={`${styles.listItem} ${selectedPopulationId === population.id ? styles.listItemActive : ''}`}
+    >
+      <div className={styles.itemMeta}>
+        <p className={styles.itemLabel}>{population.label}</p>
+        <p className={styles.itemDescription}>
+          {t('populationForm.labels.characteristicsCount', { count: population.characteristics.length })}
+        </p>
+      </div>
+      <div className={styles.actions}>
+        <button
+          className={styles.actionButton}
+          onClick={() => handlePopulationSelect(population.id)}
+        >
+          {t('actions.edit')}
+        </button>
+      </div>
+    </div>
+  );
+
+  const selectedPopulation = populationItems.find((population) => population.id === selectedPopulationId);
+
   return (
     <section className={styles.panel}>
       <aside className={styles.sidebar}>
@@ -263,7 +431,7 @@ export default function TaxonomyManagementPanel() {
               <span className={styles.typeName}>{typeDetails[type].label}</span>
               <span className={styles.typeHint}>{typeDetails[type].hint}</span>
             </span>
-            <span className={styles.count}>{(taxonomyQuery.data?.[type] as any)?.length ?? 0}</span>
+            <span className={styles.count}>{typeCounts[type] ?? 0}</span>
           </button>
         ))}
       </aside>
@@ -288,7 +456,14 @@ export default function TaxonomyManagementPanel() {
             />
             
             <div className={styles.list}>
-              {activeType === 'themes' ? (
+              {activeType === 'populations' ? (
+                <>
+                  {filteredPopulations.length === 0 && (
+                    <p className={styles.emptyListMessage}>{t('list.noResults')}</p>
+                  )}
+                  {filteredPopulations.map((population) => renderPopulationItem(population))}
+                </>
+              ) : activeType === 'themes' ? (
                 <>
                   {/* Afficher les groupes par domaine */}
                   {availableDomains.map((domain) => {
@@ -296,16 +471,8 @@ export default function TaxonomyManagementPanel() {
                     if (!groupItems || groupItems.length === 0) return null;
 
                     return (
-                      <div key={domain.id} style={{ marginBottom: '1.5rem' }}>
-                        <h4 style={{ 
-                          fontSize: '0.875rem', 
-                          fontWeight: 600, 
-                          color: '#64748b', 
-                          textTransform: 'uppercase', 
-                          letterSpacing: '0.05em',
-                          marginBottom: '0.5rem',
-                          paddingLeft: '0.5rem'
-                        }}>
+                      <div key={domain.id} className={styles.groupSection}>
+                        <h4 className={styles.groupTitle}>
                           {domain.label}
                         </h4>
                         {groupItems.map(item => renderItem(item))}
@@ -315,16 +482,9 @@ export default function TaxonomyManagementPanel() {
 
                   {/* Afficher les éléments sans domaine */}
                   {themesGroups.noDomain.length > 0 && (
-                    <div style={{ marginTop: '1.5rem', borderTop: '1px dashed #e2e8f0', paddingTop: '1rem' }}>
-                      <h4 style={{ 
-                        fontSize: '0.875rem', 
-                        fontWeight: 600, 
-                        color: '#94a3b8', 
-                        fontStyle: 'italic',
-                        marginBottom: '0.5rem',
-                        paddingLeft: '0.5rem'
-                      }}>
-                        Non classés / Sans domaine
+                    <div className={styles.ungroupedSection}>
+                      <h4 className={styles.ungroupedTitle}>
+                        {t('groups.ungrouped')}
                       </h4>
                       {themesGroups.noDomain.map(item => renderItem(item))}
                     </div>
@@ -332,7 +492,7 @@ export default function TaxonomyManagementPanel() {
                   
                   {/* Message si vide */}
                   {Object.keys(themesGroups.grouped).length === 0 && themesGroups.noDomain.length === 0 && (
-                     <p style={{ padding: '1rem', color: '#64748b', textAlign: 'center' }}>Aucun résultat trouvé.</p>
+                     <p className={styles.emptyListMessage}>{t('list.noResults')}</p>
                   )}
                 </>
               ) : (
@@ -343,68 +503,162 @@ export default function TaxonomyManagementPanel() {
 
           <div className={styles.formCard}>
             <form className={styles.formGrid} onSubmit={handleSubmit}>
-              <div className={styles.field}>
-                <label htmlFor="label-input">{t('form.fields.label')}</label>
-                <input id="label-input" className={styles.input} value={formState.label} onChange={(e) => setFormState({ ...formState, label: e.target.value })} required />
-              </div>
-
-              {activeType === 'themes' && (
+              {activeType === 'populations' ? (
                 <>
                   <div className={styles.field}>
-                    <label htmlFor="description-input">{t('form.fields.description')}</label>
-                    <textarea id="description-input" className={styles.textarea} value={formState.description} onChange={(e) => setFormState({ ...formState, description: e.target.value })} />
+                    <label htmlFor="population-select">{t('populationForm.fields.population')}</label>
+                    <select
+                      id="population-select"
+                      className={styles.select}
+                      value={selectedPopulationId ?? ''}
+                      onChange={(e) => handlePopulationSelect(e.target.value)}
+                    >
+                      <option value="" disabled>
+                        {t('populationForm.placeholders.population')}
+                      </option>
+                      {populationItems.map((population) => (
+                        <option key={population.id} value={population.id}>
+                          {population.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className={styles.field}>
-                    <label>{t('form.fields.domains')}</label>
-                    <div className={styles.checkboxList}>
-                      {availableDomains.map((domain) => (
-                        <label key={domain.id} className={styles.checkboxItem}>
-                          <input
-                            type="checkbox"
-                            checked={formState.domainIds.includes(domain.id)}
-                            onChange={(e) => {
-                              const next = new Set(formState.domainIds);
-                              if (e.target.checked) next.add(domain.id); else next.delete(domain.id);
-                              setFormState({ ...formState, domainIds: Array.from(next) });
-                            }}
-                          />
-                          <span>{domain.label}</span>
-                        </label>
-                      ))}
+                    <label htmlFor="population-characteristic-input">
+                      {t('populationForm.fields.characteristic')}
+                    </label>
+                    <input
+                      id="population-characteristic-input"
+                      className={styles.input}
+                      value={populationCharacteristic}
+                      onChange={(e) => setPopulationCharacteristic(e.target.value)}
+                      placeholder={t('populationForm.placeholders.characteristic')}
+                      required
+                    />
+                  </div>
+                  <div className={styles.formActions}>
+                    <button className={styles.submitButton} type="submit" disabled={populationSaveMutation.isPending}>
+                      {selectedCharacteristic ? t('populationForm.actions.update') : t('populationForm.actions.create')}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={() => {
+                        setSelectedCharacteristic(null);
+                        setPopulationCharacteristic('');
+                      }}
+                    >
+                      {t('populationForm.actions.reset')}
+                    </button>
+                  </div>
+
+                  <div className={styles.characteristicsSection}>
+                    <p className={styles.characteristicsTitle}>
+                      {t('populationForm.labels.characteristicsTitle')}
+                    </p>
+                    {!selectedPopulation && (
+                      <p className={styles.emptyListMessage}>
+                        {t('populationForm.messages.selectPopulation')}
+                      </p>
+                    )}
+                    {selectedPopulation && selectedPopulation.characteristics.length === 0 && (
+                      <p className={styles.emptyListMessage}>
+                        {t('populationForm.messages.noCharacteristics')}
+                      </p>
+                    )}
+                    {selectedPopulation && selectedPopulation.characteristics.length > 0 && (
+                      <div className={styles.characteristicsList}>
+                        {selectedPopulation.characteristics.map((value) => (
+                          <div key={value} className={styles.characteristicItem}>
+                            <span className={styles.characteristicLabel}>{value}</span>
+                            <div className={styles.actions}>
+                              <button
+                                type="button"
+                                className={styles.actionButton}
+                                onClick={() => handleCharacteristicEdit(value)}
+                              >
+                                {t('actions.edit')}
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.deleteButton}
+                                onClick={() => handleCharacteristicDelete(value)}
+                              >
+                                {t('actions.delete')}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.field}>
+                    <label htmlFor="label-input">{t('form.fields.label')}</label>
+                    <input id="label-input" className={styles.input} value={formState.label} onChange={(e) => setFormState({ ...formState, label: e.target.value })} required />
+                  </div>
+
+                  {activeType === 'themes' && (
+                    <>
+                      <div className={styles.field}>
+                        <label htmlFor="description-input">{t('form.fields.description')}</label>
+                        <textarea id="description-input" className={styles.textarea} value={formState.description} onChange={(e) => setFormState({ ...formState, description: e.target.value })} />
+                      </div>
+                      <div className={styles.field}>
+                        <label>{t('form.fields.domains')}</label>
+                        <div className={styles.checkboxList}>
+                          {availableDomains.map((domain) => (
+                            <label key={domain.id} className={styles.checkboxItem}>
+                              <input
+                                type="checkbox"
+                                checked={formState.domainIds.includes(domain.id)}
+                                onChange={(e) => {
+                                  const next = new Set(formState.domainIds);
+                                  if (e.target.checked) next.add(domain.id); else next.delete(domain.id);
+                                  setFormState({ ...formState, domainIds: Array.from(next) });
+                                }}
+                              />
+                              <span>{domain.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {(activeType === 'themes' || activeType === 'domains' || activeType === 'tags') && (
+                    <div className={styles.field}>
+                      <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
+                      <input id="synonyms-input" className={styles.input} value={formState.synonyms} onChange={(e) => setFormState({ ...formState, synonyms: e.target.value })} />
                     </div>
+                  )}
+
+                  {activeType === 'tags' && (
+                    <div className={styles.field}>
+                      <label>{t('form.fields.color')}</label>
+                      <div className={styles.colorSwatches}>
+                        {colors.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            className={`${styles.colorChip} ${getColorClass(color)} ${formState.color === color ? styles.colorChipActive : ''}`}
+                            onClick={() => setFormState({ ...formState, color })}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={styles.formActions}>
+                    <button className={styles.submitButton} type="submit" disabled={saveMutation.isPending}>
+                      {selectedId ? t('form.actions.update') : t('form.actions.create')}
+                    </button>
+                    <button type="button" className={styles.secondaryButton} onClick={resetForm}>{t('form.actions.reset')}</button>
                   </div>
                 </>
               )}
-
-              {(activeType === 'themes' || activeType === 'domains' || activeType === 'tags') && (
-                <div className={styles.field}>
-                  <label htmlFor="synonyms-input">{t('form.fields.synonyms')}</label>
-                  <input id="synonyms-input" className={styles.input} value={formState.synonyms} onChange={(e) => setFormState({ ...formState, synonyms: e.target.value })} />
-                </div>
-              )}
-
-              {activeType === 'tags' && (
-                <div className={styles.field}>
-                  <label>{t('form.fields.color')}</label>
-                  <div className={styles.colorSwatches}>
-                    {colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`${styles.colorChip} ${getColorClass(color)} ${formState.color === color ? styles.colorChipActive : ''}`}
-                        onClick={() => setFormState({ ...formState, color })}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className={styles.formActions}>
-                <button className={styles.submitButton} type="submit" disabled={saveMutation.isPending}>
-                  {selectedId ? t('form.actions.update') : t('form.actions.create')}
-                </button>
-                <button type="button" className={styles.secondaryButton} onClick={resetForm}>{t('form.actions.reset')}</button>
-              </div>
             </form>
           </div>
         </div>
