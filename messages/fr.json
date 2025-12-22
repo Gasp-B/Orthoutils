@@ -631,18 +631,21 @@
       "domains": "Domaines",
       "tags": "Tags",
       "resourceTypes": "Types de ressource",
+      "populations": "Caractéristiques de population",
       "hints": {
         "themes": "Description et synonymes disponibles",
         "domains": "Utilisé pour structurer le catalogue et trouvable via ses synonymes",
         "tags": "Synonymes localisés et couleur optionnelle",
-        "resourceTypes": "Liste commune pour la création de ressources"
+        "resourceTypes": "Liste commune pour la création de ressources",
+        "populations": "Caractéristiques indépendantes pour qualifier les tests"
       }
     },
     "descriptions": {
       "themes": "Les thèmes incluent un libellé, une description optionnelle et des synonymes pour faciliter la recherche.",
       "domains": "Les domaines structurent la hiérarchie du catalogue, regroupent les outils et peuvent inclure des synonymes pour accélérer la recherche.",
       "tags": "Les tags ajoutent des étiquettes légères. Ajoutez des synonymes localisés et une couleur pour les mettre en valeur.",
-      "resourceTypes": "Les types de ressource assurent la cohérence des fiches et sont réutilisés dans le formulaire admin."
+      "resourceTypes": "Les types de ressource assurent la cohérence des fiches et sont réutilisés dans le formulaire admin.",
+      "populations": "Définissez les caractéristiques assignables aux tests, indépendamment de l'audience."
     },
     "aria": {
       "panel": "Gestion de la taxonomie",
@@ -665,6 +668,9 @@
       "searchPlaceholder": "Rechercher {type}",
       "searchAria": "Rechercher dans les entrées de taxonomie",
       "noResults": "Aucune entrée ne correspond à la recherche."
+    },
+    "groups": {
+      "ungrouped": "Non classés / Sans domaine"
     },
     "empty": "Aucune entrée {type} pour le moment.",
     "actions": {
@@ -697,6 +703,30 @@
         "update": "Enregistrer",
         "create": "Créer l'entrée",
         "reset": "Réinitialiser"
+      }
+    },
+    "populationForm": {
+      "hints": {
+        "independentAudience": "Ces caractéristiques sont indépendantes de l'audience enfant/adulte."
+      },
+      "fields": {
+        "characteristic": "Caractéristique de population"
+      },
+      "placeholders": {
+        "characteristic": "Ajoutez une caractéristique"
+      },
+      "actions": {
+        "update": "Mettre à jour la caractéristique",
+        "create": "Ajouter la caractéristique",
+        "reset": "Effacer"
+      },
+      "labels": {
+        "characteristicsTitle": "Caractéristiques",
+        "characteristicsCount": "{count} caractéristique(s)"
+      },
+      "messages": {
+        "noCharacteristics": "Aucune caractéristique n'a encore été ajoutée.",
+        "deleteConfirm": "Supprimer cette caractéristique ? Cette action est irréversible."
       }
     },
     "labels": {
