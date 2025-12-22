@@ -50,7 +50,7 @@ function getColorClass(hex: string | null | undefined) {
   }
 }
 
-const typeToApi: Record<TaxonomyType, 'theme' | 'domain' | 'tag' | 'resourceType'> = {
+const typeToApi: Record<Exclude<TaxonomyType, 'populations'>, 'theme' | 'domain' | 'tag' | 'resourceType'> = {
   themes: 'theme',
   domains: 'domain',
   tags: 'tag',
@@ -321,7 +321,7 @@ export default function TaxonomyManagementPanel() {
     }
 
     const payload = {
-      type: typeToApi[activeType],
+      type: typeToApi[activeType as Exclude<TaxonomyType, 'populations'>],
       locale,
       value: formState.label.trim(),
       description: activeType === 'themes' ? formState.description.trim() || null : undefined,
@@ -340,7 +340,11 @@ export default function TaxonomyManagementPanel() {
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm(t('messages.deleteConfirm'));
     if (!confirmed) return;
-    await deleteMutation.mutateAsync({ type: typeToApi[activeType], id, locale });
+    await deleteMutation.mutateAsync({
+      type: typeToApi[activeType as Exclude<TaxonomyType, 'populations'>],
+      id,
+      locale,
+    });
   };
 
   const handlePopulationSelect = (id: string) => {
