@@ -92,7 +92,10 @@ INSERT INTO public.population_translations (population_id, locale, label)
 SELECT id, 'fr', fr_label FROM population_seed
 UNION ALL
 SELECT id, 'en', en_label FROM population_seed
-ON CONFLICT (population_id, locale) DO UPDATE SET label = EXCLUDED.label;
+ON CONFLICT (label, locale)
+DO UPDATE SET
+  population_id = EXCLUDED.population_id,
+  label = EXCLUDED.label;
 
 CREATE OR REPLACE FUNCTION public.build_tests_fts_vector(p_test_id uuid)
 RETURNS tsvector
