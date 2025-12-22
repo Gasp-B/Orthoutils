@@ -706,6 +706,9 @@
       }
     },
     "populationForm": {
+      "hints": {
+        "independentAudience": "Ces caractéristiques sont indépendantes de l'audience enfant/adulte."
+      },
       "fields": {
         "population": "Population",
         "characteristic": "Caractéristique de population"

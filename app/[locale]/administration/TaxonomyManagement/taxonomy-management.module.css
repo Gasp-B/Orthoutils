@@ -294,6 +294,12 @@
   gap: 0.35rem;
 }
 
+.fieldHint {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
 .labelRow {
   display: flex;
   justify-content: space-between;

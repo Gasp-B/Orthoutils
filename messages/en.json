@@ -773,6 +773,9 @@
       }
     },
     "populationForm": {
+      "hints": {
+        "independentAudience": "These characteristics are independent from the child/adult audience."
+      },
       "fields": {
         "population": "Population",
         "characteristic": "Population characteristic"

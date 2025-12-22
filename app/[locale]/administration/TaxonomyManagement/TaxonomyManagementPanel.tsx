@@ -516,6 +516,7 @@ export default function TaxonomyManagementPanel() {
             <form className={styles.formGrid} onSubmit={handleSubmit}>
               {activeType === 'populations' ? (
                 <>
+                  <p className={styles.fieldHint}>{t('populationForm.hints.independentAudience')}</p>
                   <div className={styles.field}>
                     <label htmlFor="population-select">{t('populationForm.fields.population')}</label>
                     <select
