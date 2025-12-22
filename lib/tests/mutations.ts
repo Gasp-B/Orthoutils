@@ -9,9 +9,11 @@ import {
   testThemes,
   tests,
   themeTranslations,
+  testsTranslations,
 } from '@/lib/db/schema';
 import { getTestWithMetadata } from '@/lib/tests/queries';
-import { testAdminUpdateSchema } from '@/lib/validation/tests';
+import { testAdminCreateSchema, testAdminUpdateSchema } from '@/lib/validation/tests';
+import { generateUniqueSlug } from '@/lib/utils/slug';
 
 type DbClient = ReturnType<typeof getDb>;
 type DbTransaction = Parameters<DbClient['transaction']>[0] extends (tx: infer Tx) => Promise<unknown> ? Tx : never;
@@ -103,7 +105,13 @@ export async function updateTestAdminFields(input: unknown) {
       payload.targetAudience !== undefined ||
       payload.domains !== undefined ||
       payload.tags !== undefined ||
-      payload.themes !== undefined;
+      payload.themes !== undefined ||
+      payload.name !== undefined ||
+      payload.shortDescription !== undefined ||
+      payload.objective !== undefined ||
+      payload.ageMinMonths !== undefined ||
+      payload.ageMaxMonths !== undefined ||
+      payload.bibliography !== undefined;
 
     if (shouldTouchTest) {
       const updates: Partial<typeof tests.$inferInsert> = {
@@ -112,8 +120,73 @@ export async function updateTestAdminFields(input: unknown) {
 
       if (payload.status !== undefined) updates.status = payload.status;
       if (payload.targetAudience !== undefined) updates.targetAudience = payload.targetAudience;
+      if (payload.ageMinMonths !== undefined) updates.ageMinMonths = payload.ageMinMonths;
+      if (payload.ageMaxMonths !== undefined) updates.ageMaxMonths = payload.ageMaxMonths;
+      if (payload.bibliography !== undefined) updates.bibliography = payload.bibliography;
 
       await tx.update(tests).set(updates).where(eq(tests.id, payload.id));
+    }
+
+    const shouldTouchTranslation =
+      payload.name !== undefined ||
+      payload.shortDescription !== undefined ||
+      payload.objective !== undefined;
+
+    if (shouldTouchTranslation) {
+      const existingTranslation = await tx
+        .select({
+          name: testsTranslations.name,
+          slug: testsTranslations.slug,
+          shortDescription: testsTranslations.shortDescription,
+          objective: testsTranslations.objective,
+        })
+        .from(testsTranslations)
+        .where(and(eq(testsTranslations.testId, payload.id), eq(testsTranslations.locale, locale)))
+        .limit(1);
+
+      const current = existingTranslation[0];
+      const name = payload.name?.trim() || current?.name;
+
+      if (!name) {
+        throw new Error('Le nom du test est requis.');
+      }
+
+      const slug = payload.name
+        ? await generateUniqueSlug({
+            db: tx,
+            name,
+            table: testsTranslations,
+            slugColumn: testsTranslations.slug,
+            idColumn: testsTranslations.testId,
+            excludeId: payload.id,
+            localeColumn: testsTranslations.locale,
+            locale,
+          })
+        : current?.slug || name;
+
+      const shortDescription =
+        payload.shortDescription !== undefined ? payload.shortDescription : current?.shortDescription ?? null;
+      const objective = payload.objective !== undefined ? payload.objective : current?.objective ?? null;
+
+      await tx
+        .insert(testsTranslations)
+        .values({
+          testId: payload.id,
+          locale,
+          name,
+          slug,
+          shortDescription,
+          objective,
+        })
+      .onConflictDoUpdate({
+        target: [testsTranslations.testId, testsTranslations.locale],
+        set: {
+          name,
+          slug,
+          shortDescription,
+          objective,
+        },
+      });
     }
 
     if (payload.domains !== undefined) {
@@ -147,4 +220,65 @@ export async function updateTestAdminFields(input: unknown) {
   }
 
   return updated;
+}
+
+export async function createTestAdminFields(input: unknown) {
+  const payload = testAdminCreateSchema.parse(input);
+  const locale = payload.locale ?? defaultLocale;
+
+  const createdId = await getDb().transaction(async (tx) => {
+    const name = payload.name.trim();
+    const slug = await generateUniqueSlug({
+      db: tx,
+      name,
+      table: testsTranslations,
+      slugColumn: testsTranslations.slug,
+      localeColumn: testsTranslations.locale,
+      locale,
+    });
+
+    const [createdTest] = await tx
+      .insert(tests)
+      .values({
+        status: payload.status ?? 'draft',
+        targetAudience: payload.targetAudience ?? 'child',
+        ageMinMonths: payload.ageMinMonths ?? null,
+        ageMaxMonths: payload.ageMaxMonths ?? null,
+        bibliography: payload.bibliography ?? [],
+        updatedAt: new Date(),
+      })
+      .returning({ id: tests.id });
+
+    await tx.insert(testsTranslations).values({
+      testId: createdTest.id,
+      locale,
+      name,
+      slug,
+      shortDescription: payload.shortDescription?.trim() || null,
+      objective: payload.objective?.trim() || null,
+    });
+
+    const domainIds = await resolveDomainIdsByLabels(tx, payload.domains ?? [], locale);
+    const tagIds = await resolveTagIdsByLabels(tx, payload.tags ?? [], locale);
+    const themeIds = await resolveThemeIdsByLabels(tx, payload.themes ?? [], locale);
+
+    if (domainIds.length) {
+      await tx.insert(testDomains).values(domainIds.map((id) => ({ testId: createdTest.id, domainId: id })));
+    }
+    if (tagIds.length) {
+      await tx.insert(testTags).values(tagIds.map((id) => ({ testId: createdTest.id, tagId: id })));
+    }
+    if (themeIds.length) {
+      await tx.insert(testThemes).values(themeIds.map((id) => ({ testId: createdTest.id, themeId: id })));
+    }
+
+    return createdTest.id;
+  });
+
+  const created = await getTestWithMetadata(createdId, locale);
+  if (!created) {
+    throw new Error('Impossible de recharger le test.');
+  }
+
+  return created;
 }

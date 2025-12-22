@@ -241,6 +241,9 @@
     "sectionLabel": "Administration",
     "pageTitle": "Gestion des tests",
     "pageLead": "Passez en revue le catalogue, filtrez par statut et audience, et gardez des tests alignés rapidement.",
+    "actions": {
+      "create": "Créer un test"
+    },
     "nav": {
       "cardEyebrow": "Tests",
       "cardTitle": "Gestion des tests"
@@ -314,38 +317,81 @@
       "inlineEdit": {
         "loading": "Chargement..."
       }
-    }
-  },
-  "AdminTests.edit": {
-    "metadata": {
-      "title": "Modifier {name} | Othoutils",
-      "description": "Mettez à jour rapidement les informations clés pour {name}."
     },
-    "sectionLabel": "Administration",
-    "pageTitle": "Modifier {name}",
-    "pageLead": "Ajustez le statut, l'audience et la taxonomie associée à ce test.",
-    "form": {
-      "statusLabel": "Statut",
-      "audienceLabel": "Audience",
-      "domainsLabel": "Domaines",
-      "themesLabel": "Thèmes",
-      "tagsLabel": "Tags",
-      "save": "Enregistrer",
-      "saving": "Enregistrement...",
-      "success": "Les modifications ont bien été enregistrées.",
-      "error": "Impossible d'enregistrer les modifications."
+    "edit": {
+      "metadata": {
+        "title": "Modifier {name} | Othoutils",
+        "description": "Mettez à jour rapidement les informations clés pour {name}."
+      },
+      "sectionLabel": "Administration",
+      "pageTitle": "Modifier {name}",
+      "pageLead": "Ajustez le statut, l'audience et la taxonomie associée à ce test.",
+      "form": {
+        "nameLabel": "Nom du test",
+        "namePlaceholder": "Saisissez le nom du test",
+        "ageMinLabel": "Âge minimum",
+        "ageMinPlaceholder": "ex : 36",
+        "ageMaxLabel": "Âge maximum",
+        "ageMaxPlaceholder": "ex : 144",
+        "ageMinAdultLabel": "Âge minimum (ans)",
+        "ageMinAdultPlaceholder": "ex : 18",
+        "ageMaxAdultLabel": "Âge maximum (ans)",
+        "ageMaxAdultPlaceholder": "ex : 65",
+        "ageUnitLabel": "Unité d'âge",
+        "ageUnitWeeks": "Semaines",
+        "ageUnitMonths": "Mois",
+        "ageUnitYears": "Années",
+        "descriptionSectionTitle": "Description",
+        "descriptionSectionLead": "Renseignez l'essentiel et l'objectif clinique.",
+        "taxonomySectionTitle": "Taxonomie",
+        "taxonomySectionLead": "Associez domaines, thèmes et tags pour la découverte.",
+        "populationSectionTitle": "Population",
+        "populationSectionLead": "Définissez l'audience et la tranche d'âge.",
+        "bibliographySectionTitle": "Bibliographie",
+        "bibliographySectionLead": "Ajoutez les sources et références utiles.",
+        "bibliographyLabel": "Titre de la source",
+        "bibliographyLabelPlaceholder": "Ex. manuel ou titre d'article",
+        "bibliographyUrl": "URL de la source",
+        "bibliographyUrlPlaceholder": "https://exemple.com/source",
+        "bibliographyAdd": "Ajouter une source",
+        "bibliographyRemove": "Supprimer la source",
+        "bibliographyEmpty": "Aucune source pour le moment.",
+        "shortDescriptionLabel": "Description courte",
+        "shortDescriptionPlaceholder": "Résumé rapide pour le catalogue.",
+        "objectiveLabel": "Objectif clinique",
+        "objectivePlaceholder": "Décrivez l'objectif clinique.",
+        "statusLabel": "Statut",
+        "audienceLabel": "Audience",
+        "domainsLabel": "Domaines",
+        "themesLabel": "Thèmes",
+        "tagsLabel": "Tags",
+        "save": "Enregistrer",
+        "create": "Créer",
+        "saving": "Enregistrement...",
+        "success": "Les modifications ont bien été enregistrées.",
+        "error": "Impossible d'enregistrer les modifications."
+      },
+      "multiSelect": {
+        "add": "Ajouter",
+        "remove": "Retirer",
+        "clear": "Tout effacer",
+        "close": "Fermer",
+        "emptySelection": "Aucune sélection",
+        "emptyResults": "Aucun résultat",
+        "loading": "Chargement...",
+        "searchPlaceholder": "Rechercher...",
+        "dialogTitle": "Filtrer {label}",
+        "dialogHelper": "Sélectionnez les valeurs pertinentes."
+      }
     },
-    "multiSelect": {
-      "add": "Ajouter",
-      "remove": "Retirer",
-      "clear": "Tout effacer",
-      "close": "Fermer",
-      "emptySelection": "Aucune sélection",
-      "emptyResults": "Aucun résultat",
-      "loading": "Chargement...",
-      "searchPlaceholder": "Rechercher...",
-      "dialogTitle": "Filtrer {label}",
-      "dialogHelper": "Sélectionnez les valeurs pertinentes."
+    "create": {
+      "metadata": {
+        "title": "Créer un test | Othoutils",
+        "description": "Ajoutez un nouveau test et définissez ses éléments essentiels."
+      },
+      "sectionLabel": "Administration",
+      "pageTitle": "Créer un test",
+      "pageLead": "Renseignez l'essentiel avant d'enrichir le test."
     }
   },
   "Footer": {

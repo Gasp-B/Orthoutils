@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import type { Locale } from '@/i18n/routing';
 import type { TaxonomyResponse, TestDto } from '@/lib/validation/tests';
 import styles from './tests-edit.module.css';
@@ -12,13 +14,33 @@ import styles from './tests-edit.module.css';
 type TestEditFormProps = {
   test: TestDto;
   locale: Locale;
+  mode: 'edit' | 'create';
 };
 
-type FormState = Pick<TestDto, 'status' | 'targetAudience' | 'domains' | 'themes' | 'tags'>;
+type FormState = Pick<
+  TestDto,
+  | 'name'
+  | 'shortDescription'
+  | 'objective'
+  | 'ageMinMonths'
+  | 'ageMaxMonths'
+  | 'bibliography'
+  | 'status'
+  | 'targetAudience'
+  | 'domains'
+  | 'themes'
+  | 'tags'
+>;
 
 type FeedbackState = 'success' | 'error' | null;
 
 const toFormState = (test: TestDto): FormState => ({
+  name: test.name,
+  shortDescription: test.shortDescription,
+  objective: test.objective,
+  ageMinMonths: test.ageMinMonths,
+  ageMaxMonths: test.ageMaxMonths,
+  bibliography: test.bibliography ?? [],
   status: test.status,
   targetAudience: test.targetAudience,
   domains: test.domains,
@@ -26,18 +48,22 @@ const toFormState = (test: TestDto): FormState => ({
   tags: test.tags,
 });
 
-export default function TestEditForm({ test, locale }: TestEditFormProps) {
+export default function TestEditForm({ test, locale, mode }: TestEditFormProps) {
   const t = useTranslations('AdminTests.edit.form');
   const gridT = useTranslations('AdminTests.grid');
   const multiSelectT = useTranslations('AdminTests.edit.multiSelect');
 
   const [formState, setFormState] = useState<FormState>(() => toFormState(test));
+  const [ageUnit, setAgeUnit] = useState<'weeks' | 'months' | 'years'>(
+    test.targetAudience === 'adult' ? 'years' : 'months',
+  );
   const [taxonomy, setTaxonomy] = useState<TaxonomyResponse | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
   useEffect(() => {
     setFormState(toFormState(test));
+    setAgeUnit(test.targetAudience === 'adult' ? 'years' : 'months');
   }, [test]);
 
   useEffect(() => {
@@ -74,6 +100,58 @@ export default function TestEditForm({ test, locale }: TestEditFormProps) {
     [gridT],
   );
 
+  const ageUnitOptions = useMemo(
+    () => [
+      { label: t('ageUnitWeeks'), value: 'weeks' },
+      { label: t('ageUnitMonths'), value: 'months' },
+      { label: t('ageUnitYears'), value: 'years' },
+    ],
+    [t],
+  );
+
+  useEffect(() => {
+    if (formState.targetAudience === 'adult') {
+      setAgeUnit('years');
+    }
+  }, [formState.targetAudience, ageUnit]);
+
+  const toDisplayValue = (valueMonths: number | null, unit: 'weeks' | 'months' | 'years') => {
+    if (valueMonths === null) return '';
+    if (unit === 'weeks') return Math.round(valueMonths * 4);
+    if (unit === 'years') return Number((valueMonths / 12).toFixed(1));
+    return valueMonths;
+  };
+
+  const toMonthsValue = (value: number | null, unit: 'weeks' | 'months' | 'years') => {
+    if (value === null) return null;
+    if (unit === 'weeks') return Math.round(value / 4);
+    if (unit === 'years') return Math.round(value * 12);
+    return Math.round(value);
+  };
+
+  const updateBibliographyItem = (index: number, field: 'label' | 'url', value: string) => {
+    setFormState((prev) => ({
+      ...prev,
+      bibliography: prev.bibliography.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item,
+      ),
+    }));
+  };
+
+  const addBibliographyItem = () => {
+    setFormState((prev) => ({
+      ...prev,
+      bibliography: [...prev.bibliography, { label: '', url: '' }],
+    }));
+  };
+
+  const removeBibliographyItem = (index: number) => {
+    setFormState((prev) => ({
+      ...prev,
+      bibliography: prev.bibliography.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
   const multiSelectTranslations = useMemo(
     () => ({
       add: multiSelectT('add'),
@@ -96,13 +174,26 @@ export default function TestEditForm({ test, locale }: TestEditFormProps) {
     setFeedback(null);
 
     try {
+      const bibliography = formState.bibliography
+        .map((item) => ({
+          label: item.label.trim(),
+          url: item.url.trim(),
+        }))
+        .filter((item) => item.label.length > 0 && item.url.length > 0);
+
       const response = await fetch('/api/tests', {
-        method: 'PATCH',
+        method: mode === 'create' ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          id: test.id,
+          id: mode === 'edit' ? test.id : undefined,
           locale,
+          name: formState.name,
+          shortDescription: formState.shortDescription,
+          objective: formState.objective,
+          ageMinMonths: formState.ageMinMonths,
+          ageMaxMonths: formState.ageMaxMonths,
+          bibliography,
           status: formState.status,
           targetAudience: formState.targetAudience,
           domains: formState.domains,
@@ -128,83 +219,281 @@ export default function TestEditForm({ test, locale }: TestEditFormProps) {
 
   return (
     <form className={styles.form} onSubmit={(event) => void handleSave(event)}>
-      <div className={styles.formRow}>
-        <label className={styles.formLabel} htmlFor="status">
-          {t('statusLabel')}
-        </label>
-        <Select
-          id="status"
-          value={formState.status}
-          onChange={(event) =>
-            setFormState((prev) => ({ ...prev, status: event.target.value as TestDto['status'] }))
-          }
-        >
-          {statusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-      </div>
+      <div className={styles.formSections}>
+        <section className={styles.formSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>{t('descriptionSectionTitle')}</h2>
+            <p className={styles.sectionLead}>{t('descriptionSectionLead')}</p>
+          </div>
+          <div className={styles.sectionBody}>
+            <div className={styles.formRow}>
+              <label className={styles.formLabel} htmlFor="name">
+                {t('nameLabel')}
+              </label>
+              <Input
+                id="name"
+                value={formState.name}
+                onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
+                placeholder={t('namePlaceholder')}
+                required
+              />
+            </div>
 
-      <div className={styles.formRow}>
-        <label className={styles.formLabel} htmlFor="audience">
-          {t('audienceLabel')}
-        </label>
-        <Select
-          id="audience"
-          value={formState.targetAudience}
-          onChange={(event) =>
-            setFormState((prev) => ({
-              ...prev,
-              targetAudience: event.target.value as TestDto['targetAudience'],
-            }))
-          }
-        >
-          {audienceOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-      </div>
+            <div className={styles.formRow}>
+              <label className={styles.formLabel} htmlFor="shortDescription">
+                {t('shortDescriptionLabel')}
+              </label>
+              <Textarea
+                id="shortDescription"
+                value={formState.shortDescription ?? ''}
+                onChange={(event) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    shortDescription: event.target.value ? event.target.value : null,
+                  }))
+                }
+                placeholder={t('shortDescriptionPlaceholder')}
+                rows={3}
+              />
+            </div>
 
-      <div className={styles.formRow}>
-        <MultiSelect
-          label={t('domainsLabel')}
-          options={taxonomy?.domains ?? []}
-          selectedValues={formState.domains}
-          onChange={(values) => setFormState((prev) => ({ ...prev, domains: values }))}
-          translations={multiSelectTranslations}
-          isLoading={!taxonomy}
-        />
-      </div>
+            <div className={styles.formRow}>
+              <label className={styles.formLabel} htmlFor="objective">
+                {t('objectiveLabel')}
+              </label>
+              <Textarea
+                id="objective"
+                value={formState.objective ?? ''}
+                onChange={(event) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    objective: event.target.value ? event.target.value : null,
+                  }))
+                }
+                placeholder={t('objectivePlaceholder')}
+                rows={4}
+              />
+            </div>
+          </div>
+        </section>
 
-      <div className={styles.formRow}>
-        <MultiSelect
-          label={t('themesLabel')}
-          options={taxonomy?.themes ?? []}
-          selectedValues={formState.themes}
-          onChange={(values) => setFormState((prev) => ({ ...prev, themes: values }))}
-          translations={multiSelectTranslations}
-          isLoading={!taxonomy}
-        />
-      </div>
+        <section className={styles.formSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>{t('taxonomySectionTitle')}</h2>
+            <p className={styles.sectionLead}>{t('taxonomySectionLead')}</p>
+          </div>
+          <div className={styles.sectionBody}>
+            <div className={styles.formRow}>
+              <MultiSelect
+                label={t('domainsLabel')}
+                options={taxonomy?.domains ?? []}
+                selectedValues={formState.domains}
+                onChange={(values) => setFormState((prev) => ({ ...prev, domains: values }))}
+                translations={multiSelectTranslations}
+                isLoading={!taxonomy}
+              />
+            </div>
 
-      <div className={styles.formRow}>
-        <MultiSelect
-          label={t('tagsLabel')}
-          options={taxonomy?.tags ?? []}
-          selectedValues={formState.tags}
-          onChange={(values) => setFormState((prev) => ({ ...prev, tags: values }))}
-          translations={multiSelectTranslations}
-          isLoading={!taxonomy}
-        />
+            <div className={styles.formRow}>
+              <MultiSelect
+                label={t('themesLabel')}
+                options={taxonomy?.themes ?? []}
+                selectedValues={formState.themes}
+                onChange={(values) => setFormState((prev) => ({ ...prev, themes: values }))}
+                translations={multiSelectTranslations}
+                isLoading={!taxonomy}
+              />
+            </div>
+
+            <div className={styles.formRow}>
+              <MultiSelect
+                label={t('tagsLabel')}
+                options={taxonomy?.tags ?? []}
+                selectedValues={formState.tags}
+                onChange={(values) => setFormState((prev) => ({ ...prev, tags: values }))}
+                translations={multiSelectTranslations}
+                isLoading={!taxonomy}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.formSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>{t('populationSectionTitle')}</h2>
+            <p className={styles.sectionLead}>{t('populationSectionLead')}</p>
+          </div>
+          <div className={styles.sectionBody}>
+            <div className={styles.formGrid}>
+              <div className={styles.formRow}>
+                <label className={styles.formLabel} htmlFor="status">
+                  {t('statusLabel')}
+                </label>
+                <Select
+                  id="status"
+                  value={formState.status}
+                  onChange={(event) =>
+                    setFormState((prev) => ({ ...prev, status: event.target.value as TestDto['status'] }))
+                  }
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel} htmlFor="audience">
+                  {t('audienceLabel')}
+                </label>
+                <Select
+                  id="audience"
+                  value={formState.targetAudience}
+                  onChange={(event) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      targetAudience: event.target.value as TestDto['targetAudience'],
+                    }))
+                  }
+                >
+                  {audienceOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel} htmlFor="ageMinMonths">
+                  {formState.targetAudience === 'adult' ? t('ageMinAdultLabel') : t('ageMinLabel')}
+                </label>
+                <Input
+                  id="ageMinMonths"
+                  type="number"
+                  min={0}
+                  step={formState.targetAudience === 'adult' ? 0.5 : 1}
+                  value={toDisplayValue(formState.ageMinMonths, ageUnit)}
+                  onChange={(event) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      ageMinMonths: toMonthsValue(
+                        event.target.value === '' ? null : Number(event.target.value),
+                        ageUnit,
+                      ),
+                    }))
+                  }
+                  placeholder={
+                    formState.targetAudience === 'adult' ? t('ageMinAdultPlaceholder') : t('ageMinPlaceholder')
+                  }
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel} htmlFor="ageMaxMonths">
+                  {formState.targetAudience === 'adult' ? t('ageMaxAdultLabel') : t('ageMaxLabel')}
+                </label>
+                <Input
+                  id="ageMaxMonths"
+                  type="number"
+                  min={0}
+                  step={formState.targetAudience === 'adult' ? 0.5 : 1}
+                  value={toDisplayValue(formState.ageMaxMonths, ageUnit)}
+                  onChange={(event) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      ageMaxMonths: toMonthsValue(
+                        event.target.value === '' ? null : Number(event.target.value),
+                        ageUnit,
+                      ),
+                    }))
+                  }
+                  placeholder={
+                    formState.targetAudience === 'adult' ? t('ageMaxAdultPlaceholder') : t('ageMaxPlaceholder')
+                  }
+                />
+              </div>
+
+              {formState.targetAudience === 'child' && (
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel} htmlFor="ageUnit">
+                    {t('ageUnitLabel')}
+                  </label>
+                  <Select
+                    id="ageUnit"
+                    value={ageUnit}
+                    onChange={(event) => setAgeUnit(event.target.value as 'weeks' | 'months' | 'years')}
+                  >
+                    {ageUnitOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.formSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>{t('bibliographySectionTitle')}</h2>
+            <p className={styles.sectionLead}>{t('bibliographySectionLead')}</p>
+          </div>
+          <div className={styles.sectionBody}>
+            {formState.bibliography.length === 0 && (
+              <p className={styles.emptyText}>{t('bibliographyEmpty')}</p>
+            )}
+            <div className={styles.bibliographyList}>
+              {formState.bibliography.map((item, index) => (
+                <div key={`${item.label}-${index}`} className={styles.bibliographyRow}>
+                  <div className={styles.formRow}>
+                    <label className={styles.formLabel} htmlFor={`bibliography-label-${index}`}>
+                      {t('bibliographyLabel')}
+                    </label>
+                    <Input
+                      id={`bibliography-label-${index}`}
+                      value={item.label}
+                      onChange={(event) => updateBibliographyItem(index, 'label', event.target.value)}
+                      placeholder={t('bibliographyLabelPlaceholder')}
+                    />
+                  </div>
+                  <div className={styles.formRow}>
+                    <label className={styles.formLabel} htmlFor={`bibliography-url-${index}`}>
+                      {t('bibliographyUrl')}
+                    </label>
+                    <Input
+                      id={`bibliography-url-${index}`}
+                      type="url"
+                      value={item.url}
+                      onChange={(event) => updateBibliographyItem(index, 'url', event.target.value)}
+                      placeholder={t('bibliographyUrlPlaceholder')}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={styles.removeButton}
+                    onClick={() => removeBibliographyItem(index)}
+                  >
+                    {t('bibliographyRemove')}
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button type="button" variant="outline" onClick={addBibliographyItem}>
+              {t('bibliographyAdd')}
+            </Button>
+          </div>
+        </section>
       </div>
 
       <div className={styles.formActions}>
         <Button type="submit" disabled={isSaving}>
-          {isSaving ? t('saving') : t('save')}
+          {isSaving ? t('saving') : mode === 'create' ? t('create') : t('save')}
         </Button>
         {feedback === 'success' && <p className={styles.successMessage}>{t('success')}</p>}
         {feedback === 'error' && <p className={styles.errorMessage}>{t('error')}</p>}

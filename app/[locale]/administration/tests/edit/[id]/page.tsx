@@ -60,7 +60,7 @@ export default async function TestEditPage({ params }: TestEditPageProps) {
       </div>
 
       <div className="glass panel">
-        <TestEditForm test={test} locale={locale as Locale} />
+        <TestEditForm test={test} locale={locale as Locale} mode="edit" />
       </div>
     </main>
   );

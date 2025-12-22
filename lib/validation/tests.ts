@@ -113,6 +113,12 @@ export type TaxonomyDeletionInput = z.infer<typeof taxonomyDeletionSchema>;
 export const testAdminUpdateSchema = z.object({
   id: z.string().uuid(),
   locale: localeEnum.default(defaultLocale),
+  name: z.string().trim().min(1).optional(),
+  shortDescription: z.string().trim().nullable().optional(),
+  objective: z.string().trim().nullable().optional(),
+  ageMinMonths: z.number().int().min(0).nullable().optional(),
+  ageMaxMonths: z.number().int().min(0).nullable().optional(),
+  bibliography: bibliographySchema.optional(),
   status: validationStatusSchema.optional(),
   targetAudience: targetAudienceSchema.optional(),
   domains: z.array(z.string()).optional(),
@@ -121,3 +127,20 @@ export const testAdminUpdateSchema = z.object({
 });
 
 export type TestAdminUpdateInput = z.infer<typeof testAdminUpdateSchema>;
+
+export const testAdminCreateSchema = z.object({
+  locale: localeEnum.default(defaultLocale),
+  name: z.string().trim().min(1),
+  shortDescription: z.string().trim().nullable().optional(),
+  objective: z.string().trim().nullable().optional(),
+  ageMinMonths: z.number().int().min(0).nullable().optional(),
+  ageMaxMonths: z.number().int().min(0).nullable().optional(),
+  bibliography: bibliographySchema.optional(),
+  status: validationStatusSchema.optional(),
+  targetAudience: targetAudienceSchema.optional(),
+  domains: z.array(z.string()).optional(),
+  themes: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+export type TestAdminCreateInput = z.infer<typeof testAdminCreateSchema>;
