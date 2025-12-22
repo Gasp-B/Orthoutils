@@ -433,6 +433,26 @@ export default function TaxonomyManagementPanel() {
 
         <div className={styles.content}>
           <div className={styles.listCard}>
+            {activeType === 'populations' && (
+              <div className={styles.field}>
+                <label htmlFor="population-select">{t('populationForm.fields.population')}</label>
+                <select
+                  id="population-select"
+                  className={styles.select}
+                  value={selectedPopulationId ?? ''}
+                  onChange={(e) => handlePopulationSelect(e.target.value)}
+                >
+                  <option value="" disabled>
+                    {t('populationForm.placeholders.population')}
+                  </option>
+                  {populationItems.map((population) => (
+                    <option key={population.id} value={population.id}>
+                      {population.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <input
               type="search"
               className={styles.input}
@@ -517,24 +537,6 @@ export default function TaxonomyManagementPanel() {
               {activeType === 'populations' ? (
                 <>
                   <p className={styles.fieldHint}>{t('populationForm.hints.independentAudience')}</p>
-                  <div className={styles.field}>
-                    <label htmlFor="population-select">{t('populationForm.fields.population')}</label>
-                    <select
-                      id="population-select"
-                      className={styles.select}
-                      value={selectedPopulationId ?? ''}
-                      onChange={(e) => handlePopulationSelect(e.target.value)}
-                    >
-                      <option value="" disabled>
-                        {t('populationForm.placeholders.population')}
-                      </option>
-                      {populationItems.map((population) => (
-                        <option key={population.id} value={population.id}>
-                          {population.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
                   <div className={styles.field}>
                     <label htmlFor="population-characteristic-input">
                       {t('populationForm.fields.characteristic')}
