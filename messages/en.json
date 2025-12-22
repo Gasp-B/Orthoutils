@@ -346,6 +346,8 @@
         "descriptionSectionLead": "Capture the essentials and the clinical objective.",
         "taxonomySectionTitle": "Taxonomy",
         "taxonomySectionLead": "Assign domains, themes, and tags for discovery.",
+        "statusSectionTitle": "Status",
+        "statusSectionLead": "Define the publication status for this test.",
         "populationSectionTitle": "Population",
         "populationSectionLead": "Define the audience and age range for this test.",
         "bibliographySectionTitle": "Bibliography",
@@ -363,6 +365,7 @@
         "objectivePlaceholder": "Describe the clinical goal.",
         "statusLabel": "Status",
         "audienceLabel": "Audience",
+        "clinicalProfilesLabel": "Clinical profile",
         "domainsLabel": "Domains",
         "themesLabel": "Themes",
         "tagsLabel": "Tags",
@@ -698,13 +701,13 @@
       "domains": "Domains",
       "tags": "Tags",
       "resourceTypes": "Resource types",
-      "populations": "Population characteristics",
+      "clinicalProfiles": "Clinical profiles",
       "hints": {
         "themes": "Description and synonyms available",
         "domains": "Used to structure the catalog and searchable via synonyms",
         "tags": "Localized synonyms plus optional color",
         "resourceTypes": "Shared list for resource creation",
-        "populations": "Independent characteristics used to qualify tests"
+        "clinicalProfiles": "Independent clinical profiles used to qualify tests"
       }
     },
     "descriptions": {
@@ -712,7 +715,7 @@
       "domains": "Domains help structure the catalog hierarchy, group tools, and can store synonyms to speed up discovery.",
       "tags": "Tags add lightweight labels. Add localized synonyms and an optional color to highlight them.",
       "resourceTypes": "Resource types keep resource sheets consistent and are reused in the admin form.",
-      "populations": "Define the characteristics you can assign to tests, independently of the target audience."
+      "clinicalProfiles": "Define the clinical profiles you can assign to tests, independently of the target audience."
     },
     "aria": {
       "panel": "Taxonomy management",
@@ -772,28 +775,28 @@
         "reset": "Reset"
       }
     },
-    "populationForm": {
+    "clinicalProfileForm": {
       "hints": {
-        "independentAudience": "These characteristics are independent from the child/adult audience."
+        "independentAudience": "These clinical profiles are independent from the child/adult audience."
       },
       "fields": {
-        "characteristic": "Population characteristic"
+        "clinicalProfile": "Clinical profile"
       },
       "placeholders": {
-        "characteristic": "Add a characteristic"
+        "clinicalProfile": "Add a clinical profile"
       },
       "actions": {
-        "update": "Update characteristic",
-        "create": "Add characteristic",
+        "update": "Update clinical profile",
+        "create": "Add clinical profile",
         "reset": "Clear"
       },
       "labels": {
-        "characteristicsTitle": "Characteristics",
-        "characteristicsCount": "{count} characteristic(s)"
+        "characteristicsTitle": "Clinical profiles",
+        "characteristicsCount": "{count} clinical profile(s)"
       },
       "messages": {
-        "noCharacteristics": "No characteristics have been added yet.",
-        "deleteConfirm": "Delete this characteristic? This action cannot be undone."
+        "noCharacteristics": "No clinical profiles have been added yet.",
+        "deleteConfirm": "Delete this clinical profile? This action cannot be undone."
       }
     },
     "labels": {

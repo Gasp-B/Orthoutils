@@ -12,15 +12,15 @@ import {
   type TaxonomyResponse,
 } from '@/lib/validation/tests';
 import {
-  populationCharacteristicCreateSchema,
-  populationCharacteristicDeleteSchema,
-  populationCharacteristicUpdateSchema,
-  populationCharacteristicsResponseSchema,
-  type PopulationCharacteristicsResponse,
-} from '@/lib/validation/population';
+  clinicalProfileCreateSchema,
+  clinicalProfileDeleteSchema,
+  clinicalProfileUpdateSchema,
+  clinicalProfilesResponseSchema,
+  type ClinicalProfilesResponse,
+} from '@/lib/validation/clinical-profiles';
 import { type Locale } from '@/i18n/routing';
 
-type TaxonomyType = 'themes' | 'domains' | 'tags' | 'resourceTypes' | 'populations';
+type TaxonomyType = 'themes' | 'domains' | 'tags' | 'resourceTypes' | 'clinicalProfiles';
 type TaxonomyEntry =
   | TaxonomyResponse['themes'][number]
   | TaxonomyResponse['domains'][number]
@@ -49,7 +49,7 @@ function getColorClass(hex: string | null | undefined) {
   }
 }
 
-const typeToApi: Record<Exclude<TaxonomyType, 'populations'>, 'theme' | 'domain' | 'tag' | 'resourceType'> = {
+const typeToApi: Record<Exclude<TaxonomyType, 'clinicalProfiles'>, 'theme' | 'domain' | 'tag' | 'resourceType'> = {
   themes: 'theme',
   domains: 'domain',
   tags: 'tag',
@@ -75,8 +75,8 @@ export default function TaxonomyManagementPanel() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [selectedCharacteristic, setSelectedCharacteristic] = useState<string | null>(null);
-  const [populationCharacteristic, setPopulationCharacteristic] = useState('');
+  const [selectedClinicalProfile, setSelectedClinicalProfile] = useState<string | null>(null);
+  const [clinicalProfile, setClinicalProfile] = useState('');
 
   const taxonomyQuery = useQuery<TaxonomyResponse>({
     queryKey: ['taxonomy-management', locale],
@@ -88,13 +88,13 @@ export default function TaxonomyManagementPanel() {
     },
   });
 
-  const populationQuery = useQuery<PopulationCharacteristicsResponse>({
-    queryKey: ['population-management', locale],
+  const clinicalProfilesQuery = useQuery<ClinicalProfilesResponse>({
+    queryKey: ['clinical-profiles-management', locale],
     queryFn: async () => {
-      const response = await fetch(`/api/tests/populations?locale=${locale}`);
+      const response = await fetch(`/api/tests/clinical-profiles?locale=${locale}`);
       if (!response.ok) throw new Error(t('messages.loadError'));
       const json = await response.json();
-      return populationCharacteristicsResponseSchema.parse(json);
+      return clinicalProfilesResponseSchema.parse(json);
     },
   });
 
@@ -108,8 +108,8 @@ export default function TaxonomyManagementPanel() {
     setSearchTerm('');
     setStatusMessage(null);
     setErrorMessage(null);
-    setSelectedCharacteristic(null);
-    setPopulationCharacteristic('');
+    setSelectedClinicalProfile(null);
+    setClinicalProfile('');
   }, [activeType]);
 
   const typeDetails = useMemo(() => ({
@@ -117,25 +117,25 @@ export default function TaxonomyManagementPanel() {
     domains: { label: t('types.domains'), hint: t('types.hints.domains'), lead: t('descriptions.domains') },
     tags: { label: t('types.tags'), hint: t('types.hints.tags'), lead: t('descriptions.tags') },
     resourceTypes: { label: t('types.resourceTypes'), hint: t('types.hints.resourceTypes'), lead: t('descriptions.resourceTypes') },
-    populations: { label: t('types.populations'), hint: t('types.hints.populations'), lead: t('descriptions.populations') },
+    clinicalProfiles: { label: t('types.clinicalProfiles'), hint: t('types.hints.clinicalProfiles'), lead: t('descriptions.clinicalProfiles') },
   }), [t]);
 
   const items: TaxonomyEntry[] = useMemo(() => {
     if (!taxonomyQuery.data) return [];
-    if (activeType === 'populations') return [];
+    if (activeType === 'clinicalProfiles') return [];
     return taxonomyQuery.data[activeType] || [];
   }, [taxonomyQuery.data, activeType]);
 
   const availableDomains = taxonomyQuery.data?.domains ?? [];
-  const populationCharacteristics = populationQuery.data?.characteristics ?? [];
+  const clinicalProfiles = clinicalProfilesQuery.data?.profiles ?? [];
 
   const typeCounts = useMemo(() => ({
     themes: taxonomyQuery.data?.themes.length ?? 0,
     domains: taxonomyQuery.data?.domains.length ?? 0,
     tags: taxonomyQuery.data?.tags.length ?? 0,
     resourceTypes: taxonomyQuery.data?.resourceTypes.length ?? 0,
-    populations: populationCharacteristics.length,
-  }), [taxonomyQuery.data, populationCharacteristics.length]);
+    clinicalProfiles: clinicalProfiles.length,
+  }), [taxonomyQuery.data, clinicalProfiles.length]);
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -150,9 +150,9 @@ export default function TaxonomyManagementPanel() {
 
   const filteredCharacteristics = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return populationCharacteristics;
-    return populationCharacteristics.filter((value) => value.toLowerCase().includes(term));
-  }, [populationCharacteristics, searchTerm]);
+    if (!term) return clinicalProfiles;
+    return clinicalProfiles.filter((value) => value.toLowerCase().includes(term));
+  }, [clinicalProfiles, searchTerm]);
 
   // Logique de regroupement des thèmes par domaines
   const themesGroups = useMemo(() => {
@@ -218,9 +218,9 @@ export default function TaxonomyManagementPanel() {
     onError: (err) => { setErrorMessage(err.message); setStatusMessage(null); },
   });
 
-  const populationSaveMutation = useMutation({
+  const clinicalProfileSaveMutation = useMutation({
     mutationFn: async (input: { method: 'POST' | 'PUT'; payload: any }) => {
-      const res = await fetch('/api/tests/populations', {
+      const res = await fetch('/api/tests/clinical-profiles', {
         method: input.method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input.payload),
@@ -229,20 +229,20 @@ export default function TaxonomyManagementPanel() {
       return res.json();
     },
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['population-management', locale] });
+      await queryClient.invalidateQueries({ queryKey: ['clinical-profiles-management', locale] });
       setStatusMessage(
         variables.method === 'PUT' ? t('messages.updated') : t('messages.created'),
       );
       setErrorMessage(null);
-      setSelectedCharacteristic(null);
-      setPopulationCharacteristic('');
+      setSelectedClinicalProfile(null);
+      setClinicalProfile('');
     },
     onError: (err) => { setErrorMessage(err.message); setStatusMessage(null); },
   });
 
-  const populationDeleteMutation = useMutation({
+  const clinicalProfileDeleteMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await fetch('/api/tests/populations', {
+      const res = await fetch('/api/tests/clinical-profiles', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -251,11 +251,11 @@ export default function TaxonomyManagementPanel() {
       return res.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['population-management', locale] });
+      await queryClient.invalidateQueries({ queryKey: ['clinical-profiles-management', locale] });
       setStatusMessage(t('messages.deleted'));
       setErrorMessage(null);
-      setSelectedCharacteristic(null);
-      setPopulationCharacteristic('');
+      setSelectedClinicalProfile(null);
+      setClinicalProfile('');
     },
     onError: (err) => { setErrorMessage(err.message); setStatusMessage(null); },
   });
@@ -284,30 +284,30 @@ export default function TaxonomyManagementPanel() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (activeType === 'populations') {
+    if (activeType === 'clinicalProfiles') {
       const payload = {
         locale,
-        value: populationCharacteristic.trim(),
+        value: clinicalProfile.trim(),
       };
-      const parsed = selectedCharacteristic
-        ? populationCharacteristicUpdateSchema.safeParse({
+      const parsed = selectedClinicalProfile
+        ? clinicalProfileUpdateSchema.safeParse({
             ...payload,
-            previousValue: selectedCharacteristic,
+            previousValue: selectedClinicalProfile,
           })
-        : populationCharacteristicCreateSchema.safeParse(payload);
+        : clinicalProfileCreateSchema.safeParse(payload);
       if (!parsed.success) {
         setErrorMessage(parsed.error.issues[0]?.message ?? t('messages.validationError'));
         return;
       }
-      await populationSaveMutation.mutateAsync({
-        method: selectedCharacteristic ? 'PUT' : 'POST',
+      await clinicalProfileSaveMutation.mutateAsync({
+        method: selectedClinicalProfile ? 'PUT' : 'POST',
         payload: parsed.data,
       });
       return;
     }
 
     const payload = {
-      type: typeToApi[activeType as Exclude<TaxonomyType, 'populations'>],
+      type: typeToApi[activeType as Exclude<TaxonomyType, 'clinicalProfiles'>],
       locale,
       value: formState.label.trim(),
       description: activeType === 'themes' ? formState.description.trim() || null : undefined,
@@ -327,21 +327,21 @@ export default function TaxonomyManagementPanel() {
     const confirmed = window.confirm(t('messages.deleteConfirm'));
     if (!confirmed) return;
     await deleteMutation.mutateAsync({
-      type: typeToApi[activeType as Exclude<TaxonomyType, 'populations'>],
+      type: typeToApi[activeType as Exclude<TaxonomyType, 'clinicalProfiles'>],
       id,
       locale,
     });
   };
 
-  const handleCharacteristicEdit = (value: string) => {
-    setSelectedCharacteristic(value);
-    setPopulationCharacteristic(value);
+  const handleClinicalProfileEdit = (value: string) => {
+    setSelectedClinicalProfile(value);
+    setClinicalProfile(value);
   };
 
-  const handleCharacteristicDelete = async (value: string) => {
-    const confirmed = window.confirm(t('populationForm.messages.deleteConfirm'));
+  const handleClinicalProfileDelete = async (value: string) => {
+    const confirmed = window.confirm(t('clinicalProfileForm.messages.deleteConfirm'));
     if (!confirmed) return;
-    const parsed = populationCharacteristicDeleteSchema.safeParse({
+    const parsed = clinicalProfileDeleteSchema.safeParse({
       locale,
       value,
     });
@@ -349,7 +349,7 @@ export default function TaxonomyManagementPanel() {
       setErrorMessage(parsed.error.issues[0]?.message ?? t('messages.validationError'));
       return;
     }
-    await populationDeleteMutation.mutateAsync(parsed.data);
+    await clinicalProfileDeleteMutation.mutateAsync(parsed.data);
   };
 
   // Helper pour rendre un item de la liste afin d'éviter la duplication de code
@@ -415,7 +415,7 @@ export default function TaxonomyManagementPanel() {
             />
             
             <div className={styles.list}>
-              {activeType === 'populations' ? (
+              {activeType === 'clinicalProfiles' ? (
                 <>
                   {filteredCharacteristics.length === 0 && (
                     <p className={styles.emptyListMessage}>{t('list.noResults')}</p>
@@ -427,14 +427,14 @@ export default function TaxonomyManagementPanel() {
                         <button
                           type="button"
                           className={styles.actionButton}
-                          onClick={() => handleCharacteristicEdit(value)}
+                          onClick={() => handleClinicalProfileEdit(value)}
                         >
                           {t('actions.edit')}
                         </button>
                         <button
                           type="button"
                           className={styles.deleteButton}
-                          onClick={() => handleCharacteristicDelete(value)}
+                          onClick={() => handleClinicalProfileDelete(value)}
                         >
                           {t('actions.delete')}
                         </button>
@@ -482,35 +482,41 @@ export default function TaxonomyManagementPanel() {
 
           <div className={styles.formCard}>
             <form className={styles.formGrid} onSubmit={handleSubmit}>
-              {activeType === 'populations' ? (
+              {activeType === 'clinicalProfiles' ? (
                 <>
-                  <p className={styles.fieldHint}>{t('populationForm.hints.independentAudience')}</p>
+                  <p className={styles.fieldHint}>{t('clinicalProfileForm.hints.independentAudience')}</p>
                   <div className={styles.field}>
-                    <label htmlFor="population-characteristic-input">
-                      {t('populationForm.fields.characteristic')}
+                    <label htmlFor="clinical-profile-input">
+                      {t('clinicalProfileForm.fields.clinicalProfile')}
                     </label>
                     <input
-                      id="population-characteristic-input"
+                      id="clinical-profile-input"
                       className={styles.input}
-                      value={populationCharacteristic}
-                      onChange={(e) => setPopulationCharacteristic(e.target.value)}
-                      placeholder={t('populationForm.placeholders.characteristic')}
+                      value={clinicalProfile}
+                      onChange={(e) => setClinicalProfile(e.target.value)}
+                      placeholder={t('clinicalProfileForm.placeholders.clinicalProfile')}
                       required
                     />
                   </div>
                   <div className={styles.formActions}>
-                    <button className={styles.submitButton} type="submit" disabled={populationSaveMutation.isPending}>
-                      {selectedCharacteristic ? t('populationForm.actions.update') : t('populationForm.actions.create')}
+                    <button
+                      className={styles.submitButton}
+                      type="submit"
+                      disabled={clinicalProfileSaveMutation.isPending}
+                    >
+                      {selectedClinicalProfile
+                        ? t('clinicalProfileForm.actions.update')
+                        : t('clinicalProfileForm.actions.create')}
                     </button>
                     <button
                       type="button"
                       className={styles.secondaryButton}
                       onClick={() => {
-                        setSelectedCharacteristic(null);
-                        setPopulationCharacteristic('');
+                        setSelectedClinicalProfile(null);
+                        setClinicalProfile('');
                       }}
                     >
-                      {t('populationForm.actions.reset')}
+                      {t('clinicalProfileForm.actions.reset')}
                     </button>
                   </div>
                 </>
