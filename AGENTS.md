@@ -29,6 +29,21 @@ Avant toute modification du code ou du schéma TypeScript :
 2. **Priorité aux migrations** : Si une table est présente dans le code mais supprimée par un fichier `.sql` (ex: `drop_tools_tables.sql`), elle DOIT être supprimée immédiatement du fichier `schema.ts`.
 3. **Vérifier les types natifs** : S'assurer que les types complexes comme `tsvector` ou les `enums` sont déclarés dans Drizzle pour correspondre aux index et colonnes de recherche SQL.
 
+TESTING & QUALITY ASSURANCE (STRICT MOCKING):
+
+NO LIVE DATABASE ACCESS:
+            - Unit tests MUST NOT connect to the production or staging Supabase instance.
+            - Tests must be executable without any `.env` file (environment agnostic).
+
+MOCKING STRATEGY:
+            - Mock the Supabase Client: Intercept all calls to `supabase.from()`, `select()`, etc., and return static fixture data.
+            - Mock Drizzle ORM: If testing DB logic, mock the query builder responses.
+            - Zero Network Requests: Tests should not make real HTTP calls.
+
+TOOLING:
+            - Use Vitest (preferred for Next.js) or Jest.
+            - If testing libraries are missing in package.json, install them as devDependencies immediately.
+
 ## Vigilance spécifique
 - **Traductions** : Chaque table principale (ex: `tests`, `themes`) possède souvent une table `_translations` associée. Ne pas oublier de les synchroniser.
 - **Thèmes vs Pathologies** : Ne plus utiliser le terme "pathologies". Tout a été migré vers "themes".
