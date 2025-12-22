@@ -33,8 +33,20 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${requestUrl.origin}/${locale}/account`);
       }
 
-      // Redirection par défaut (Dashboard ou URL 'next')
-      const targetPath = next ?? `/${locale}/administration`;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const { data: profile, error: profileError } = user
+        ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+        : { data: null, error: null };
+
+      if (profileError) {
+        console.error('[Auth Callback] Failed to load user role:', profileError.message);
+      }
+
+      const isAdmin = profile?.role === 'admin';
+      const targetPath = isAdmin ? `/${locale}/administration` : `/${locale}`;
       return NextResponse.redirect(`${requestUrl.origin}${targetPath}`);
     } else {
       console.error('[Auth Callback] Code exchange error:', error.message);

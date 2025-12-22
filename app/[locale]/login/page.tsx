@@ -56,8 +56,22 @@ export default function LoginPage() {
       return;
     }
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { data: profile, error: profileError } = user
+      ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+      : { data: null, error: null };
+
+    if (profileError) {
+      console.error('[Login] Failed to load user role:', profileError);
+    }
+
+    const isAdmin = profile?.role === 'admin';
+
     router.refresh();
-    router.push(`/${locale}/administration`);
+    router.push(isAdmin ? `/${locale}/administration` : `/${locale}`);
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'apple') => {
@@ -68,7 +82,7 @@ export default function LoginPage() {
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/${locale}/administration`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/${locale}`,
       },
     });
 
@@ -96,7 +110,7 @@ export default function LoginPage() {
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email: parsed.data.email,
       options: {
-        emailRedirectTo: `${window.location.origin}/${locale}/administration`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/${locale}`,
       },
     });
 
