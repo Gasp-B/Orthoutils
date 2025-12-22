@@ -75,7 +75,6 @@ export default function TaxonomyManagementPanel() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [selectedPopulationId, setSelectedPopulationId] = useState<string | null>(null);
   const [selectedCharacteristic, setSelectedCharacteristic] = useState<string | null>(null);
   const [populationCharacteristic, setPopulationCharacteristic] = useState('');
 
@@ -109,7 +108,6 @@ export default function TaxonomyManagementPanel() {
     setSearchTerm('');
     setStatusMessage(null);
     setErrorMessage(null);
-    setSelectedPopulationId(null);
     setSelectedCharacteristic(null);
     setPopulationCharacteristic('');
   }, [activeType]);
@@ -129,18 +127,15 @@ export default function TaxonomyManagementPanel() {
   }, [taxonomyQuery.data, activeType]);
 
   const availableDomains = taxonomyQuery.data?.domains ?? [];
-  const populationItems = populationQuery.data?.populations ?? [];
-  const totalPopulationCharacteristics = useMemo(() => (
-    populationItems.reduce((total, population) => total + population.characteristics.length, 0)
-  ), [populationItems]);
+  const populationCharacteristics = populationQuery.data?.characteristics ?? [];
 
   const typeCounts = useMemo(() => ({
     themes: taxonomyQuery.data?.themes.length ?? 0,
     domains: taxonomyQuery.data?.domains.length ?? 0,
     tags: taxonomyQuery.data?.tags.length ?? 0,
     resourceTypes: taxonomyQuery.data?.resourceTypes.length ?? 0,
-    populations: totalPopulationCharacteristics,
-  }), [taxonomyQuery.data, totalPopulationCharacteristics]);
+    populations: populationCharacteristics.length,
+  }), [taxonomyQuery.data, populationCharacteristics.length]);
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -153,14 +148,11 @@ export default function TaxonomyManagementPanel() {
     });
   }, [items, searchTerm]);
 
-  const selectedPopulation = populationItems.find((population) => population.id === selectedPopulationId);
   const filteredCharacteristics = useMemo(() => {
-    if (!selectedPopulation) return [];
     const term = searchTerm.trim().toLowerCase();
-    const list = selectedPopulation.characteristics;
-    if (!term) return list;
-    return list.filter((value) => value.toLowerCase().includes(term));
-  }, [selectedPopulation, searchTerm]);
+    if (!term) return populationCharacteristics;
+    return populationCharacteristics.filter((value) => value.toLowerCase().includes(term));
+  }, [populationCharacteristics, searchTerm]);
 
   // Logique de regroupement des thèmes par domaines
   const themesGroups = useMemo(() => {
@@ -293,12 +285,7 @@ export default function TaxonomyManagementPanel() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (activeType === 'populations') {
-      if (!selectedPopulationId) {
-        setErrorMessage(t('populationForm.messages.populationRequired'));
-        return;
-      }
       const payload = {
-        populationId: selectedPopulationId,
         locale,
         value: populationCharacteristic.trim(),
       };
@@ -346,12 +333,6 @@ export default function TaxonomyManagementPanel() {
     });
   };
 
-  const handlePopulationSelect = (id: string) => {
-    setSelectedPopulationId(id);
-    setSelectedCharacteristic(null);
-    setPopulationCharacteristic('');
-  };
-
   const handleCharacteristicEdit = (value: string) => {
     setSelectedCharacteristic(value);
     setPopulationCharacteristic(value);
@@ -359,9 +340,8 @@ export default function TaxonomyManagementPanel() {
 
   const handleCharacteristicDelete = async (value: string) => {
     const confirmed = window.confirm(t('populationForm.messages.deleteConfirm'));
-    if (!confirmed || !selectedPopulationId) return;
+    if (!confirmed) return;
     const parsed = populationCharacteristicDeleteSchema.safeParse({
-      populationId: selectedPopulationId,
       locale,
       value,
     });
@@ -395,13 +375,6 @@ export default function TaxonomyManagementPanel() {
     </div>
   );
 
-  useEffect(() => {
-    if (activeType !== 'populations') return;
-    if (selectedPopulationId) return;
-    if (populationItems.length === 0) return;
-    setSelectedPopulationId(populationItems[0]?.id ?? null);
-  }, [activeType, populationItems, selectedPopulationId]);
-
   return (
     <section className={styles.panel}>
       <aside className={styles.sidebar}>
@@ -433,26 +406,6 @@ export default function TaxonomyManagementPanel() {
 
         <div className={styles.content}>
           <div className={styles.listCard}>
-            {activeType === 'populations' && (
-              <div className={styles.field}>
-                <label htmlFor="population-select">{t('populationForm.fields.population')}</label>
-                <select
-                  id="population-select"
-                  className={styles.select}
-                  value={selectedPopulationId ?? ''}
-                  onChange={(e) => handlePopulationSelect(e.target.value)}
-                >
-                  <option value="" disabled>
-                    {t('populationForm.placeholders.population')}
-                  </option>
-                  {populationItems.map((population) => (
-                    <option key={population.id} value={population.id}>
-                      {population.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
             <input
               type="search"
               className={styles.input}
@@ -464,15 +417,10 @@ export default function TaxonomyManagementPanel() {
             <div className={styles.list}>
               {activeType === 'populations' ? (
                 <>
-                  {!selectedPopulation && (
-                    <p className={styles.emptyListMessage}>
-                      {t('populationForm.messages.selectPopulation')}
-                    </p>
-                  )}
-                  {selectedPopulation && filteredCharacteristics.length === 0 && (
+                  {filteredCharacteristics.length === 0 && (
                     <p className={styles.emptyListMessage}>{t('list.noResults')}</p>
                   )}
-                  {selectedPopulation && filteredCharacteristics.map((value) => (
+                  {filteredCharacteristics.map((value) => (
                     <div key={value} className={styles.characteristicItem}>
                       <span className={styles.characteristicLabel}>{value}</span>
                       <div className={styles.actions}>

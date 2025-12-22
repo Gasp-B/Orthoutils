@@ -777,11 +777,9 @@
         "independentAudience": "These characteristics are independent from the child/adult audience."
       },
       "fields": {
-        "population": "Population",
         "characteristic": "Population characteristic"
       },
       "placeholders": {
-        "population": "Select a population",
         "characteristic": "Add a characteristic"
       },
       "actions": {
@@ -794,8 +792,6 @@
         "characteristicsCount": "{count} characteristic(s)"
       },
       "messages": {
-        "populationRequired": "Please choose a population.",
-        "selectPopulation": "Select a population to review its characteristics.",
         "noCharacteristics": "No characteristics have been added yet.",
         "deleteConfirm": "Delete this characteristic? This action cannot be undone."
       }

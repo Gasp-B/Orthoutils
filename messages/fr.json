@@ -710,11 +710,9 @@
         "independentAudience": "Ces caractéristiques sont indépendantes de l'audience enfant/adulte."
       },
       "fields": {
-        "population": "Population",
         "characteristic": "Caractéristique de population"
       },
       "placeholders": {
-        "population": "Sélectionnez une population",
         "characteristic": "Ajoutez une caractéristique"
       },
       "actions": {
@@ -727,8 +725,6 @@
         "characteristicsCount": "{count} caractéristique(s)"
       },
       "messages": {
-        "populationRequired": "Veuillez choisir une population.",
-        "selectPopulation": "Sélectionnez une population pour afficher ses caractéristiques.",
         "noCharacteristics": "Aucune caractéristique n'a encore été ajoutée.",
         "deleteConfirm": "Supprimer cette caractéristique ? Cette action est irréversible."
       }

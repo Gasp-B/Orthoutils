@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { defaultLocale, locales, type Locale } from '@/i18n/routing';
 import { getDb } from '@/lib/db/client';
-import { createRouteHandlerSupabaseClient, supabaseAdmin } from '@/lib/supabaseClient';
-import { populationTranslations } from '@/lib/db/schema';
+import { createRouteHandlerSupabaseClient } from '@/lib/supabaseClient';
+import { populations, populationTranslations } from '@/lib/db/schema';
 import {
   populationCharacteristicCreateSchema,
   populationCharacteristicDeleteSchema,
@@ -19,62 +19,77 @@ function normalizeCharacteristic(value: string) {
   return normalized;
 }
 
-async function getPopulationTranslation(
-  populationId: string,
-  locale: Locale,
-) {
+async function ensurePopulationTranslations(locale: Locale) {
   const db = getDb();
-  const [row] = await db
-    .select({
-      id: populationTranslations.id,
-      label: populationTranslations.label,
-      populationCharacteristic: populationTranslations.populationCharacteristic,
-    })
+  const populationRows = await db.select({ id: populations.id }).from(populations);
+  if (populationRows.length === 0) return;
+
+  const localeRows = await db
+    .select({ populationId: populationTranslations.populationId })
     .from(populationTranslations)
-    .where(and(eq(populationTranslations.populationId, populationId), eq(populationTranslations.locale, locale)))
-    .limit(1);
+    .where(eq(populationTranslations.locale, locale));
+  const existing = new Set(localeRows.map((row) => row.populationId));
 
-  return row ?? null;
-}
+  const missingIds = populationRows
+    .map((row) => row.id)
+    .filter((id) => !existing.has(id));
 
-async function ensurePopulationTranslation(
-  populationId: string,
-  locale: Locale,
-) {
-  const db = getDb();
-  const existing = await getPopulationTranslation(populationId, locale);
-  if (existing) return existing;
+  if (missingIds.length === 0) return;
 
-  const [fallback] = await db
+  const fallbackRows = await db
     .select({
+      populationId: populationTranslations.populationId,
       label: populationTranslations.label,
     })
     .from(populationTranslations)
     .where(
       and(
-        eq(populationTranslations.populationId, populationId),
+        inArray(populationTranslations.populationId, missingIds),
         eq(populationTranslations.locale, defaultLocale),
       ),
-    )
-    .limit(1);
+    );
 
-  if (!fallback) return null;
+  const labelByPopulation = new Map(
+    fallbackRows.map((row) => [row.populationId, row.label]),
+  );
 
-  const [created] = await db
-    .insert(populationTranslations)
-    .values({
-      populationId,
-      locale,
-      label: fallback.label,
-      populationCharacteristic: [],
+  const insertValues = missingIds
+    .map((id) => {
+      const label = labelByPopulation.get(id);
+      if (!label) return null;
+      return {
+        populationId: id,
+        locale,
+        label,
+        populationCharacteristic: [],
+      };
     })
-    .returning({
-      id: populationTranslations.id,
-      label: populationTranslations.label,
-      populationCharacteristic: populationTranslations.populationCharacteristic,
-    });
+    .filter((value): value is NonNullable<typeof value> => Boolean(value));
 
-  return created ?? null;
+  if (insertValues.length > 0) {
+    await db.insert(populationTranslations).values(insertValues);
+  }
+}
+
+async function loadCharacteristics(locale: Locale) {
+  const db = getDb();
+  const rows = await db
+    .select({
+      locale: populationTranslations.locale,
+      characteristics: populationTranslations.populationCharacteristic,
+    })
+    .from(populationTranslations)
+    .where(inArray(populationTranslations.locale, [locale, defaultLocale]));
+
+  const localeRows = rows.filter((row) => row.locale === locale);
+  const fallbackRows = rows.filter((row) => row.locale === defaultLocale);
+  const sourceRows = localeRows.length > 0 ? localeRows : fallbackRows;
+
+  const characteristics = Array.from(
+    new Set(sourceRows.flatMap((row) => row.characteristics ?? [])),
+  ).sort((a, b) => a.localeCompare(b));
+
+  return characteristics;
 }
 
 export async function GET(request: NextRequest) {
@@ -92,58 +107,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const dataClient = supabaseAdmin ?? supabase;
-
-    const [populationRowsResult, translationRowsResult] = await Promise.all([
-      dataClient.from('population').select('id'),
-      dataClient
-        .from('population_translations')
-        .select('population_id, locale, label, population_characteristic')
-        .in('locale', [locale, defaultLocale]),
-    ]);
-
-    if (populationRowsResult.error) throw populationRowsResult.error;
-    if (translationRowsResult.error) throw translationRowsResult.error;
-
-    const populationsRows = (populationRowsResult.data ?? []) as Array<{ id: string }>;
-    const translationRows = (translationRowsResult.data ?? []) as Array<{
-      population_id: string;
-      locale: string;
-      label: string;
-      population_characteristic: string[] | null;
-    }>;
-
-    const translationsById = new Map<string, Array<{ locale: string; label: string; characteristics: string[] }>>();
-    for (const row of translationRows) {
-      const list = translationsById.get(row.population_id) ?? [];
-      list.push({
-        locale: row.locale,
-        label: row.label,
-        characteristics: row.population_characteristic ?? [],
-      });
-      translationsById.set(row.population_id, list);
-    }
-
-    const resolved = populationsRows
-      .map((population) => {
-        const list = translationsById.get(population.id) ?? [];
-        const translation =
-          list.find((item) => item.locale === locale) ??
-          list.find((item) => item.locale === defaultLocale);
-
-        return translation
-          ? {
-              id: population.id,
-              label: translation.label,
-              characteristics: translation.characteristics,
-            }
-          : null;
-      })
-      .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
-      .sort((a, b) => a.label.localeCompare(b.label));
+    const characteristics = await loadCharacteristics(locale);
 
     const payload = populationCharacteristicsResponseSchema.parse({
-      populations: resolved,
+      characteristics,
     });
 
     return NextResponse.json(payload, {
@@ -162,25 +129,16 @@ export async function POST(request: NextRequest) {
     const locale = payload.locale ?? defaultLocale;
     const normalized = normalizeCharacteristic(payload.value);
 
-    const translation = await ensurePopulationTranslation(payload.populationId, locale);
-
-    if (!translation) {
-      return NextResponse.json({ error: 'Population introuvable.' }, { status: 404 });
-    }
-
-    const characteristics = Array.from(
-      new Set([...(translation.populationCharacteristic ?? []), normalized]),
-    );
+    await ensurePopulationTranslations(locale);
+    const current = await loadCharacteristics(locale);
+    const characteristics = Array.from(new Set([...current, normalized])).sort((a, b) => a.localeCompare(b));
 
     await getDb()
       .update(populationTranslations)
       .set({ populationCharacteristic: characteristics })
-      .where(eq(populationTranslations.id, translation.id));
+      .where(eq(populationTranslations.locale, locale));
 
-    return NextResponse.json({
-      populationId: payload.populationId,
-      characteristics,
-    }, { status: 201 });
+    return NextResponse.json({ characteristics }, { status: 201 });
   } catch (error) {
     console.error('Create population characteristic error', error);
     const message = error instanceof Error ? error.message : 'Erreur serveur';
@@ -195,29 +153,23 @@ export async function PUT(request: NextRequest) {
     const previousValue = normalizeCharacteristic(payload.previousValue);
     const normalized = normalizeCharacteristic(payload.value);
 
-    const translation = await getPopulationTranslation(payload.populationId, locale);
-    if (!translation) {
-      return NextResponse.json({ error: 'Population introuvable.' }, { status: 404 });
-    }
+    await ensurePopulationTranslations(locale);
+    const current = await loadCharacteristics(locale);
 
-    const characteristics = translation.populationCharacteristic ?? [];
-    if (!characteristics.includes(previousValue)) {
+    if (!current.includes(previousValue)) {
       return NextResponse.json({ error: 'Caractéristique introuvable.' }, { status: 404 });
     }
 
     const updated = Array.from(
-      new Set(characteristics.map((value) => (value === previousValue ? normalized : value))),
-    );
+      new Set(current.map((value) => (value === previousValue ? normalized : value))),
+    ).sort((a, b) => a.localeCompare(b));
 
     await getDb()
       .update(populationTranslations)
       .set({ populationCharacteristic: updated })
-      .where(eq(populationTranslations.id, translation.id));
+      .where(eq(populationTranslations.locale, locale));
 
-    return NextResponse.json({
-      populationId: payload.populationId,
-      characteristics: updated,
-    }, { status: 200 });
+    return NextResponse.json({ characteristics: updated }, { status: 200 });
   } catch (error) {
     console.error('Update population characteristic error', error);
     const message = error instanceof Error ? error.message : 'Erreur serveur';
@@ -231,24 +183,20 @@ export async function DELETE(request: NextRequest) {
     const locale = payload.locale ?? defaultLocale;
     const normalized = normalizeCharacteristic(payload.value);
 
-    const translation = await getPopulationTranslation(payload.populationId, locale);
-    if (!translation) {
-      return NextResponse.json({ error: 'Population introuvable.' }, { status: 404 });
+    await ensurePopulationTranslations(locale);
+    const current = await loadCharacteristics(locale);
+    if (!current.includes(normalized)) {
+      return NextResponse.json({ error: 'Caractéristique introuvable.' }, { status: 404 });
     }
 
-    const characteristics = (translation.populationCharacteristic ?? []).filter(
-      (value) => value !== normalized,
-    );
+    const characteristics = current.filter((value) => value !== normalized);
 
     await getDb()
       .update(populationTranslations)
       .set({ populationCharacteristic: characteristics })
-      .where(eq(populationTranslations.id, translation.id));
+      .where(eq(populationTranslations.locale, locale));
 
-    return NextResponse.json({
-      populationId: payload.populationId,
-      characteristics,
-    }, { status: 200 });
+    return NextResponse.json({ characteristics }, { status: 200 });
   } catch (error) {
     console.error('Delete population characteristic error', error);
     const message = error instanceof Error ? error.message : 'Erreur serveur';
