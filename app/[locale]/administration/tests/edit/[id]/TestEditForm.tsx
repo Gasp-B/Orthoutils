@@ -104,6 +104,7 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
     () => [
       { label: t('ageUnitWeeks'), value: 'weeks' },
       { label: t('ageUnitMonths'), value: 'months' },
+      { label: t('ageUnitYears'), value: 'years' },
     ],
     [t],
   );
@@ -111,8 +112,6 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
   useEffect(() => {
     if (formState.targetAudience === 'adult') {
       setAgeUnit('years');
-    } else if (ageUnit === 'years') {
-      setAgeUnit('months');
     }
   }, [formState.targetAudience, ageUnit]);
 
@@ -425,7 +424,7 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
                   <Select
                     id="ageUnit"
                     value={ageUnit}
-                    onChange={(event) => setAgeUnit(event.target.value as 'weeks' | 'months')}
+                    onChange={(event) => setAgeUnit(event.target.value as 'weeks' | 'months' | 'years')}
                   >
                     {ageUnitOptions.map((option) => (
                       <option key={option.value} value={option.value}>
