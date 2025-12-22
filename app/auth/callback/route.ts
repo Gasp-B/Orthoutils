@@ -38,7 +38,11 @@ export async function GET(request: NextRequest) {
       } = await supabase.auth.getUser();
 
       const { data: profile, error: profileError } = user
-        ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+        ? await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single<{ role: string | null }>()
         : { data: null, error: null };
 
       if (profileError) {
