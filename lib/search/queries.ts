@@ -1,7 +1,8 @@
-import type { Locale } from '@/i18n/routing';
+import { defaultLocale, type Locale } from '@/i18n/routing';
 import { getDb } from '@/lib/db/client';
 import {
   domainsTranslations,
+  populationTranslations,
   tagsTranslations,
   resourceDomains,
   resourceTags,
@@ -18,6 +19,7 @@ import {
 import type { SearchGroup, SearchHubProps, SearchQueryInput, SearchResult } from '@/lib/search/types';
 import { searchLocaleSchema, searchPaginationSchema, searchQuerySchema } from '@/lib/validation/search';
 import { and, asc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 
 export async function searchAll(query: string, locale: Locale) {
   const db = await getDb();
@@ -37,12 +39,8 @@ export async function searchAll(query: string, locale: Locale) {
       and(
         eq(testsTranslations.locale, locale),
         eq(tests.status, 'published'),
-        or(
-          ilike(testsTranslations.name, `%${normalizedQuery}%`),
-          ilike(testsTranslations.shortDescription, `%${normalizedQuery}%`),
-          // Utilisation du vecteur FTS pour la performance
-          sql`${tests.ftsVector} @@ to_tsquery('french', ${normalizedQuery})`
-        )
+        // Utilisation du vecteur FTS pour la performance
+        sql`${tests.ftsVector} @@ plainto_tsquery('french', ${normalizedQuery})`
       )
     )
     .limit(10);
@@ -89,16 +87,12 @@ export async function getSearchHubData(input: SearchQueryInput): Promise<SearchH
   ];
 
   if (normalizedQuery) {
-    const testSearchFilter = or(
-      sql`${tests.ftsVector} @@ plainto_tsquery('french', ${normalizedQuery})`,
-      ilike(testsTranslations.name, `%${normalizedQuery}%`),
-      ilike(testsTranslations.shortDescription, `%${normalizedQuery}%`),
-      ilike(testsTranslations.objective, `%${normalizedQuery}%`),
-    );
-    if (testSearchFilter) {
-      testFilters.push(testSearchFilter);
-    }
+    testFilters.push(sql`${tests.ftsVector} @@ plainto_tsquery('french', ${normalizedQuery})`);
   }
+
+  const localizedPopulation = alias(populationTranslations, 'localized_population');
+  const fallbackPopulation = alias(populationTranslations, 'fallback_population');
+  const populationExpression = sql<string | null>`COALESCE(${localizedPopulation.label}, ${fallbackPopulation.label})`;
 
   const testsRows = await db
     .select({
@@ -107,13 +101,24 @@ export async function getSearchHubData(input: SearchQueryInput): Promise<SearchH
       slug: testsTranslations.slug,
       description: testsTranslations.shortDescription,
       objective: testsTranslations.objective,
-      population: testsTranslations.population,
+      population: populationExpression,
       materials: testsTranslations.materials,
       durationMinutes: tests.durationMinutes,
       isStandardized: tests.isStandardized,
     })
     .from(tests)
     .innerJoin(testsTranslations, eq(tests.id, testsTranslations.testId))
+    .leftJoin(
+      localizedPopulation,
+      and(eq(localizedPopulation.populationId, tests.populationId), eq(localizedPopulation.locale, locale)),
+    )
+    .leftJoin(
+      fallbackPopulation,
+      and(
+        eq(fallbackPopulation.populationId, tests.populationId),
+        eq(fallbackPopulation.locale, defaultLocale),
+      ),
+    )
     .where(and(...testFilters))
     .orderBy(asc(testsTranslations.name))
     .limit(limit)

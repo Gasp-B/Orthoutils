@@ -53,6 +53,11 @@ export const themes = pgTable('themes', {
   slugConstraint: uniqueIndex('themes_slug_key').on(table.slug),
 }));
 
+export const populations = pgTable('population', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // --- TRANSLATIONS ---
 
 export const tagsTranslations = pgTable('tags_translations', {
@@ -88,12 +93,35 @@ export const themeTranslations = pgTable('theme_translations', {
   pk: primaryKey({ columns: [table.themeId, table.locale] }),
 }));
 
+export const populationTranslations = pgTable('population_translations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  populationId: uuid('population_id')
+    .notNull()
+    .references(() => populations.id, { onDelete: 'cascade' }),
+  locale: text('locale').notNull(),
+  label: text('label').notNull(),
+  populationCharacteristic: text('population_characteristic')
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+}, (table) => ({
+  localeConstraint: uniqueIndex('population_translations_population_id_locale_key').on(
+    table.populationId,
+    table.locale,
+  ),
+  labelLocaleConstraint: uniqueIndex('population_translations_label_locale_key').on(
+    table.label,
+    table.locale,
+  ),
+}));
+
 // --- TESTS ---
 
 export const tests = pgTable('tests', {
   id: uuid('id').defaultRandom().primaryKey(),
   // Ajout de la colonne targetAudience
   targetAudience: targetAudienceEnum('target_audience').notNull().default('child'),
+  populationId: uuid('population_id').references(() => populations.id),
   ageMinMonths: integer('age_min_months'),
   ageMaxMonths: integer('age_max_months'),
   durationMinutes: integer('duration_minutes'),
@@ -117,7 +145,6 @@ export const testsTranslations = pgTable('tests_translations', {
   slug: text('slug').notNull(),
   shortDescription: text('short_description'),
   objective: text('objective'),
-  population: text('population'),
   materials: text('materials'),
   publisher: text('publisher'),
   priceRange: text('price_range'),
