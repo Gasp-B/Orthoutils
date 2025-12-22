@@ -317,61 +317,61 @@
       "inlineEdit": {
         "loading": "Chargement..."
       }
+    },
+    "edit": {
+      "metadata": {
+        "title": "Modifier {name} | Othoutils",
+        "description": "Mettez à jour rapidement les informations clés pour {name}."
+      },
+      "sectionLabel": "Administration",
+      "pageTitle": "Modifier {name}",
+      "pageLead": "Ajustez le statut, l'audience et la taxonomie associée à ce test.",
+      "form": {
+        "nameLabel": "Nom du test",
+        "namePlaceholder": "Saisissez le nom du test",
+        "slugLabel": "Slug",
+        "slugPlaceholder": "exemple-test",
+        "ageMinLabel": "Âge minimum (mois)",
+        "ageMinPlaceholder": "ex : 36",
+        "ageMaxLabel": "Âge maximum (mois)",
+        "ageMaxPlaceholder": "ex : 144",
+        "shortDescriptionLabel": "Description courte",
+        "shortDescriptionPlaceholder": "Résumé rapide pour le catalogue.",
+        "objectiveLabel": "Objectif clinique",
+        "objectivePlaceholder": "Décrivez l'objectif clinique.",
+        "statusLabel": "Statut",
+        "audienceLabel": "Audience",
+        "domainsLabel": "Domaines",
+        "themesLabel": "Thèmes",
+        "tagsLabel": "Tags",
+        "save": "Enregistrer",
+        "create": "Créer",
+        "saving": "Enregistrement...",
+        "success": "Les modifications ont bien été enregistrées.",
+        "error": "Impossible d'enregistrer les modifications."
+      },
+      "multiSelect": {
+        "add": "Ajouter",
+        "remove": "Retirer",
+        "clear": "Tout effacer",
+        "close": "Fermer",
+        "emptySelection": "Aucune sélection",
+        "emptyResults": "Aucun résultat",
+        "loading": "Chargement...",
+        "searchPlaceholder": "Rechercher...",
+        "dialogTitle": "Filtrer {label}",
+        "dialogHelper": "Sélectionnez les valeurs pertinentes."
+      }
+    },
+    "create": {
+      "metadata": {
+        "title": "Créer un test | Othoutils",
+        "description": "Ajoutez un nouveau test et définissez ses éléments essentiels."
+      },
+      "sectionLabel": "Administration",
+      "pageTitle": "Créer un test",
+      "pageLead": "Renseignez l'essentiel avant d'enrichir le test."
     }
-  },
-  "AdminTests.edit": {
-    "metadata": {
-      "title": "Modifier {name} | Othoutils",
-      "description": "Mettez à jour rapidement les informations clés pour {name}."
-    },
-    "sectionLabel": "Administration",
-    "pageTitle": "Modifier {name}",
-    "pageLead": "Ajustez le statut, l'audience et la taxonomie associée à ce test.",
-    "form": {
-      "nameLabel": "Nom du test",
-      "namePlaceholder": "Saisissez le nom du test",
-      "slugLabel": "Slug",
-      "slugPlaceholder": "exemple-test",
-      "ageMinLabel": "Âge minimum (mois)",
-      "ageMinPlaceholder": "ex : 36",
-      "ageMaxLabel": "Âge maximum (mois)",
-      "ageMaxPlaceholder": "ex : 144",
-      "shortDescriptionLabel": "Description courte",
-      "shortDescriptionPlaceholder": "Résumé rapide pour le catalogue.",
-      "objectiveLabel": "Objectif clinique",
-      "objectivePlaceholder": "Décrivez l'objectif clinique.",
-      "statusLabel": "Statut",
-      "audienceLabel": "Audience",
-      "domainsLabel": "Domaines",
-      "themesLabel": "Thèmes",
-      "tagsLabel": "Tags",
-      "save": "Enregistrer",
-      "create": "Créer",
-      "saving": "Enregistrement...",
-      "success": "Les modifications ont bien été enregistrées.",
-      "error": "Impossible d'enregistrer les modifications."
-    },
-    "multiSelect": {
-      "add": "Ajouter",
-      "remove": "Retirer",
-      "clear": "Tout effacer",
-      "close": "Fermer",
-      "emptySelection": "Aucune sélection",
-      "emptyResults": "Aucun résultat",
-      "loading": "Chargement...",
-      "searchPlaceholder": "Rechercher...",
-      "dialogTitle": "Filtrer {label}",
-      "dialogHelper": "Sélectionnez les valeurs pertinentes."
-    }
-  },
-  "AdminTests.create": {
-    "metadata": {
-      "title": "Créer un test | Othoutils",
-      "description": "Ajoutez un nouveau test et définissez ses éléments essentiels."
-    },
-    "sectionLabel": "Administration",
-    "pageTitle": "Créer un test",
-    "pageLead": "Renseignez l'essentiel avant d'enrichir le test."
   },
   "Footer": {
     "note": "Fait avec soin pour les équipes d'orthophonie. Mobile first, adaptatif et pensé pour la collaboration."

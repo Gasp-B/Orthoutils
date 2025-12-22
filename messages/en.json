@@ -317,61 +317,61 @@
       "inlineEdit": {
         "loading": "Loading..."
       }
+    },
+    "edit": {
+      "metadata": {
+        "title": "Edit {name} | Othoutils",
+        "description": "Quickly update the key details for {name}."
+      },
+      "sectionLabel": "Administration",
+      "pageTitle": "Edit {name}",
+      "pageLead": "Adjust the status, audience, and taxonomy linked to this test.",
+      "form": {
+        "nameLabel": "Test name",
+        "namePlaceholder": "Enter the test name",
+        "slugLabel": "Slug",
+        "slugPlaceholder": "example-test",
+        "ageMinLabel": "Minimum age (months)",
+        "ageMinPlaceholder": "e.g. 36",
+        "ageMaxLabel": "Maximum age (months)",
+        "ageMaxPlaceholder": "e.g. 144",
+        "shortDescriptionLabel": "Short description",
+        "shortDescriptionPlaceholder": "Quick summary for the catalogue.",
+        "objectiveLabel": "Clinical objective",
+        "objectivePlaceholder": "Describe the clinical goal.",
+        "statusLabel": "Status",
+        "audienceLabel": "Audience",
+        "domainsLabel": "Domains",
+        "themesLabel": "Themes",
+        "tagsLabel": "Tags",
+        "save": "Save",
+        "create": "Create",
+        "saving": "Saving...",
+        "success": "Updates saved successfully.",
+        "error": "Unable to save the updates."
+      },
+      "multiSelect": {
+        "add": "Add",
+        "remove": "Remove",
+        "clear": "Clear all",
+        "close": "Close",
+        "emptySelection": "No selection",
+        "emptyResults": "No results",
+        "loading": "Loading...",
+        "searchPlaceholder": "Search...",
+        "dialogTitle": "Filter {label}",
+        "dialogHelper": "Select the relevant values."
+      }
+    },
+    "create": {
+      "metadata": {
+        "title": "Create a test | Othoutils",
+        "description": "Add a new test and define its main details."
+      },
+      "sectionLabel": "Administration",
+      "pageTitle": "Create a test",
+      "pageLead": "Enter the essentials before enriching the test later."
     }
-  },
-  "AdminTests.edit": {
-    "metadata": {
-      "title": "Edit {name} | Othoutils",
-      "description": "Quickly update the key details for {name}."
-    },
-    "sectionLabel": "Administration",
-    "pageTitle": "Edit {name}",
-    "pageLead": "Adjust the status, audience, and taxonomy linked to this test.",
-    "form": {
-      "nameLabel": "Test name",
-      "namePlaceholder": "Enter the test name",
-      "slugLabel": "Slug",
-      "slugPlaceholder": "example-test",
-      "ageMinLabel": "Minimum age (months)",
-      "ageMinPlaceholder": "e.g. 36",
-      "ageMaxLabel": "Maximum age (months)",
-      "ageMaxPlaceholder": "e.g. 144",
-      "shortDescriptionLabel": "Short description",
-      "shortDescriptionPlaceholder": "Quick summary for the catalogue.",
-      "objectiveLabel": "Clinical objective",
-      "objectivePlaceholder": "Describe the clinical goal.",
-      "statusLabel": "Status",
-      "audienceLabel": "Audience",
-      "domainsLabel": "Domains",
-      "themesLabel": "Themes",
-      "tagsLabel": "Tags",
-      "save": "Save",
-      "create": "Create",
-      "saving": "Saving...",
-      "success": "Updates saved successfully.",
-      "error": "Unable to save the updates."
-    },
-    "multiSelect": {
-      "add": "Add",
-      "remove": "Remove",
-      "clear": "Clear all",
-      "close": "Close",
-      "emptySelection": "No selection",
-      "emptyResults": "No results",
-      "loading": "Loading...",
-      "searchPlaceholder": "Search...",
-      "dialogTitle": "Filter {label}",
-      "dialogHelper": "Select the relevant values."
-    }
-  },
-  "AdminTests.create": {
-    "metadata": {
-      "title": "Create a test | Othoutils",
-      "description": "Add a new test and define its main details."
-    },
-    "sectionLabel": "Administration",
-    "pageTitle": "Create a test",
-    "pageLead": "Enter the essentials before enriching the test later."
   },
   "Footer": {
     "note": "Made with care for speech-language pathology teams. Mobile-first, adaptive, and built for collaboration."
