@@ -8,6 +8,7 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { Locale } from '@/i18n/routing';
+import { clinicalProfilesResponseSchema } from '@/lib/validation/clinical-profiles';
 import type { TaxonomyResponse, TestDto } from '@/lib/validation/tests';
 import styles from './tests-edit.module.css';
 
@@ -27,6 +28,7 @@ type FormState = Pick<
   | 'bibliography'
   | 'status'
   | 'targetAudience'
+  | 'clinicalProfiles'
   | 'domains'
   | 'themes'
   | 'tags'
@@ -43,6 +45,7 @@ const toFormState = (test: TestDto): FormState => ({
   bibliography: test.bibliography ?? [],
   status: test.status,
   targetAudience: test.targetAudience,
+  clinicalProfiles: test.clinicalProfiles ?? [],
   domains: test.domains,
   themes: test.themes,
   tags: test.tags,
@@ -58,6 +61,7 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
     test.targetAudience === 'adult' ? 'years' : 'months',
   );
   const [taxonomy, setTaxonomy] = useState<TaxonomyResponse | null>(null);
+  const [clinicalProfiles, setClinicalProfiles] = useState<string[] | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
@@ -76,6 +80,23 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
     };
 
     void loadTaxonomy();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [locale]);
+
+  useEffect(() => {
+    let isMounted = true;
+  const loadClinicalProfiles = async () => {
+      const response = await fetch(`/api/tests/clinical-profiles?locale=${locale}`, { credentials: 'include' });
+      if (!response.ok) return;
+      const json = await response.json();
+      const data = clinicalProfilesResponseSchema.parse(json);
+      if (isMounted) setClinicalProfiles(data.profiles);
+    };
+
+    void loadClinicalProfiles();
 
     return () => {
       isMounted = false;
@@ -107,6 +128,15 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
       { label: t('ageUnitYears'), value: 'years' },
     ],
     [t],
+  );
+
+  const clinicalProfileOptions = useMemo(
+    () =>
+      (clinicalProfiles ?? []).map((value) => ({
+        id: value,
+        label: value,
+      })),
+    [clinicalProfiles],
   );
 
   useEffect(() => {
@@ -196,6 +226,7 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
           bibliography,
           status: formState.status,
           targetAudience: formState.targetAudience,
+          clinicalProfiles: formState.clinicalProfiles,
           domains: formState.domains,
           themes: formState.themes,
           tags: formState.tags,
@@ -320,28 +351,47 @@ export default function TestEditForm({ test, locale, mode }: TestEditFormProps) 
 
         <section className={styles.formSection}>
           <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>{t('statusSectionTitle')}</h2>
+            <p className={styles.sectionLead}>{t('statusSectionLead')}</p>
+          </div>
+          <div className={styles.sectionBody}>
+            <div className={styles.formRow}>
+              <label className={styles.formLabel} htmlFor="status">
+                {t('statusLabel')}
+              </label>
+              <Select
+                id="status"
+                value={formState.status}
+                onChange={(event) =>
+                  setFormState((prev) => ({ ...prev, status: event.target.value as TestDto['status'] }))
+                }
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.formSection}>
+          <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>{t('populationSectionTitle')}</h2>
             <p className={styles.sectionLead}>{t('populationSectionLead')}</p>
           </div>
           <div className={styles.sectionBody}>
             <div className={styles.formGrid}>
               <div className={styles.formRow}>
-                <label className={styles.formLabel} htmlFor="status">
-                  {t('statusLabel')}
-                </label>
-                <Select
-                  id="status"
-                  value={formState.status}
-                  onChange={(event) =>
-                    setFormState((prev) => ({ ...prev, status: event.target.value as TestDto['status'] }))
-                  }
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
+                <MultiSelect
+                  label={t('clinicalProfilesLabel')}
+                  options={clinicalProfileOptions}
+                  selectedValues={formState.clinicalProfiles}
+                  onChange={(values) => setFormState((prev) => ({ ...prev, clinicalProfiles: values }))}
+                  translations={multiSelectTranslations}
+                  isLoading={clinicalProfiles === null}
+                />
               </div>
 
               <div className={styles.formRow}>

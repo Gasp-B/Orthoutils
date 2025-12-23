@@ -22,6 +22,7 @@ const createEmptyTest = (): TestDto => ({
   ageMinMonths: null,
   ageMaxMonths: null,
   population: null,
+  clinicalProfiles: [],
   durationMinutes: null,
   materials: null,
   isStandardized: false,
