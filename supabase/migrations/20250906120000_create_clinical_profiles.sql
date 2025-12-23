@@ -22,18 +22,47 @@ CREATE TABLE IF NOT EXISTS public.test_clinical_profiles (
   PRIMARY KEY (test_id, clinical_profile_id)
 );
 
-WITH raw_labels AS (
-  SELECT locale, unnest(population_characteristic) AS label
-  FROM public.population_translations
-  WHERE population_characteristic IS NOT NULL
-  UNION ALL
-  SELECT locale, unnest(population_characteristics) AS label
-  FROM public.tests_translations
-  WHERE population_characteristics IS NOT NULL
-),
-normalized AS (
+CREATE TEMP TABLE IF NOT EXISTS clinical_profile_seed_labels (
+  locale text,
+  label text
+);
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'population_translations'
+      AND column_name = 'population_characteristic'
+  ) THEN
+    EXECUTE $sql$
+      INSERT INTO clinical_profile_seed_labels (locale, label)
+      SELECT locale, unnest(population_characteristic) AS label
+      FROM public.population_translations
+      WHERE population_characteristic IS NOT NULL
+    $sql$;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'tests_translations'
+      AND column_name = 'population_characteristics'
+  ) THEN
+    EXECUTE $sql$
+      INSERT INTO clinical_profile_seed_labels (locale, label)
+      SELECT locale, unnest(population_characteristics) AS label
+      FROM public.tests_translations
+      WHERE population_characteristics IS NOT NULL
+    $sql$;
+  END IF;
+END $$;
+
+WITH normalized AS (
   SELECT DISTINCT locale, trim(label) AS label
-  FROM raw_labels
+  FROM clinical_profile_seed_labels
   WHERE label IS NOT NULL AND trim(label) <> ''
 ),
 profile_seed AS (
@@ -54,12 +83,35 @@ insert_translations AS (
 )
 SELECT 1;
 
+CREATE TEMP TABLE IF NOT EXISTS clinical_profile_test_links (
+  test_id uuid,
+  locale text,
+  label text
+);
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'tests_translations'
+      AND column_name = 'population_characteristics'
+  ) THEN
+    EXECUTE $sql$
+      INSERT INTO clinical_profile_test_links (test_id, locale, label)
+      SELECT tt.test_id, tt.locale, unnest(tt.population_characteristics) AS label
+      FROM public.tests_translations tt
+      WHERE tt.population_characteristics IS NOT NULL
+    $sql$;
+  END IF;
+END $$;
+
 INSERT INTO public.test_clinical_profiles (test_id, clinical_profile_id)
-SELECT DISTINCT tt.test_id, cpt.clinical_profile_id
-FROM public.tests_translations tt
-JOIN LATERAL unnest(tt.population_characteristics) AS raw_label ON true
+SELECT DISTINCT link.test_id, cpt.clinical_profile_id
+FROM clinical_profile_test_links link
 JOIN public.clinical_profile_translations cpt
-  ON cpt.label = trim(raw_label) AND cpt.locale = tt.locale
+  ON cpt.label = trim(link.label) AND cpt.locale = link.locale
 ON CONFLICT DO NOTHING;
 
 ALTER TABLE IF EXISTS public.tests_translations
@@ -67,6 +119,9 @@ ALTER TABLE IF EXISTS public.tests_translations
 
 ALTER TABLE IF EXISTS public.population_translations
   DROP COLUMN IF EXISTS population_characteristic;
+
+DROP TABLE IF EXISTS clinical_profile_test_links;
+DROP TABLE IF EXISTS clinical_profile_seed_labels;
 
 WITH population_seed AS (
   SELECT gen_random_uuid() AS id, 'child'::text AS audience, 'Enfant'::text AS fr_label, 'Child'::text AS en_label
