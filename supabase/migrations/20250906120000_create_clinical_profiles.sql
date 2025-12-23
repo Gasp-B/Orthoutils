@@ -123,35 +123,6 @@ ALTER TABLE IF EXISTS public.population_translations
 DROP TABLE IF EXISTS clinical_profile_test_links;
 DROP TABLE IF EXISTS clinical_profile_seed_labels;
 
-WITH population_seed AS (
-  SELECT gen_random_uuid() AS id, 'child'::text AS audience, 'Enfant'::text AS fr_label, 'Child'::text AS en_label
-  UNION ALL
-  SELECT gen_random_uuid(), 'adult', 'Adulte', 'Adult'
-),
-insert_population AS (
-  INSERT INTO public.population (id, created_at)
-  SELECT id, timezone('utc', now()) FROM population_seed
-  ON CONFLICT DO NOTHING
-),
-update_tests AS (
-  UPDATE public.tests t
-  SET population_id = population_seed.id
-  FROM population_seed
-  WHERE t.target_audience::text = population_seed.audience
-),
-delete_old AS (
-  DELETE FROM public.population p
-  WHERE p.id NOT IN (SELECT id FROM population_seed)
-)
-INSERT INTO public.population_translations (population_id, locale, label)
-SELECT id, 'fr', fr_label FROM population_seed
-UNION ALL
-SELECT id, 'en', en_label FROM population_seed
-ON CONFLICT (label, locale)
-DO UPDATE SET
-  population_id = EXCLUDED.population_id,
-  label = EXCLUDED.label;
-
 CREATE OR REPLACE FUNCTION public.build_tests_fts_vector(p_test_id uuid)
 RETURNS tsvector
 LANGUAGE plpgsql
@@ -299,6 +270,35 @@ CREATE TRIGGER test_clinical_profiles_tests_fts_vector_refresh
 AFTER INSERT OR DELETE ON public.test_clinical_profiles
 FOR EACH ROW
 EXECUTE FUNCTION public.refresh_tests_fts_from_test_clinical_profile();
+
+WITH population_seed AS (
+  SELECT gen_random_uuid() AS id, 'child'::text AS audience, 'Enfant'::text AS fr_label, 'Child'::text AS en_label
+  UNION ALL
+  SELECT gen_random_uuid(), 'adult', 'Adulte', 'Adult'
+),
+insert_population AS (
+  INSERT INTO public.population (id, created_at)
+  SELECT id, timezone('utc', now()) FROM population_seed
+  ON CONFLICT DO NOTHING
+),
+update_tests AS (
+  UPDATE public.tests t
+  SET population_id = population_seed.id
+  FROM population_seed
+  WHERE t.target_audience::text = population_seed.audience
+),
+delete_old AS (
+  DELETE FROM public.population p
+  WHERE p.id NOT IN (SELECT id FROM population_seed)
+)
+INSERT INTO public.population_translations (population_id, locale, label)
+SELECT id, 'fr', fr_label FROM population_seed
+UNION ALL
+SELECT id, 'en', en_label FROM population_seed
+ON CONFLICT (label, locale)
+DO UPDATE SET
+  population_id = EXCLUDED.population_id,
+  label = EXCLUDED.label;
 
 ALTER TABLE IF EXISTS public.clinical_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.clinical_profile_translations ENABLE ROW LEVEL SECURITY;
