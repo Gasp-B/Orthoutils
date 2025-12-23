@@ -100,10 +100,6 @@ export const populationTranslations = pgTable('population_translations', {
     .references(() => populations.id, { onDelete: 'cascade' }),
   locale: text('locale').notNull(),
   label: text('label').notNull(),
-  populationCharacteristic: text('population_characteristic')
-    .array()
-    .notNull()
-    .default(sql`'{}'::text[]`),
 }, (table) => ({
   localeConstraint: uniqueIndex('population_translations_population_id_locale_key').on(
     table.populationId,
@@ -154,6 +150,29 @@ export const testsTranslations = pgTable('tests_translations', {
   slugLocaleConstraint: uniqueIndex('tests_translations_slug_locale_key').on(table.slug, table.locale),
 }));
 
+export const clinicalProfiles = pgTable('clinical_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const clinicalProfileTranslations = pgTable('clinical_profile_translations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clinicalProfileId: uuid('clinical_profile_id')
+    .notNull()
+    .references(() => clinicalProfiles.id, { onDelete: 'cascade' }),
+  locale: text('locale').notNull(),
+  label: text('label').notNull(),
+}, (table) => ({
+  localeConstraint: uniqueIndex('clinical_profile_translations_profile_id_locale_key').on(
+    table.clinicalProfileId,
+    table.locale,
+  ),
+  labelLocaleConstraint: uniqueIndex('clinical_profile_translations_label_locale_key').on(
+    table.label,
+    table.locale,
+  ),
+}));
+
 // --- RELATIONS MANY-TO-MANY ---
 
 export const testDomains = pgTable('test_domains', {
@@ -175,6 +194,15 @@ export const testThemes = pgTable('test_themes', {
   themeId: uuid('theme_id').notNull().references(() => themes.id, { onDelete: 'cascade' }),
 }, (table) => ({
   pk: primaryKey({ columns: [table.testId, table.themeId] }),
+}));
+
+export const testClinicalProfiles = pgTable('test_clinical_profiles', {
+  testId: uuid('test_id').notNull().references(() => tests.id, { onDelete: 'cascade' }),
+  clinicalProfileId: uuid('clinical_profile_id')
+    .notNull()
+    .references(() => clinicalProfiles.id, { onDelete: 'cascade' }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.testId, table.clinicalProfileId] }),
 }));
 
 export const themeDomains = pgTable('theme_domains', {
