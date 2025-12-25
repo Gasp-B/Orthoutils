@@ -218,7 +218,15 @@ function Header() {
     router.push('/login');
   };
 
-  const adminLinks = useMemo(
+  type AdminHref =
+    | '/administration'
+    | '/administration/tests'
+    | '/administration/TaxonomyManagement'
+    | '/administration/resources';
+
+  type AdminLink = { href: AdminHref; label: string };
+
+  const adminLinks = useMemo<AdminLink[]>(
     () => [
       { href: '/administration', label: t('dashboard') },
       { href: '/administration/tests', label: t('testsManagement') },
