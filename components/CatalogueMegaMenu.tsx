@@ -13,13 +13,19 @@ import type { CatalogueDomain } from '@/lib/navigation/catalogue';
 
 type Props = {
   domains: CatalogueDomain[];
+  variant?: 'desktop' | 'drawer';
+  onNavigate?: () => void;
 };
 
-function CatalogueMegaMenu({ domains }: Props) {
+function CatalogueMegaMenu({ domains, variant = 'desktop', onNavigate }: Props) {
   const t = useTranslations('Header');
 
+  const isDrawerVariant = variant === 'drawer';
   const [isOpen, setIsOpen] = useState(false);
   const [activeDomainId, setActiveDomainId] = useState<string | null>(
+    domains[0]?.id ?? null,
+  );
+  const [expandedDomainId, setExpandedDomainId] = useState<string | null>(
     domains[0]?.id ?? null,
   );
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -31,13 +37,18 @@ function CatalogueMegaMenu({ domains }: Props) {
   useEffect(() => {
     if (!domains.length) {
       setActiveDomainId(null);
+      setExpandedDomainId(null);
       return;
     }
 
     if (!activeDomainId || !domains.some((d) => d.id === activeDomainId)) {
       setActiveDomainId(domains[0]?.id ?? null);
     }
-  }, [activeDomainId, domains]);
+
+    if (!expandedDomainId || !domains.some((d) => d.id === expandedDomainId)) {
+      setExpandedDomainId(domains[0]?.id ?? null);
+    }
+  }, [activeDomainId, domains, expandedDomainId]);
 
   const activeDomain = useMemo(
     () => domains.find((d) => d.id === activeDomainId) ?? domains[0],
@@ -103,6 +114,79 @@ function CatalogueMegaMenu({ domains }: Props) {
     );
   }
 
+  if (isDrawerVariant) {
+    return (
+      <div className="ph-header__drawer-section" aria-label={t('megaMenuLabel')}>
+        <p className="ph-header__drawer-title">{t('catalogue')}</p>
+
+        <ul className="ph-header__accordion" role="list">
+          {domains.map((domain) => {
+            const isExpanded = expandedDomainId === domain.id;
+            const panelId = `${menuId}-${domain.id}-panel`;
+
+            return (
+              <li key={domain.id} className="ph-header__accordion-item">
+                <button
+                  type="button"
+                  className="ph-header__accordion-trigger"
+                  aria-expanded={isExpanded}
+                  aria-controls={panelId}
+                  onClick={() =>
+                    setExpandedDomainId((current) =>
+                      current === domain.id ? null : domain.id,
+                    )
+                  }
+                >
+                  <span>{domain.label}</span>
+                  <span aria-hidden>{isExpanded ? '−' : '+'}</span>
+                </button>
+
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-hidden={!isExpanded}
+                  className={`ph-header__accordion-panel ${
+                    isExpanded ? 'is-open' : ''
+                  }`}
+                >
+                  <Link
+                    href={{
+                      pathname: '/search',
+                      query: { domain: domain.label },
+                    }}
+                    className="ph-header__accordion-link"
+                    onClick={() => onNavigate?.()}
+                  >
+                    {domain.label}
+                  </Link>
+
+                  <div className="ph-header__accordion-tags">
+                    {(domain.themes ?? []).map((theme) => (
+                      <Link
+                        key={`${domain.id}-${theme.id}`}
+                        href={{
+                          pathname: '/search',
+                          query: {
+                            domain: domain.label,
+                            theme: theme.label,
+                          },
+                        }}
+                        className="ph-header__accordion-link ph-header__accordion-link--tag"
+                        onClick={() => onNavigate?.()}
+                      >
+                        {theme.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
+
   return (
     <div
       className="ph-header__mega-wrapper"
@@ -157,7 +241,10 @@ function CatalogueMegaMenu({ domains }: Props) {
                       openMenu();
                       setActiveDomainId(domain.id);
                     }}
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      setIsOpen(false);
+                      onNavigate?.();
+                    }}
                   >
                     <span>{domain.label}</span>
                     <span aria-hidden>›</span>
@@ -190,7 +277,10 @@ function CatalogueMegaMenu({ domains }: Props) {
                       },
                     }}
                     className="ph-header__mega-tag"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      setIsOpen(false);
+                      onNavigate?.();
+                    }}
                   >
                     {theme.label}
                   </Link>
