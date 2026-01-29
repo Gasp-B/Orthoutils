@@ -406,7 +406,10 @@
       "range": "{min} à {max} mois",
       "from": "Dès {min} mois",
       "until": "Jusqu'à {max} mois",
-      "free": "Âge libre"
+      "free": "Âge libre",
+      "rangeYears": "{min} à {max} ans",
+      "fromYears": "Dès {min} ans",
+      "untilYears": "Jusqu'à {max} ans"
     },
     "duration": {
       "variable": "Durée variable",

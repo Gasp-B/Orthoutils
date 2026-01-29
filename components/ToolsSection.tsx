@@ -10,15 +10,27 @@ function formatAgeRange(
   min: number | null,
   max: number | null,
 ) {
+  const isYears = (val: number) => val >= 24;
+  const toYears = (val: number) => Math.floor(val / 12); // Simple conversion for display
+
   if (min && max) {
+    if (isYears(min) && isYears(max)) {
+      return translateShared('ageRange.rangeYears', { max: toYears(max), min: toYears(min) });
+    }
     return translateShared('ageRange.range', { max, min });
   }
 
   if (min) {
+    if (isYears(min)) {
+      return translateShared('ageRange.fromYears', { min: toYears(min) });
+    }
     return translateShared('ageRange.from', { min });
   }
 
   if (max) {
+    if (isYears(max)) {
+      return translateShared('ageRange.untilYears', { max: toYears(max) });
+    }
     return translateShared('ageRange.until', { max });
   }
 
