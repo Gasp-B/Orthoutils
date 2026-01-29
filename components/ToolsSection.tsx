@@ -63,69 +63,58 @@ async function ToolsSection() {
   return (
     <>
       <section id="catalogue" className="container section-shell">
-        <div className="section-title">
-          <span />
-          <p className={styles.sectionLabel}>{t('sectionLabel')}</p>
-        </div>
-
-        <div className="glass panel">
-          <div className={styles.headerRow}>
-            <div className={`stack ${styles.headingStack}`}>
+        <div className={`glass panel ${styles.headerPanel}`}>
+          <div className={styles.headerContent}>
+            <div className={styles.headerText}>
               <h2 className={styles.headingTitle}>{t('headingTitle')}</h2>
-              <p className={styles.headingText}>{t('headingText')}</p>
+              <p className={styles.headingLead}>{t('headingText')}</p>
             </div>
-            <Link className="ph-header__pill" href="/catalogue">
+            <Link className={`primary-btn ${styles.catalogueBtn}`} href="/catalogue">
               {t('ctas.openCatalogue')}
             </Link>
           </div>
         </div>
 
-        <div className="card-grid">
+        <div className={styles.grid}>
           {featured.map((test) => (
-            <article key={test.id} className="glass panel">
+            <Link
+              key={test.id}
+              href={{ pathname: '/catalogue/[slug]', params: { slug: test.slug } }}
+              className={`glass ${styles.card}`}
+            >
               <div className={styles.cardHeader}>
-                <div>
-                  <p className={styles.cardTitle}>{test.name}</p>
-                  <p className={`text-subtle ${styles.cardSubtitle}`}>
-                    {test.shortDescription ?? shared('placeholders.description')}
-                  </p>
-                </div>
-                <span className="badge">{formatAgeRange(shared, test.ageMinMonths, test.ageMaxMonths)}</span>
-              </div>
-
-              <p className={styles.objectiveText}>
-                {test.objective ?? shared('placeholders.objective')}
-              </p>
-
-              <div className={styles.tagRow}>
-                {test.domains.map((domain) => (
-                  <span key={domain} className="pill-muted">
-                    {domain}
+                <div className={styles.cardTop}>
+                  <div className={styles.domains}>
+                    {test.domains.slice(0, 1).map((domain) => (
+                      <span key={domain} className={styles.domainPill}>
+                        {domain}
+                      </span>
+                    ))}
+                    {test.domains.length > 1 && (
+                      <span className={styles.domainPlus}>+{test.domains.length - 1}</span>
+                    )}
+                  </div>
+                  <span className={styles.ageBadge}>
+                    {formatAgeRange(shared, test.ageMinMonths, test.ageMaxMonths)}
                   </span>
-                ))}
-              </div>
-
-              {test.tags.length > 0 && (
-                <div className={styles.tagRow}>
-                  {test.tags.map((tag) => (
-                    <span key={tag} className="badge">
-                      {tag}
-                    </span>
-                  ))}
                 </div>
-              )}
 
-              <div className={`action-row ${styles.actionRow}`}>
-                <span className="text-subtle">{formatDuration(shared, test.durationMinutes)}</span>
-                <Link
-                  className="ph-header__link"
-                  href={{ pathname: '/catalogue/[slug]', params: { slug: test.slug } }}
-                  aria-label={t('ctas.viewSheet', { testName: test.name })}
-                >
-                  {t('ctas.viewSheetLabel')}
-                </Link>
+                <h3 className={styles.cardTitle}>{test.name}</h3>
+                <p className={styles.cardDesc}>
+                  {test.shortDescription ?? shared('placeholders.description')}
+                </p>
               </div>
-            </article>
+
+              <div className={styles.cardFooter}>
+                <div className={styles.metaRow}>
+                  <span className={styles.metaItem}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                    {formatDuration(shared, test.durationMinutes)}
+                  </span>
+                </div>
+                <span className={styles.linkArrow}>→</span>
+              </div>
+            </Link>
           ))}
         </div>
 

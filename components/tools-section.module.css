@@ -1,82 +1,224 @@
+/* Main Layout */
 .sectionLabel {
-  margin: 0;
+  display: inline-block;
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: rgba(14, 165, 233, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
 }
 
-.headerRow {
+.headerPanel {
+  padding: 2.5rem 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.4) 100%);
+}
+
+.headerContent {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
-}
-
-.headingStack {
-  margin: 0;
-}
-
-.headingTitle {
-  margin: 0;
-  color: #0f172a;
-  font-weight: 800;
-}
-
-.headingText {
-  margin: 0;
-}
-
-.cardHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.6rem;
-  align-items: center;
-}
-
-.cardTitle {
-  margin: 0;
-  color: #0f172a;
-  font-weight: 800;
-}
-
-.cardSubtitle {
-  margin: 0.1rem 0 0;
-}
-
-.objectiveText {
-  margin: 0.4rem 0 0;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.tagRow {
-  display: flex;
-  gap: 0.35rem;
+  gap: 2rem;
   flex-wrap: wrap;
 }
 
-.actionRow {
-  justify-content: space-between;
-  align-items: center;
+.headerText {
+  max-width: 600px;
 }
 
+.headingTitle {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.headingLead {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.catalogueBtn {
+  font-size: 1rem;
+  padding: 0.85rem 1.5rem;
+  box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.39);
+  transition: all 0.2s ease;
+}
+
+.catalogueBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.23);
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+/* Card Styling */
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -5px rgba(15, 23, 42, 0.1), 0 8px 16px -6px rgba(15, 23, 42, 0.1);
+  border-color: rgba(14, 165, 233, 0.4);
+}
+
+.card:hover .linkArrow {
+  transform: translateX(4px);
+  color: var(--accent);
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.domains {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.domainPill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+  background: rgba(14, 165, 233, 0.1);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+}
+
+.domainPlus {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.ageBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+
+.cardDesc {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #64748b;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  margin-top: auto;
+}
+
+.metaRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.linkArrow {
+  font-size: 1.25rem;
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+/* Empty State */
 .emptyState {
-  margin-top: 0.5rem;
+  text-align: center;
+  padding: 3rem;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
 }
 
 .emptyText {
-  margin: 0;
+  color: #64748b;
+  font-size: 1rem;
 }
 
+/* Collaboration Section adjustments */
 .collaborationSection {
-  margin-top: 1.6rem;
+  margin-top: 4rem;
 }
 
 .statCardValue {
   margin: 0;
   color: #0f172a;
   font-weight: 800;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
 }
 
-.statCardLabel {
-  margin: 0.1rem 0 0;
-  color: #0f172a;
+/* Mobile Adjustments */
+@media (max-width: 640px) {
+  .headerPanel {
+    padding: 1.5rem;
+  }
+  
+  .headingTitle {
+    font-size: 1.75rem;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
